@@ -5,6 +5,8 @@ import tempfile
 from enum import Enum
 import re
 
+LINE_ELEMENTS = ("date", "time", "type", "source", "thread", "details")
+
 class LogType(Enum):
     DEBUG = 1
     INFO = 2
@@ -54,27 +56,58 @@ class LogLine:
             self.type = LogType.find_log_type(input)
             self.details = input
 
-    def _condense_details(self):
-        list_index = self.details.find("[", 0, self.CONDENSE_LEN)
-        dict_index = self.details.find("{", 0, self.CONDENSE_LEN)
+    def condensed_details(self):
+        return self._condense(self.details, collapse_list=True, collapse_dict=True)
+
+    def condensed_source(self):
+        return self._condense(self.source, collapse_list=True)
+
+    def condensed_thread(self):
+        return self._condense(self.thread, collapse_list=True)
+
+    def _condense(self, str_element, collapse_list=False, collapse_dict=False):
+        list_index = -1
+        dict_index = -1
+        if collapse_list and collapse_dict:
+            list_index = str_element.find("[", 0, self.CONDENSE_LEN)
+            dict_index = str_element.find("{", 0, self.CONDENSE_LEN)
+        elif collapse_list:
+            list_index = str_element.find("[", 0, self.CONDENSE_LEN)
+        elif collapse_dict:
+            dict_index = str_element.find("{", 0, self.CONDENSE_LEN)
+
         if list_index < 0 and dict_index < 0:
-            return "".join([self.details[:self.CONDENSE_LEN], "..."])
+            return "".join([str_element[:self.CONDENSE_LEN], "..."])
         elif list_index >= 0:
             index = list_index + self.COND_LIST_DISPLAY_LEN
-            return "".join([self.details[:index], "...]"])
+            return "".join([str_element[:index], "...]"])
         else:
             index = dict_index + self.COND_LIST_DISPLAY_LEN
-            return "".join([self.details[:index], "...}"])
+            return "".join([str_element[:index], "...}"])
 
-    # TODO - Fix issue!
-    def format_line(self, **kwargs):
+class LogFormatter:
+
+    @staticmethod
+    def format_line(log_line, condense_details=False, date=True, time=True, type=True, source=True,
+                    thread=True, details=True):
         output = []
-        for key, val in kwargs.items():
-            if key is "type" and val:
-                output.extend(getattr(self, key).name)
-            elif val:
-                output.extend(getattr(self, key))
+        if date:
+            output.append(log_line.date)
+        if time:
+            output.append(log_line.time)
+        if type:
+            output.append(log_line.type.name)
+        if source:
+            output.append(log_line.condensed_source())
+        if thread:
+            output.append(log_line.condensed_thread())
+        if details:
+            if condense_details:
+                output.append(log_line.condensed_details())
+            else:
+                output.append(log_line.details)
         return " ".join(output)
+
 
 def format_file(filepath, **kwargs):
     with open(filepath, "r") as file:
@@ -89,7 +122,8 @@ if __name__ == '__main__':
     log_line = LogLine(line)
     print(log_line.type)
     print(log_line.date)
-    print(log_line._condense_details())
+    print LogFormatter.format_line(log_line, condense_details=True)
+    print(LogFormatter.format_line(log_line, condense_details=True, source=False, thread=False))
 
     log_format = {
         "date":True,
@@ -97,7 +131,7 @@ if __name__ == '__main__':
         "type":True,
         "details":True
     }
-    print log_line.format_line(**log_format)
+    #print log_line.format_line(**log_format)
 
     # line = "2017-10-30 19:13:22.383767 INFO [sf_platform.api.ApiVolume.delete_volumes:1185] [MainProcess:MainThread] Deleting volumes: [203, 204]."
     # log_line = LogLine(line)

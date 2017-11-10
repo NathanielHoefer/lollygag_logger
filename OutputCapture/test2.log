@@ -1,0 +1,18 @@
+2017-10-30 19:13:32.210385 DEBUG [valence.camelot.suite._log_threads:355] [MainProcess:MainThread] Suite threads info (should be len=1)  : [<_MainThread(MainThread, started 140583595407104)>]
+2017-10-30 19:13:32.210588 DEBUG [valence.camelot.suite._log_threads:358] [MainProcess:MainThread] Suite processes info (should be len=0): []
+2017-10-30 19:13:32.210789 INFO [valence.camelot.suite.create_final_report:189] [MainProcess:MainThread] 
+
+=========================================================================================================
+Final Report
+=========================================================================================================
+
+2017-10-30 19:13:32.211198 INFO [valence.camelot.suite.create_final_report:190] [MainProcess:MainThread] SuiteResult<name=TsBulkVolOperationsSFtoSFS3Swift, status=PASSED, execution_time=0:07:07.317118>
+2017-10-30 19:13:32.211510 INFO [valence.camelot.suite.create_final_report:199] [MainProcess:MainThread] 
+
+# History of TsBulkVolOperationsSFtoSFS3Swift[camelot/suite.py:136]
+|> UTC[2017-10-30 19:06:24.892556] LOC[2017-10-30 14:06:24.892556] [camelot/suite.py:342]: All Test Case Preconditions
+|> UTC[2017-10-30 19:06:24.894108] LOC[2017-10-30 14:06:24.894108] [camelot/suite.py:143]: Test Suite: Starting Setup of TsBulkVolOperationsSFtoSFS3Swift
+|> UTC[2017-10-30 19:13:32.209706] LOC[2017-10-30 14:13:32.209706] [camelot/suite.py:162]: Test Suite: Starting Teardown of TsBulkVolOperationsSFtoSFS3Swift
+2017-10-30 19:13:32.211721 INFO [valence.camelot.suite.create_final_report:208] [MainProcess:MainThread] Output files dir: /home/hnathani/vl_artifacts/TsBulkVolOperationsSFtoSFS3Swift-2017-10-30T14.06.19
+2017-10-30 19:13:32.218639 DEBUG [valence.driver.main._post_to_groot:98] [MainProcess:MainThread] Posting to groot
+

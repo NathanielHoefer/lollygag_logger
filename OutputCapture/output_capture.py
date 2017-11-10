@@ -29,7 +29,7 @@ class LogType(Enum):
 
 
 class LogLine:
-    CONDENSE_LEN = 300              # Max number of characters to show of details when condensed
+    CONDENSE_LEN = 100              # Max number of characters to show of details when condensed
     COND_LIST_DISPLAY_LEN = 10      # Number of characters to show within condensed list or dict
 
     def __init__(self, line=""):
@@ -66,24 +66,28 @@ class LogLine:
         return self._condense(self.thread, collapse_list=True)
 
     def _condense(self, str_element, collapse_list=False, collapse_dict=False):
-        list_index = -1
-        dict_index = -1
+        output = str_element
         if collapse_list and collapse_dict:
-            list_index = str_element.find("[", 0, self.CONDENSE_LEN)
-            dict_index = str_element.find("{", 0, self.CONDENSE_LEN)
+            output = self._collapse(output, "[", "]")
+            output = self._collapse(output, "{", "}")
         elif collapse_list:
-            list_index = str_element.find("[", 0, self.CONDENSE_LEN)
+            output = self._collapse(output, "[", "]")
         elif collapse_dict:
-            dict_index = str_element.find("{", 0, self.CONDENSE_LEN)
+            output = self._collapse(output, "{", "}")
 
-        if list_index < 0 and dict_index < 0:
-            return "".join([str_element[:self.CONDENSE_LEN], "..."])
-        elif list_index >= 0:
-            index = list_index + self.COND_LIST_DISPLAY_LEN
-            return "".join([str_element[:index], "...]"])
-        else:
-            index = dict_index + self.COND_LIST_DISPLAY_LEN
-            return "".join([str_element[:index], "...}"])
+        # import pdb; pdb.set_trace()
+        if len(output) > self.CONDENSE_LEN:
+            output = "".join([output[:self.CONDENSE_LEN], "..."])
+        return output.strip()
+
+    def _collapse(self, str_element, start_char, end_char):
+        start_index = str_element.find(start_char)
+        end_index = str_element.find(end_char)
+        if 0 <= start_index <= self.CONDENSE_LEN \
+                and start_index < end_index <= self.CONDENSE_LEN \
+                and end_index - start_index > self.COND_LIST_DISPLAY_LEN:
+            return "".join([str_element[:start_index + self.COND_LIST_DISPLAY_LEN], "...", end_char])
+        return str_element
 
 class LogFormatter:
 
@@ -91,6 +95,10 @@ class LogFormatter:
     def format_line(log_line, condense_details=False, date=True, time=True, type=True, source=True,
                     thread=True, details=True):
         output = []
+        # import pdb; pdb.set_trace()
+
+        if log_line.type == LogType.TITLE or log_line.type == LogType.STEP or log_line.type == LogType.OTHER:
+            return log_line.details
         if date:
             output.append(log_line.date)
         if time:
@@ -109,21 +117,26 @@ class LogFormatter:
         return " ".join(output)
 
 
-def format_file(filepath, **kwargs):
+def format_print_file(filepath):
     with open(filepath, "r") as file:
-        for line in file:
-            log = LogLine(line)
+        for line in file.readlines():
+            line.strip()
+            f = LogFormatter.format_line(LogLine(line), condense_details=True)
 
+            print f
 
 if __name__ == '__main__':
 
 
-    line = "2017-10-30 19:13:23.871372 DEBUG [sf_platform.core.retry_handlers.retry_wrapper:624] [MainProcess:MainThread] CallContext 63: UUID=63-6589ff16-bda6-11e7-89b9-6c0b84e27010, function=call_readonly_cluster_api, call_stack=[/home/hnathani/repos/suites_refresh/nathaniel/nathaniel-sr-autoplatform/sf_platform/cluster_api.py:get_constants:3722, from /home/hnathani/repos/suites_refresh/nathaniel/nathaniel-sr-autoplatform/sf_platform/api/ApiVolume.py:purge_deleted_volumes:1207, from /home/hnathani/repos/suites_refresh/nathaniel/nathaniel-sr-autotest-content/steps/AutotestVolume.py:delete_volumes:1984, from /home/hnathani/repos/suites_refresh/nathaniel/nathaniel-sr-autotest-content/tests/bulk_volume/cases/bulk_volume_operations.py:_teardown:692, from /home/hnathani/repos/suites_refresh/nathaniel/nathaniel-sr-autoplatform/valence_repo/valence/camelot/case.py:_internal_teardown:339]"
-    log_line = LogLine(line)
-    print(log_line.type)
-    print(log_line.date)
-    print LogFormatter.format_line(log_line, condense_details=True)
-    print(LogFormatter.format_line(log_line, condense_details=True, source=False, thread=False))
+    # line = "2017-10-30 19:13:23.871372 DEBUG [sf_platform.core.retry_handlers.retry_wrapper:624] [MainProcess:MainThread] CallContext 63: UUID=63-6589ff16-bda6-11e7-89b9-6c0b84e27010, function=call_readonly_cluster_api, call_stack=[/home/hnathani/repos/suites_refresh/nathaniel/nathaniel-sr-autoplatform/sf_platform/cluster_api.py:get_constants:3722, from /home/hnathani/repos/suites_refresh/nathaniel/nathaniel-sr-autoplatform/sf_platform/api/ApiVolume.py:purge_deleted_volumes:1207, from /home/hnathani/repos/suites_refresh/nathaniel/nathaniel-sr-autotest-content/steps/AutotestVolume.py:delete_volumes:1984, from /home/hnathani/repos/suites_refresh/nathaniel/nathaniel-sr-autotest-content/tests/bulk_volume/cases/bulk_volume_operations.py:_teardown:692, from /home/hnathani/repos/suites_refresh/nathaniel/nathaniel-sr-autoplatform/valence_repo/valence/camelot/case.py:_internal_teardown:339]"
+    # log_line = LogLine(line)
+    # print(log_line.type)
+    # print(log_line.date)
+    # print LogFormatter.format_line(log_line, condense_details=True)
+    # print(LogFormatter.format_line(log_line, condense_details=True, source=False, thread=False))
+
+    path = "/home/nathaniel/Repos/lollygag_logger/OutputCapture/test.log"
+    format_print_file(path)
 
     log_format = {
         "date":True,

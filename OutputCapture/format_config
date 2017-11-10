@@ -1,15 +1,14 @@
 [DISPLAY LOG TYPES]
-Debug = True
-Info = True
-Step = True
-Title = True
-Other = True
+DEBUG = False
+INFO = True
+WARNING = False
+OTHER = True
 
 [DISPLAY ELEMENTS]
 DisplayDate = True
 DisplayTime = True
 DisplayType = True
-DisplaySource = True
+DisplaySource = False
 DisplayThread = True
 DisplayDetails = True
 

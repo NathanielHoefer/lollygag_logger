@@ -7,7 +7,14 @@ import configparser
 import re
 
 LINE_ELEMENTS = ("date", "time", "type", "source", "thread", "details")
-LOG_TYPES = ("DEBUG", "INFO", "STEP", "TITLE", "OTHER")
+TYPE_DEBUG = "DEBUG"
+TYPE_INFO = "INFO"
+TYPE_WARNING = "WARNING"
+TYPE_STEP = "STEP"
+TYPE_TITLE = "TITLE"
+TYPE_OTHER = "OTHER"
+LOG_TYPES = (TYPE_DEBUG, TYPE_INFO, TYPE_WARNING, TYPE_STEP, TYPE_TITLE, TYPE_OTHER)
+
 
 class LogType(Enum):
     DEBUG = 1
@@ -23,16 +30,16 @@ class LogType(Enum):
 
     @classmethod
     def find_log_type(cls, log_type_str):
-        if log_type_str == "DEBUG":
-            return cls.DEBUG
-        elif log_type_str == "INFO":
-            return cls.INFO
+        if log_type_str.upper() == TYPE_DEBUG:
+            return TYPE_DEBUG
+        elif log_type_str.upper() == TYPE_INFO:
+            return TYPE_INFO
         elif re.match("(\-\-\-)+", log_type_str):
-            return cls.STEP
+            return TYPE_STEP
         elif re.match("(===)+", log_type_str):
-            return cls.TITLE
+            return TYPE_TITLE
         else:
-            return cls.OTHER
+            return TYPE_OTHER
 
 
 class LogLine:
@@ -56,7 +63,7 @@ class LogLine:
             split = input.split(" ", 5)
             self.date = split[0]
             self.time = split[1]
-            self.type = LogType.find_log_type(split[2])
+            self.type = split[2]
             self.source = split[3]
             self.thread = split[4]
             self.details = split[5]
@@ -104,7 +111,6 @@ class LogFormatter:
     def format_line(log_line):
         config = configparser.ConfigParser()
         config.read("/home/hnathani/repos/hoefer/lollygag-logger/OutputCapture/format_config")
-        # import pdb; pdb.set_trace()
 
         if not config.sections():
             return log_line
@@ -112,18 +118,22 @@ class LogFormatter:
         display_log_types = config["DISPLAY LOG TYPES"]
         display_elements = config["DISPLAY ELEMENTS"]
         condense_elements = config["CONDENSE ELEMENTS"]
+        # import pdb; pdb.set_trace()
         output = []
 
+        log_type = log_line.type.upper()
+        if log_type in config["DISPLAY LOG TYPES"] and not LogFormatter._str_to_bool(display_log_types[log_type]):
+            return ""
 
 
-        if log_line.type == LogType.TITLE or log_line.type == LogType.STEP or log_line.type == LogType.OTHER:
+        if log_type == TYPE_TITLE or log_type == TYPE_STEP or log_type == TYPE_OTHER:
             return log_line.details
         if LogFormatter._str_to_bool(display_elements["DisplayDate"]):
             output.append(log_line.date)
         if LogFormatter._str_to_bool(display_elements["DisplayTime"]):
             output.append(log_line.time)
         if LogFormatter._str_to_bool(display_elements["DisplayType"]):
-            output.append(log_line.type.name.ljust(LogType.type_str_len()))
+            output.append(log_line.type.ljust(LogType.type_str_len()))
         if LogFormatter._str_to_bool(display_elements["DisplaySource"]):
             if LogFormatter._str_to_bool(condense_elements["CondSource"]):
                 output.append(log_line.condensed_source())
@@ -147,11 +157,18 @@ class LogFormatter:
 
 
 def format_print_file(filepath):
+    # TODO - Edit to associate steps and titles not as type other
     with open(filepath, "r") as file:
         for line in file.readlines():
-            line = line.strip("\n\\n")
-            f = LogFormatter.format_line(LogLine(line), condense_details=True)
-            print f
+            if line == "\n":
+                print ""
+            else:
+                line = line.strip("\n\\n")
+                f = LogFormatter.format_line(LogLine(line))
+                if not f:
+                    continue
+                print f
+
 
 if __name__ == '__main__':
 

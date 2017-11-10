@@ -3,9 +3,11 @@ import sys
 import time
 import tempfile
 from enum import Enum
+import configparser
 import re
 
 LINE_ELEMENTS = ("date", "time", "type", "source", "thread", "details")
+LOG_TYPES = ("DEBUG", "INFO", "STEP", "TITLE", "OTHER")
 
 class LogType(Enum):
     DEBUG = 1
@@ -13,6 +15,11 @@ class LogType(Enum):
     STEP = 3
     TITLE = 4
     OTHER = 5
+
+    # TODO - Figure out a better solution to this
+    @classmethod
+    def type_str_len(cls):
+        return 5
 
     @classmethod
     def find_log_type(cls, log_type_str):
@@ -43,6 +50,7 @@ class LogLine:
         self._parse_line(line)
 
     def _parse_line(self, input):
+        input.strip()
         is_standard = re.match("[0-9]{4}\-[0-9]{2}\-[0-9]{2}", input)
         if is_standard:
             split = input.split(" ", 5)
@@ -90,39 +98,59 @@ class LogLine:
         return str_element
 
 class LogFormatter:
+    VALID_TRUE_INPUT = ("true", "yes", "t", "y", "1")
 
     @staticmethod
-    def format_line(log_line, condense_details=False, date=True, time=True, type=True, source=True,
-                    thread=True, details=True):
-        output = []
+    def format_line(log_line):
+        config = configparser.ConfigParser()
+        config.read("/home/hnathani/repos/hoefer/lollygag-logger/OutputCapture/format_config")
         # import pdb; pdb.set_trace()
+
+        if not config.sections():
+            return log_line
+
+        display_log_types = config["DISPLAY LOG TYPES"]
+        display_elements = config["DISPLAY ELEMENTS"]
+        condense_elements = config["CONDENSE ELEMENTS"]
+        output = []
+
+
 
         if log_line.type == LogType.TITLE or log_line.type == LogType.STEP or log_line.type == LogType.OTHER:
             return log_line.details
-        if date:
+        if LogFormatter._str_to_bool(display_elements["DisplayDate"]):
             output.append(log_line.date)
-        if time:
+        if LogFormatter._str_to_bool(display_elements["DisplayTime"]):
             output.append(log_line.time)
-        if type:
-            output.append(log_line.type.name)
-        if source:
-            output.append(log_line.condensed_source())
-        if thread:
-            output.append(log_line.condensed_thread())
-        if details:
-            if condense_details:
+        if LogFormatter._str_to_bool(display_elements["DisplayType"]):
+            output.append(log_line.type.name.ljust(LogType.type_str_len()))
+        if LogFormatter._str_to_bool(display_elements["DisplaySource"]):
+            if LogFormatter._str_to_bool(condense_elements["CondSource"]):
+                output.append(log_line.condensed_source())
+            else:
+                output.append(log_line.source)
+        if LogFormatter._str_to_bool(display_elements["DisplayThread"]):
+            if LogFormatter._str_to_bool(condense_elements["CondThread"]):
+                output.append(log_line.condensed_thread())
+            else:
+                output.append(log_line.thread)
+        if LogFormatter._str_to_bool(display_elements["DisplayDetails"]):
+            if LogFormatter._str_to_bool(condense_elements["CondDetails"]):
                 output.append(log_line.condensed_details())
             else:
                 output.append(log_line.details)
         return " ".join(output)
 
+    @classmethod
+    def _str_to_bool(cls, input):
+        return input.lower() in cls.VALID_TRUE_INPUT
+
 
 def format_print_file(filepath):
     with open(filepath, "r") as file:
         for line in file.readlines():
-            line.strip()
+            line = line.strip("\n\\n")
             f = LogFormatter.format_line(LogLine(line), condense_details=True)
-
             print f
 
 if __name__ == '__main__':
@@ -135,7 +163,10 @@ if __name__ == '__main__':
     # print LogFormatter.format_line(log_line, condense_details=True)
     # print(LogFormatter.format_line(log_line, condense_details=True, source=False, thread=False))
 
-    path = "/home/nathaniel/Repos/lollygag_logger/OutputCapture/test.log"
+    # path = "/home/nathaniel/Repos/lollygag_logger/OutputCapture/test.log"
+    path = "/home/hnathani/vl_artifacts/TsCreateDeleteAccountsVolSnap-2017-09-22T14.12.18/test.log"
+    # path = "/home/hnathani/Documents/OutputCapture/testlogs.log"
+
     format_print_file(path)
 
     log_format = {
@@ -151,8 +182,8 @@ if __name__ == '__main__':
     # print(log_line.type)
     # print(log_line.date)
     #
-    # line = "========================================================================================================="
-    # log_line = LogLine(line)
+    # line = "=========================================================================================================\n"
+    # print LogFormatter.format_line(LogLine(line))
     # print(log_line.type)
     # print(log_line.date)
 

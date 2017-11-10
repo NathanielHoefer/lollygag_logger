@@ -1,0 +1,19 @@
+[DISPLAY LOG TYPES]
+Debug = True
+Info = True
+Step = True
+Title = True
+Other = True
+
+[DISPLAY ELEMENTS]
+DisplayDate = True
+DisplayTime = True
+DisplayType = True
+DisplaySource = True
+DisplayThread = True
+DisplayDetails = True
+
+[CONDENSE ELEMENTS]
+CondSource = True
+CondThread = True
+CondDetails = True

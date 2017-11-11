@@ -9,10 +9,10 @@ Current Functionality:
     - On/Off Debug and Info lines
     - On/Off Date, Time, Type, Source, Thread, and Details in log line
     - On/Off condense source, thread, and detail elements
+    - Take file name input for log file
+    - Automatic generation and retrieval of format_config file
 
 TODO list:
- - Take file name input for log file
- - Automatic generation and retrieval of format_config file
  - Clean up current work and add comments/docstrings
  - Create separate file for starting vl run process and capturing output
  - Handle ERROR and WARNING log types
@@ -57,15 +57,15 @@ class LogType(Enum):
     @classmethod
     def find_log_type(cls, log_type_str):
         if log_type_str.upper() == TYPE_DEBUG:
-            return TYPE_DEBUG
+            return LogType.DEBUG
         elif log_type_str.upper() == TYPE_INFO:
-            return TYPE_INFO
+            return LogType.INFO
         elif re.match("(\-\-\-)+", log_type_str):
-            return TYPE_STEP
+            return LogType.STEP
         elif re.match("(===)+", log_type_str):
-            return TYPE_TITLE
+            return LogType.TITLE
         else:
-            return TYPE_OTHER
+            return LogType.OTHER
 
 
 class LogLine:
@@ -74,9 +74,11 @@ class LogLine:
 
     def __init__(self, line=""):
         self.original_line = line
+        self.type_enum = LogType.OTHER
+
         self.date = ""
         self.time = ""
-        self.type = TYPE_OTHER
+        self.type = ""
         self.source = ""
         self.thread = ""
         self.details = ""
@@ -93,45 +95,42 @@ class LogLine:
             split = input.split(" ", 5)
             self.date = split[0]
             self.time = split[1]
-            self.type = split[2]
+            self.type = split[2].ljust(5)
             self.source = split[3]
             self.thread = split[4]
             self.details = split[5]
+            self.type_enum = LogType.find_log_type(input)
         else:
-            self.type = LogType.find_log_type(input)
             self.details = input
+            self.type_enum = LogType.find_log_type(input)
 
-    def condensed_details(self):
-        return self._condense(self.details, collapse_list=True, collapse_dict=True)
+    def condense(self, element, format_config):
 
-    def condensed_source(self):
-        return self._condense(self.source, collapse_list=True)
+        collapse_dict = format_config["COLLAPSE STRUCTURES"]["dict"]
+        collapse_list = format_config["COLLAPSE STRUCTURES"]["list"]
+        condense_len = int(format_config["LENGTHS"]["condensed_elem_len"])
+        current_str = getattr(self, element)
 
-    def condensed_thread(self):
-        return self._condense(self.thread, collapse_list=True)
+        # Collapse dicts or lists if specified
+        if collapse_dict:
+            current_str = self._collapse(current_str, "{", "}", format_config)
+        if collapse_list:
+            current_str = self._collapse(current_str, "[", "]", format_config)
 
-    def _condense(self, str_element, collapse_list=False, collapse_dict=False):
-        output = str_element
-        if collapse_list and collapse_dict:
-            output = self._collapse(output, "[", "]")
-            output = self._collapse(output, "{", "}")
-        elif collapse_list:
-            output = self._collapse(output, "[", "]")
-        elif collapse_dict:
-            output = self._collapse(output, "{", "}")
+        # Condense length of element if it exceeds specified length
+        if len(current_str) > condense_len:
+            current_str = "".join([current_str[:condense_len - 3], "..."])
 
-        # import pdb; pdb.set_trace()
-        if len(output) > self.CONDENSE_LEN:
-            output = "".join([output[:self.CONDENSE_LEN], "..."])
-        return output.strip()
+        return current_str
 
-    def _collapse(self, str_element, start_char, end_char):
+    @staticmethod
+    def _collapse(str_element, start_char, end_char, format_config):
         start_index = str_element.find(start_char)
         end_index = str_element.find(end_char)
-        if 0 <= start_index <= self.CONDENSE_LEN \
-                and start_index < end_index <= self.CONDENSE_LEN \
-                and end_index - start_index > self.COND_LIST_DISPLAY_LEN:
-            return "".join([str_element[:start_index + self.COND_LIST_DISPLAY_LEN], "...", end_char])
+        collapse_len = int(format_config["LENGTHS"]["collapsed_struct_len"])
+        if 0 <= start_index < end_index and end_index - start_index > collapse_len:
+            return "".join([str_element[:start_index + collapse_len - 4], "...", end_char])
+        # import pdb; pdb.set_trace()
         return str_element
 
 class LogFormatter:
@@ -140,67 +139,85 @@ class LogFormatter:
     @staticmethod
     def format_line(log_line, format_config):
 
+        # Return original line if unable to read format config file
         if not format_config.sections():
             return str(log_line)
 
+        # Retrieve options
         display_log_types = format_config["DISPLAY LOG TYPES"]
         display_elements = format_config["DISPLAY ELEMENTS"]
         condense_elements = format_config["CONDENSE ELEMENTS"]
-        output = []
 
-        log_type = log_line.type.upper()
-        if log_type in format_config["DISPLAY LOG TYPES"] and not LogFormatter._str_to_bool(display_log_types[log_type]):
+        # Don't print line if marked false in config file
+        log_type = log_line.type.lower()
+        if log_type in format_config["DISPLAY LOG TYPES"] \
+                and not LogFormatter.str_to_bool(display_log_types[log_type]):
             return ""
 
-        # TODO - Add condense function for all of these so that these can be iterated through
-        if log_type == TYPE_TITLE or log_type == TYPE_STEP or log_type == TYPE_OTHER:
+        # Return only the line details if not a standard log line
+        standard_logs = (TYPE_DEBUG, TYPE_INFO, TYPE_WARNING, TYPE_ERROR)
+        if log_type.upper().strip() not in standard_logs:
             return log_line.details
-        if LogFormatter._str_to_bool(display_elements["DisplayDate"]):
-            output.append(log_line.date)
-        if LogFormatter._str_to_bool(display_elements["DisplayTime"]):
-            output.append(log_line.time)
-        if LogFormatter._str_to_bool(display_elements["DisplayType"]):
-            output.append(log_line.type.ljust(LogType.type_str_len()))
-        if LogFormatter._str_to_bool(display_elements["DisplaySource"]):
-            if LogFormatter._str_to_bool(condense_elements["CondSource"]):
-                output.append(log_line.condensed_source())
-            else:
-                output.append(log_line.source)
-        if LogFormatter._str_to_bool(display_elements["DisplayThread"]):
-            if LogFormatter._str_to_bool(condense_elements["CondThread"]):
-                output.append(log_line.condensed_thread())
-            else:
-                output.append(log_line.thread)
-        if LogFormatter._str_to_bool(display_elements["DisplayDetails"]):
-            if LogFormatter._str_to_bool(condense_elements["CondDetails"]):
-                output.append(log_line.condensed_details())
-            else:
-                output.append(log_line.details)
-        return " ".join(output)
+
+        # Condense and collapse individual line elements from standard log line
+        elements = []
+        for elem, val in display_elements.items():
+            if LogFormatter.str_to_bool(val):
+                if LogFormatter.str_to_bool(condense_elements[elem]):
+                    elements.append(log_line.condense(elem, format_config))
+                else:
+                    elements.append(getattr(log_line, elem))
+        output = " ".join(elements)
+
+        # Condense entire log line if necessary
+
+        # TODO - Get console size for max len
+        # if LogFormatter.str_to_bool(format_config["LENGTHS"]["use_console_len"]):
+        #     _, max_len = os.popen('stty size', 'r').read().split()
+        # else:
+
+        max_len = int(format_config["LENGTHS"]["max_line_len"])
+        if len(output) > max_len:
+            output = output[:max_len - 3] + "..."
+        return output
 
     @classmethod
-    def _str_to_bool(cls, input):
+    def str_to_bool(cls, input):
         return input.lower() in cls.VALID_TRUE_INPUT
+
 
 def create_config_file():
     config = configparser.ConfigParser()
 
     config.add_section("DISPLAY LOG TYPES")
-    config.set("DISPLAY LOG TYPES", "DEBUG", "False")
-    config.set("DISPLAY LOG TYPES", "INFO", "True")
+    config.set("DISPLAY LOG TYPES", "debug", "False")
+    config.set("DISPLAY LOG TYPES", "info", "True")
 
     config.add_section("DISPLAY ELEMENTS")
-    config.set("DISPLAY ELEMENTS", "DisplayDate", "True")
-    config.set("DISPLAY ELEMENTS", "DisplayTime", "True")
-    config.set("DISPLAY ELEMENTS", "DisplayType", "True")
-    config.set("DISPLAY ELEMENTS", "DisplaySource", "True")
-    config.set("DISPLAY ELEMENTS", "DisplayThread", "True")
-    config.set("DISPLAY ELEMENTS", "DisplayDetails", "True")
+    config.set("DISPLAY ELEMENTS", "date", "False")
+    config.set("DISPLAY ELEMENTS", "time", "True")
+    config.set("DISPLAY ELEMENTS", "type", "True")
+    config.set("DISPLAY ELEMENTS", "source", "True")
+    config.set("DISPLAY ELEMENTS", "thread", "False")
+    config.set("DISPLAY ELEMENTS", "details", "True")
 
     config.add_section("CONDENSE ELEMENTS")
-    config.set("CONDENSE ELEMENTS", "CondSource", "True")
-    config.set("CONDENSE ELEMENTS", "CondThread", "True")
-    config.set("CONDENSE ELEMENTS", "CondDetails", "True")
+    config.set("CONDENSE ELEMENTS", "date", "False")
+    config.set("CONDENSE ELEMENTS", "time", "False")
+    config.set("CONDENSE ELEMENTS", "type", "False")
+    config.set("CONDENSE ELEMENTS", "source", "True")
+    config.set("CONDENSE ELEMENTS", "thread", "True")
+    config.set("CONDENSE ELEMENTS", "details", "True")
+
+    config.add_section("COLLAPSE STRUCTURES")
+    config.set("COLLAPSE STRUCTURES", "list", "True")
+    config.set("COLLAPSE STRUCTURES", "dict", "True")
+
+    config.add_section("LENGTHS")
+    config.set("LENGTHS", "use_console_len", "True")
+    config.set("LENGTHS", "max_line_len", "200")
+    config.set("LENGTHS", "condensed_elem_len", "100")
+    config.set("LENGTHS", "collapsed_struct_len", "30")
 
     with open("format_config", "wb") as configfile:
         config.write(configfile)
@@ -209,12 +226,14 @@ def create_config_file():
 
 def format_print_file(filepath):
 
-    local_cwd = os.getcwd() + "/"
-    if not os.path.isfile(local_cwd + FORMAT_CONFIG_NAME):
+    # Create new format config file if it doesn't already exist in the current working directory
+    local_cwd = filepath[:filepath.rfind("/") + 1]
+    config_path = local_cwd + FORMAT_CONFIG_NAME
+    if not os.path.isfile(config_path):
         create_config_file()
 
     config = configparser.ConfigParser()
-    config.read("/home/nathaniel/Repos/lollygag_logger/OutputCapture/format_config")
+    config.read(config_path)
 
     # config.read("/home/hnathani/repos/hoefer/lollygag-logger/OutputCapture/format_config")
     with open(filepath, "r") as file:
@@ -231,11 +250,12 @@ def format_print_file(filepath):
 
 if __name__ == '__main__':
 
+    # Check for entered path
     if len(sys.argv) == 2:
         file_path = os.getcwd() + "/" + sys.argv[1]
-        _, columns = os.popen('stty size', 'r').read().split()  # TODO - Keep logs to fit within console
-        LogLine.CONDENSE_LEN = columns
-
+    # else:
+    #     print "Please provide the log file to print"
+    #     exit(0)
     else:
         file_path = "/home/nathaniel/Repos/lollygag_logger/OutputCapture/test.log"
         # file_path = "/home/hnathani/vl_artifacts/TsCreateDeleteAccountsVolSnap-2017-09-22T14.12.18/test.log"

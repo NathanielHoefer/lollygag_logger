@@ -1,17 +1,30 @@
 [DISPLAY LOG TYPES]
-debug = False
+debug = True
 info = True
 
 [DISPLAY ELEMENTS]
-displaydate = True
-displaytime = True
-displaytype = True
-displaysource = True
-displaythread = True
-displaydetails = True
+date = False
+time = True
+type = True
+source = True
+thread = False
+details = True
 
 [CONDENSE ELEMENTS]
-condsource = True
-condthread = True
-conddetails = True
+date = False
+time = False
+type = False
+source = True
+thread = True
+details = True
+
+[COLLAPSE STRUCTURES]
+list = True
+dict = True
+
+[LENGTHS]
+use_console_len = True
+max_line_len = 200
+condensed_elem_len = 100
+collapsed_struct_len = 15
 

@@ -1,18 +1,17 @@
 [DISPLAY LOG TYPES]
-DEBUG = False
-INFO = True
-WARNING = False
-OTHER = True
+debug = False
+info = True
 
 [DISPLAY ELEMENTS]
-DisplayDate = True
-DisplayTime = True
-DisplayType = True
-DisplaySource = False
-DisplayThread = True
-DisplayDetails = True
+displaydate = True
+displaytime = True
+displaytype = True
+displaysource = True
+displaythread = True
+displaydetails = True
 
 [CONDENSE ELEMENTS]
-CondSource = True
-CondThread = True
-CondDetails = True
+condsource = True
+condthread = True
+conddetails = True
+

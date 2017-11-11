@@ -1,15 +1,41 @@
+"""
+=========================================================================================================
+Lollygag Logger
+=========================================================================================================
+
+Current Functionality:
+ - Read a log file and print out the contents
+ - Display options:
+    - On/Off Debug and Info lines
+    - On/Off Date, Time, Type, Source, Thread, and Details in log line
+    - On/Off condense source, thread, and detail elements
+
+TODO list:
+ - Take file name input for log file
+ - Automatic generation and retrieval of format_config file
+ - Clean up current work and add comments/docstrings
+ - Create separate file for starting vl run process and capturing output
+ - Handle ERROR and WARNING log types
+
+=========================================================================================================
+"""
+
 import subprocess
 import sys
 import time
 import tempfile
 from enum import Enum
 import configparser
+import os, sys
 import re
+
+FORMAT_CONFIG_NAME = "format_config"
 
 LINE_ELEMENTS = ("date", "time", "type", "source", "thread", "details")
 TYPE_DEBUG = "DEBUG"
 TYPE_INFO = "INFO"
 TYPE_WARNING = "WARNING"
+TYPE_ERROR = "ERROR"
 TYPE_STEP = "STEP"
 TYPE_TITLE = "TITLE"
 TYPE_OTHER = "OTHER"
@@ -47,14 +73,18 @@ class LogLine:
     COND_LIST_DISPLAY_LEN = 10      # Number of characters to show within condensed list or dict
 
     def __init__(self, line=""):
+        self.original_line = line
         self.date = ""
         self.time = ""
-        self.type = LogType.OTHER
+        self.type = TYPE_OTHER
         self.source = ""
         self.thread = ""
         self.details = ""
 
         self._parse_line(line)
+
+    def __str__(self):
+        return self.original_line
 
     def _parse_line(self, input):
         input.strip()
@@ -108,24 +138,21 @@ class LogFormatter:
     VALID_TRUE_INPUT = ("true", "yes", "t", "y", "1")
 
     @staticmethod
-    def format_line(log_line):
-        config = configparser.ConfigParser()
-        config.read("/home/hnathani/repos/hoefer/lollygag-logger/OutputCapture/format_config")
+    def format_line(log_line, format_config):
 
-        if not config.sections():
-            return log_line
+        if not format_config.sections():
+            return str(log_line)
 
-        display_log_types = config["DISPLAY LOG TYPES"]
-        display_elements = config["DISPLAY ELEMENTS"]
-        condense_elements = config["CONDENSE ELEMENTS"]
-        # import pdb; pdb.set_trace()
+        display_log_types = format_config["DISPLAY LOG TYPES"]
+        display_elements = format_config["DISPLAY ELEMENTS"]
+        condense_elements = format_config["CONDENSE ELEMENTS"]
         output = []
 
         log_type = log_line.type.upper()
-        if log_type in config["DISPLAY LOG TYPES"] and not LogFormatter._str_to_bool(display_log_types[log_type]):
+        if log_type in format_config["DISPLAY LOG TYPES"] and not LogFormatter._str_to_bool(display_log_types[log_type]):
             return ""
 
-
+        # TODO - Add condense function for all of these so that these can be iterated through
         if log_type == TYPE_TITLE or log_type == TYPE_STEP or log_type == TYPE_OTHER:
             return log_line.details
         if LogFormatter._str_to_bool(display_elements["DisplayDate"]):
@@ -155,16 +182,48 @@ class LogFormatter:
     def _str_to_bool(cls, input):
         return input.lower() in cls.VALID_TRUE_INPUT
 
+def create_config_file():
+    config = configparser.ConfigParser()
+
+    config.add_section("DISPLAY LOG TYPES")
+    config.set("DISPLAY LOG TYPES", "DEBUG", "False")
+    config.set("DISPLAY LOG TYPES", "INFO", "True")
+
+    config.add_section("DISPLAY ELEMENTS")
+    config.set("DISPLAY ELEMENTS", "DisplayDate", "True")
+    config.set("DISPLAY ELEMENTS", "DisplayTime", "True")
+    config.set("DISPLAY ELEMENTS", "DisplayType", "True")
+    config.set("DISPLAY ELEMENTS", "DisplaySource", "True")
+    config.set("DISPLAY ELEMENTS", "DisplayThread", "True")
+    config.set("DISPLAY ELEMENTS", "DisplayDetails", "True")
+
+    config.add_section("CONDENSE ELEMENTS")
+    config.set("CONDENSE ELEMENTS", "CondSource", "True")
+    config.set("CONDENSE ELEMENTS", "CondThread", "True")
+    config.set("CONDENSE ELEMENTS", "CondDetails", "True")
+
+    with open("format_config", "wb") as configfile:
+        config.write(configfile)
+
+
 
 def format_print_file(filepath):
-    # TODO - Edit to associate steps and titles not as type other
+
+    local_cwd = os.getcwd() + "/"
+    if not os.path.isfile(local_cwd + FORMAT_CONFIG_NAME):
+        create_config_file()
+
+    config = configparser.ConfigParser()
+    config.read("/home/nathaniel/Repos/lollygag_logger/OutputCapture/format_config")
+
+    # config.read("/home/hnathani/repos/hoefer/lollygag-logger/OutputCapture/format_config")
     with open(filepath, "r") as file:
         for line in file.readlines():
             if line == "\n":
                 print ""
             else:
                 line = line.strip("\n\\n")
-                f = LogFormatter.format_line(LogLine(line))
+                f = LogFormatter.format_line(LogLine(line), config)
                 if not f:
                     continue
                 print f
@@ -172,37 +231,18 @@ def format_print_file(filepath):
 
 if __name__ == '__main__':
 
+    if len(sys.argv) == 2:
+        file_path = os.getcwd() + "/" + sys.argv[1]
+        _, columns = os.popen('stty size', 'r').read().split()  # TODO - Keep logs to fit within console
+        LogLine.CONDENSE_LEN = columns
 
-    # line = "2017-10-30 19:13:23.871372 DEBUG [sf_platform.core.retry_handlers.retry_wrapper:624] [MainProcess:MainThread] CallContext 63: UUID=63-6589ff16-bda6-11e7-89b9-6c0b84e27010, function=call_readonly_cluster_api, call_stack=[/home/hnathani/repos/suites_refresh/nathaniel/nathaniel-sr-autoplatform/sf_platform/cluster_api.py:get_constants:3722, from /home/hnathani/repos/suites_refresh/nathaniel/nathaniel-sr-autoplatform/sf_platform/api/ApiVolume.py:purge_deleted_volumes:1207, from /home/hnathani/repos/suites_refresh/nathaniel/nathaniel-sr-autotest-content/steps/AutotestVolume.py:delete_volumes:1984, from /home/hnathani/repos/suites_refresh/nathaniel/nathaniel-sr-autotest-content/tests/bulk_volume/cases/bulk_volume_operations.py:_teardown:692, from /home/hnathani/repos/suites_refresh/nathaniel/nathaniel-sr-autoplatform/valence_repo/valence/camelot/case.py:_internal_teardown:339]"
-    # log_line = LogLine(line)
-    # print(log_line.type)
-    # print(log_line.date)
-    # print LogFormatter.format_line(log_line, condense_details=True)
-    # print(LogFormatter.format_line(log_line, condense_details=True, source=False, thread=False))
+    else:
+        file_path = "/home/nathaniel/Repos/lollygag_logger/OutputCapture/test.log"
+        # file_path = "/home/hnathani/vl_artifacts/TsCreateDeleteAccountsVolSnap-2017-09-22T14.12.18/test.log"
+        # file_path = "/home/hnathani/Documents/OutputCapture/testlogs.log"
 
-    # path = "/home/nathaniel/Repos/lollygag_logger/OutputCapture/test.log"
-    path = "/home/hnathani/vl_artifacts/TsCreateDeleteAccountsVolSnap-2017-09-22T14.12.18/test.log"
-    # path = "/home/hnathani/Documents/OutputCapture/testlogs.log"
+    format_print_file(file_path)
 
-    format_print_file(path)
-
-    log_format = {
-        "date":True,
-        "time":True,
-        "type":True,
-        "details":True
-    }
-    #print log_line.format_line(**log_format)
-
-    # line = "2017-10-30 19:13:22.383767 INFO [sf_platform.api.ApiVolume.delete_volumes:1185] [MainProcess:MainThread] Deleting volumes: [203, 204]."
-    # log_line = LogLine(line)
-    # print(log_line.type)
-    # print(log_line.date)
-    #
-    # line = "=========================================================================================================\n"
-    # print LogFormatter.format_line(LogLine(line))
-    # print(log_line.type)
-    # print(log_line.date)
 
 
     # print("Starting")

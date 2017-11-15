@@ -27,6 +27,12 @@ python lollygag_logger.py -vl suite.path.etc
 If you experience any issues with this script (which there stands a good possibility) or you would like
 suggest an improvement, you can reach me at my email listed above.
 
+
+Improvements to implement:
+ - Split reading from a file handle and formatting into two separate processes in a producer-consumer
+ model.
+ - Treat reading from file and executing vl process as both file handles to be passed into a single funct
+
 =========================================================================================================
 """
 
@@ -334,30 +340,32 @@ def format_vl_output(vl_run_path):
 
     # Begin vl run subprocess
     proc = subprocess.Popen(["vl", "run", vl_run_path], stdout=subprocess.PIPE,
-                            bufsize=1, universal_newlines=False)
+                                bufsize=1, universal_newlines=False)
+    try:
 
-    # Capture output from vl run, format it, and print it to the console
-    for line in iter(proc.stdout.readline, b''):
+        # Capture output from vl run, format it, and print it to the console
+        for line in iter(proc.stdout.readline, b''):
 
-        # Check for format config file update
-        current_config_modify_time = os.path.getmtime(config_path)
-        if current_config_modify_time > initial_config_modify_time:
-            config.read(config_path)
-            initial_config_modify_time = current_config_modify_time
+            # Check for format config file update
+            current_config_modify_time = os.path.getmtime(config_path)
+            if current_config_modify_time > initial_config_modify_time:
+                config.read(config_path)
+                initial_config_modify_time = current_config_modify_time
 
-        # Format and print log line
-        formatted_line = LogFormatter.format_line_for_console(line, config)
-        if formatted_line == "\n":
-            print ""
-        elif formatted_line == "":
-            continue
-        else:
-            print formatted_line
-        sys.stdout.flush()
+            # Format and print log line
+            formatted_line = LogFormatter.format_line_for_console(line, config)
+            if formatted_line == "\n":
+                print ""
+            elif formatted_line == "":
+                continue
+            else:
+                print formatted_line
+            sys.stdout.flush()
 
-    proc.stdout.close()
-    proc.wait()
-
+        proc.stdout.close()
+        proc.wait()
+    except KeyboardInterrupt:
+        proc.kill()
 
 if __name__ == '__main__':
 

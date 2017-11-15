@@ -128,6 +128,8 @@ class LogFormatter:
         """
 
         # Check to see if line is empty, and create log line object to parse the line
+        if unformatted_line == "\n":
+            return "\n"
         line = unformatted_line.strip("\n\\n")
         if not line:
             return ""
@@ -243,9 +245,12 @@ class LogFormatter:
         return input.lower() in cls.VALID_TRUE_INPUT
 
 
-def create_config_file():
+def create_config_file(filepath = ""):
     """Creates a config parser file within the current working directory containing the options for
-    formatting log lines."""
+    formatting log lines.
+
+    :param str filepath: File path to store format config file. Default is current working directory.
+    """
 
     config = configparser.ConfigParser()
 
@@ -287,40 +292,68 @@ def create_config_file():
     config.set("LENGTHS", "collapsed_struct_len", "30")     # This value includes the "[" and "...]"
 
     # Write config to file in current working directory
-    with open(FORMAT_CONFIG_FILE_NAME, "wb") as configfile:
+    filepath = filepath if filepath else FORMAT_CONFIG_FILE_NAME
+    with open(filepath, "wb") as configfile:
         config.write(configfile)
 
 
 def format_print_file_to_console(filepath):
     """Prints a log file to the console using format information found within a format config file within
-    the current working directory. If the format config file isn't found, a new one is created using
+    the same directory as the log file. If the format config file isn't found, a new one is created using
     default settings.
 
     :param str filepath: File path of the log file to be printed.
     """
 
     # Create new format config file if it doesn't already exist in the current working directory
-    local_cwd = filepath[:filepath.rfind("/") + 1]
-    config_path = local_cwd + FORMAT_CONFIG_NAME
+    config_path = filepath[:filepath.rfind("/") + 1] + FORMAT_CONFIG_NAME
     if not os.path.isfile(config_path):
-        create_config_file()
+        create_config_file(config_path)
     config = configparser.ConfigParser()
     config.read(config_path)
 
     # Open the log file, format each line, and print to the console.
     with open(filepath, "r") as logfile:
         for line in logfile.readlines():
-            f = LogFormatter.format_line_for_console(line, config)
-            print f
+            formatted_line = LogFormatter.format_line_for_console(line, config)
+            if formatted_line == "\n":
+                print ""
+            elif formatted_line == "":
+                continue
+            else:
+                print formatted_line
 
 def format_vl_output(vl_run_path):
-    pass
+
+    # Create new format config file if it doesn't already exist in the current working directory
+    config_path = os.getcwd() + "/" + FORMAT_CONFIG_FILE_NAME
+    if not os.path.isfile(config_path):
+        create_config_file()
+    config = configparser.ConfigParser()
+    config.read(config_path)
+
+    proc = subprocess.Popen(["vl", "run", sys.argv[1]], stdout=subprocess.PIPE,
+                            bufsize=1, universal_newlines=False)
+    for line in iter(proc.stdout.readline, b''):
+        formatted_line = LogFormatter.format_line_for_console(line, config)
+        print formatted_line
+        sys.stdout.flush()
+
+
+            # print("Captured Output: {}".format(line.decode("utf-8").rstrip(), flush=True))
+    proc.stdout.close()
+    proc.wait()
+
 
 if __name__ == '__main__':
 
     # Check for entered path
     if len(sys.argv) == 2:
-        file_path = os.getcwd() + "/" + sys.argv[1]
+        arg_path = sys.argv[1]
+        if arg_path[0] == "/" or arg_path[0] == "~":
+            file_path = arg_path
+        else:
+            file_path = os.getcwd() + "/" + sys.argv[1]
     # else:
     #     print "Please provide the log file to print"
     #     exit(0)

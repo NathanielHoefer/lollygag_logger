@@ -1,5 +1,5 @@
 [DISPLAY LOG TYPES]
-debug = True
+debug = False
 info = True
 
 [DISPLAY ELEMENTS]
@@ -26,5 +26,5 @@ dict = True
 use_console_len = True
 max_line_len = 200
 condensed_elem_len = 100
-collapsed_struct_len = 15
+collapsed_struct_len = 30
 

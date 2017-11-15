@@ -2,36 +2,49 @@
 =========================================================================================================
 Lollygag Logger
 =========================================================================================================
+by Nathaniel Hoefer
+Contact: nathaniel.hoefer@netapp.com
+Version: 1.0
+Last Updated: 11/14/2017
 
-Current Functionality:
- - Read a log file and print out the contents
- - Display options:
-    - On/Off Debug and Info lines
-    - On/Off Date, Time, Type, Source, Thread, and Details in log line
-    - On/Off condense source, thread, and detail elements
-    - Take file name input for log file
-    - Automatic generation and retrieval of format_config file
+This is the first iteration of a script to present a more legible output from the vl suite execution.
 
-TODO list:
- - Clean up current work and add comments/docstrings
- - Create separate file for starting vl run process and capturing output
- - Handle ERROR and WARNING log types
+Currently, this is capable of reading from a log file by using the -f argument to specify a log file to
+read from. This method will also generate a format config file during the initial run in the same
+location as the log file. This format config file allows you - the user - to specify how you would like
+the output to be formatted.
+
+Another option is to run this script using the -vl argument, passing in the suite path just as though
+you are running the "vl run suite.path.etc" command. You will still have to execute this from within the
+same directory as if you were executing the command by itself. The big difference is this too generates
+a format config file, that you can change at any point during your test to see future logs in the new
+format. This format config file will be generated in your current working directory.
+
+Script execution examples:
+python lollygag_logger.py -f test.log
+python lollygag_logger.py -vl suite.path.etc
+
+If you experience any issues with this script (which there stands a good possibility) or you would like
+suggest an improvement, you can reach me at my email listed above.
 
 =========================================================================================================
 """
 
 import subprocess
-import sys
-import time
-import tempfile
-from enum import Enum
 import configparser
-import os, sys
+import os
+import sys
 import re
+import argparse
 
-FORMAT_CONFIG_NAME = "format_config"
+# Descriptions for arg parse
+PROGRAM = "Lollygag Logger"
+DESCRIPTION = "This script will print out formatted logs from a log file or format the output of the " \
+              "vl run command."
+ARG_FILE_DESC = "Path of the log file to print."
+ARG_VL_DESC = "The path to the suite as used in the 'vl run' command."
 
-LINE_ELEMENTS = ("date", "time", "type", "source", "thread", "details")
+# Types of logs found during vl execution
 TYPE_DEBUG = "DEBUG"
 TYPE_INFO = "INFO"
 TYPE_WARNING = "WARNING"
@@ -39,44 +52,14 @@ TYPE_ERROR = "ERROR"
 TYPE_STEP = "STEP"
 TYPE_TITLE = "TITLE"
 TYPE_OTHER = "OTHER"
-LOG_TYPES = (TYPE_DEBUG, TYPE_INFO, TYPE_WARNING, TYPE_STEP, TYPE_TITLE, TYPE_OTHER)
 
 FORMAT_CONFIG_FILE_NAME = "format_config"
 
-
-class LogType(Enum):
-    DEBUG = 1
-    INFO = 2
-    STEP = 3
-    TITLE = 4
-    OTHER = 5
-
-    # TODO - Figure out a better solution to this
-    @classmethod
-    def type_str_len(cls):
-        return 5
-
-    @classmethod
-    def find_log_type(cls, log_type_str):
-        if log_type_str.upper() == TYPE_DEBUG:
-            return LogType.DEBUG
-        elif log_type_str.upper() == TYPE_INFO:
-            return LogType.INFO
-        elif re.match("(\-\-\-)+", log_type_str):
-            return LogType.STEP
-        elif re.match("(===)+", log_type_str):
-            return LogType.TITLE
-        else:
-            return LogType.OTHER
-
-
 class LogLine:
-    CONDENSE_LEN = 100              # Max number of characters to show of details when condensed
-    COND_LIST_DISPLAY_LEN = 10      # Number of characters to show within condensed list or dict
+    """Stores log line into its various elements per the vl logging."""
 
     def __init__(self, line=""):
         self.original_line = line
-        self.type_enum = LogType.OTHER
 
         self.date = ""
         self.time = ""
@@ -90,21 +73,26 @@ class LogLine:
     def __str__(self):
         return self.original_line
 
-    def _parse_line(self, input):
-        input.strip()
-        is_standard = re.match("[0-9]{4}\-[0-9]{2}\-[0-9]{2}", input)
+    def _parse_line(self, input_str):
+        """Determines if the log line is in standard vl logging format based on the format of the
+        timestamp (I know, its not very thorough, but it works for now). If the line is not in standard
+        format, the line is stored in details as is.
+
+        :param str input: The unformatted log line to be parsed.
+        :return:
+        """
+        input_str.strip()
+        is_standard = re.match("[0-9]{4}\-[0-9]{2}\-[0-9]{2}", input_str)
         if is_standard:
-            split = input.split(" ", 5)
+            split = input_str.split(" ", 5)
             self.date = split[0]
             self.time = split[1]
             self.type = split[2].ljust(5)
             self.source = split[3]
             self.thread = split[4]
             self.details = split[5]
-            self.type_enum = LogType.find_log_type(input)
         else:
-            self.details = input
-            self.type_enum = LogType.find_log_type(input)
+            self.details = input_str
 
 
 class LogFormatter:
@@ -165,14 +153,14 @@ class LogFormatter:
                     elements.append(getattr(log_line, elem))
         output = " ".join(elements)
 
-        # Condense entire log line if necessary
+        # Grab max line length from format config file or from console width
+        if LogFormatter.str_to_bool(format_config["LENGTHS"]["use_console_len"]):
+            _, console_width = os.popen('stty size', 'r').read().split()
+            max_len = int(console_width)
+        else:
+            max_len = int(format_config["LENGTHS"]["max_line_len"])
 
-        # TODO - Get console size for max len
-        # if LogFormatter.str_to_bool(format_config["LENGTHS"]["use_console_len"]):
-        #     _, max_len = os.popen('stty size', 'r').read().split()
-        # else:
-
-        max_len = int(format_config["LENGTHS"]["max_line_len"])
+        # Condense entire log line if beyond max length
         if len(output) > max_len:
             output = output[:max_len - 3] + "..."
         return output
@@ -186,7 +174,7 @@ class LogFormatter:
         :param LogLine log_line: Line to be condensed and collapsed if requested.
         :param str element: Name of element within the LogLine object to be condensed
         :param configparser.ConfigParser format_config: ConfigParser containing the options for desired
-            formatting. Refer to Create Config File function for further details.
+            formatting. Refer to Create Config File function for further config details.
         :returns: String of the condensed and collapsed log_line
         """
 
@@ -216,7 +204,7 @@ class LogFormatter:
         :param str str_element: The log line element str containing the data structure
         :param str data_struct: "list" or "dict" indicating what data structure to collapse
         :param configparser.ConfigParser format_config: ConfigParser containing the options for desired
-            formatting. Refer to Create Config File function for further details.
+            formatting. Refer to Create Config File function for further config details.
         :return: String of the element with the specified collapsed structure.
         """
         # Determine struct entered
@@ -300,13 +288,13 @@ def create_config_file(filepath = ""):
 def format_print_file_to_console(filepath):
     """Prints a log file to the console using format information found within a format config file within
     the same directory as the log file. If the format config file isn't found, a new one is created using
-    default settings.
+    default settings. Refer to Create Config File function for further config details.
 
     :param str filepath: File path of the log file to be printed.
     """
 
-    # Create new format config file if it doesn't already exist in the current working directory
-    config_path = filepath[:filepath.rfind("/") + 1] + FORMAT_CONFIG_NAME
+    # Create new format config file if it doesn't already exist in the same directory as the log file
+    config_path = filepath[:filepath.rfind("/") + 1] + FORMAT_CONFIG_FILE_NAME
     if not os.path.isfile(config_path):
         create_config_file(config_path)
     config = configparser.ConfigParser()
@@ -323,7 +311,18 @@ def format_print_file_to_console(filepath):
             else:
                 print formatted_line
 
+
 def format_vl_output(vl_run_path):
+    """Captures the log lines from the output of a "vl run <vl_run_path>" and formats them as specified
+    in a format config file. This function will need to be call in the same location as a typical vl run
+    would be called in to ensure that the suite path is correct.
+
+    The format config file is generated in the current working directory and
+    can be updated. Refer to Create Config File function for further config details.
+
+    :param str vl_run_path: The path to the suite to be executed
+    :return:
+    """
 
     # Create new format config file if it doesn't already exist in the current working directory
     config_path = os.getcwd() + "/" + FORMAT_CONFIG_FILE_NAME
@@ -331,45 +330,53 @@ def format_vl_output(vl_run_path):
         create_config_file()
     config = configparser.ConfigParser()
     config.read(config_path)
+    initial_config_modify_time = os.path.getmtime(config_path)
 
-    proc = subprocess.Popen(["vl", "run", sys.argv[1]], stdout=subprocess.PIPE,
+    # Begin vl run subprocess
+    proc = subprocess.Popen(["vl", "run", vl_run_path], stdout=subprocess.PIPE,
                             bufsize=1, universal_newlines=False)
+
+    # Capture output from vl run, format it, and print it to the console
     for line in iter(proc.stdout.readline, b''):
+
+        # Check for format config file update
+        current_config_modify_time = os.path.getmtime(config_path)
+        if current_config_modify_time > initial_config_modify_time:
+            config.read(config_path)
+            initial_config_modify_time = current_config_modify_time
+
+        # Format and print log line
         formatted_line = LogFormatter.format_line_for_console(line, config)
-        print formatted_line
+        if formatted_line == "\n":
+            print ""
+        elif formatted_line == "":
+            continue
+        else:
+            print formatted_line
         sys.stdout.flush()
 
-
-            # print("Captured Output: {}".format(line.decode("utf-8").rstrip(), flush=True))
     proc.stdout.close()
     proc.wait()
 
 
 if __name__ == '__main__':
 
-    # Check for entered path
-    if len(sys.argv) == 2:
-        arg_path = sys.argv[1]
+    # Argument setup and parsing
+    parser = argparse.ArgumentParser(prog=PROGRAM, description=DESCRIPTION)
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("-f",  action="store", dest="log_filepath", help=ARG_FILE_DESC)
+    group.add_argument("-vl", action="store", dest="vl_suite_path", help=ARG_VL_DESC)
+    args = parser.parse_args()
+
+    # Validate that args exist and execute printing the logs
+    if args.log_filepath:
+        arg_path = args.log_filepath
         if arg_path[0] == "/" or arg_path[0] == "~":
             file_path = arg_path
         else:
-            file_path = os.getcwd() + "/" + sys.argv[1]
-    # else:
-    #     print "Please provide the log file to print"
-    #     exit(0)
+            file_path = os.getcwd() + "/" + arg_path
+        format_print_file_to_console(file_path)
+    elif args.vl_suite_path:
+        format_vl_output(args.vl_suite_path)
     else:
-        file_path = "/home/nathaniel/Repos/lollygag_logger/OutputCapture/test.log"
-        # file_path = "/home/hnathani/vl_artifacts/TsCreateDeleteAccountsVolSnap-2017-09-22T14.12.18/test.log"
-        # file_path = "/home/hnathani/Documents/OutputCapture/testlogs.log"
-
-    format_print_file_to_console(file_path)
-
-
-
-    # print("Starting")
-    # proc = subprocess.Popen(['python', r'C:\Users\natha\Downloads\OutputCapture\output_print.py'], stdout=subprocess.PIPE,
-    #                         bufsize=1, universal_newlines=False)
-    # for line in iter(proc.stdout.readline, b''):
-    #     print("Captured Output: {}".format(line.decode("utf-8").rstrip(), flush=True))
-    # proc.stdout.close()
-    # proc.wait()
+        print "Please pass valid arguments"

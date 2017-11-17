@@ -1,10 +1,12 @@
+#!/usr/bin/env python
+
 """
 =========================================================================================================
 Lollygag Logger
 =========================================================================================================
 by Nathaniel Hoefer
 Contact: nathaniel.hoefer@netapp.com
-Version: 1.0
+Version: 0.5
 Last Updated: 11/14/2017
 
 This is the first iteration of a script to present a more legible output from the vl suite execution.

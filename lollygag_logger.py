@@ -44,6 +44,8 @@ import os
 import sys
 import re
 import argparse
+from threading import Thread
+import Queue
 
 # Descriptions for arg parse
 PROGRAM = "Lollygag Logger"
@@ -62,6 +64,61 @@ TYPE_TITLE = "TITLE"
 TYPE_OTHER = "OTHER"
 
 FORMAT_CONFIG_FILE_NAME = "format_config"
+
+
+class LollygagLogger:
+    """Primary class that reads log lines individually from a file handle and handles formatting those
+    lines based on the LogLine class and LogFormatter used.
+    """
+
+    def __init__(self, stream_handle, log_line, log_formatter):
+        """Stores the components necessary for the run function
+
+        :param stream_handle: an iterable that iterates line by line
+        :param log_line: the class extended from LogLine that uses the uses the desired parser for the
+            logs to be formatted.
+        :param log_formatter: the class extended from LogFormatter that formats the passed LogLine JSON
+            information
+        """
+
+        self.stream_handle = stream_handle
+        self.log_line = log_line
+        self.log_formatter = log_formatter
+        self.queue = Queue.Queue()
+
+    def run(self):
+        """Executes the read and format threads concurrently."""
+        # TODO
+
+    def read(self):
+        """Continuously reads logs line by line from the stream_handle and stores them as LogLine objects
+        in JSON format to the queue."""
+
+        for unformatted_line in self.stream_handle:
+            if unformatted_line == "\n":
+                self._store("")
+                continue
+            unformatted_line= unformatted_line.strip("\n\\n")
+            if unformatted_line == "":
+                continue
+            else:
+                self._store(unformatted_line)
+
+    def format(self):
+        """Continuously looks for logs in JSON format within the queue and then formats them according
+        to the log_formatter class
+        """
+
+        formatter = self.log_formatter()
+
+        while True:
+            unformatted_line = self.queue.get(block=True)
+            formatter.format(unformatted_line)
+
+    def _store(self, unformatted_line):
+        """Stores the unformatted line as a LogLine object in JSON format"""
+        self.queue.put(self.log_line(unformatted_line).to_json())
+
 
 class LogLine:
     """Stores log line into its various elements per the vl logging."""

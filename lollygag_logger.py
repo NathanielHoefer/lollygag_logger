@@ -38,6 +38,7 @@ Improvements to implement:
 =========================================================================================================
 """
 
+from abc import ABCMeta, abstractmethod
 import subprocess
 import configparser
 import os
@@ -75,10 +76,10 @@ class LollygagLogger:
         """Stores the components necessary for the run function
 
         :param stream_handle: an iterable that iterates line by line
-        :param log_line: the class extended from LogLine that uses the uses the desired parser for the
-            logs to be formatted.
-        :param log_formatter: the class extended from LogFormatter that formats the passed LogLine JSON
-            information
+        :param LogLine log_line: the class extended from LogLine that uses the uses the desired parser
+            for the logs to be formatted.
+        :param LegacyLogFormatter log_formatter: an instance extended from LogFormatter that formats the
+            passed LogLine JSON information
         :ivar Queue queue: The queue that allows for communication between the read and format threads
         :ivar bool read_complete: Identifies whether the read thread is completed reading.
         """
@@ -108,10 +109,19 @@ class LollygagLogger:
         """Continuously looks for logs in JSON format within the queue and then formats them according
         to the log_formatter class
         """
-        formatter = self.log_formatter()
         while not self.read_complete:
-            unformatted_line = self.queue.get(block=True)
-            formatter.format(unformatted_line)
+            unformatted_json_line = self.queue.get(block=True)
+            self.log_formatter.format(unformatted_json_line)
+
+
+class LogFormatter:
+    """Abstract base class to be used in the LollygagLogger to format incoming JSON LogLine objects and
+    handle them as needed.
+    """
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def format(self, unformatted_json_line): pass
 
 
 class LogLine:
@@ -154,7 +164,7 @@ class LogLine:
             self.details = input_str
 
 
-class LogFormatter:
+class LegacyLogFormatter:
     """Class containing log line format functions"""
 
     # Valid values from ConfigParser that result in True
@@ -194,7 +204,7 @@ class LogFormatter:
         # Don't print line if marked false in config file
         log_type = log_line.type.strip().lower()
         if log_type in format_config["DISPLAY LOG TYPES"] \
-                and not LogFormatter.str_to_bool(display_log_types[log_type]):
+                and not LegacyLogFormatter.str_to_bool(display_log_types[log_type]):
             return ""
 
         # Return only the line details if not a standard log line
@@ -205,15 +215,15 @@ class LogFormatter:
         # Condense and collapse individual line elements from standard log line
         elements = []
         for elem, val in display_elements.items():
-            if LogFormatter.str_to_bool(val):
-                if LogFormatter.str_to_bool(condense_elements[elem]):
-                    elements.append(LogFormatter._static_condense(log_line, elem, format_config))
+            if LegacyLogFormatter.str_to_bool(val):
+                if LegacyLogFormatter.str_to_bool(condense_elements[elem]):
+                    elements.append(LegacyLogFormatter._static_condense(log_line, elem, format_config))
                 else:
                     elements.append(getattr(log_line, elem))
         output = " ".join(elements)
 
         # Grab max line length from format config file or from console width
-        if LogFormatter.str_to_bool(format_config["LENGTHS"]["use_console_len"]):
+        if LegacyLogFormatter.str_to_bool(format_config["LENGTHS"]["use_console_len"]):
             _, console_width = os.popen('stty size', 'r').read().split()
             max_len = int(console_width)
         else:
@@ -244,9 +254,9 @@ class LogFormatter:
 
         # Collapse dicts or lists if specified
         if collapse_dict:
-            current_str = LogFormatter._collapse(current_str, "dict", format_config)
+            current_str = LegacyLogFormatter._collapse(current_str, "dict", format_config)
         if collapse_list:
-            current_str = LogFormatter._collapse(current_str, "list", format_config)
+            current_str = LegacyLogFormatter._collapse(current_str, "list", format_config)
 
         # Condense length of element if it exceeds specified length
         if len(current_str) > condense_len:
@@ -362,7 +372,7 @@ def format_print_file_to_console(filepath):
     # Open the log file, format each line, and print to the console.
     with open(filepath, "r") as logfile:
         for line in logfile.readlines():
-            formatted_line = LogFormatter.format_line_for_console(line, config)
+            formatted_line = LegacyLogFormatter.format_line_for_console(line, config)
             if formatted_line == "\n":
                 print ""
             elif formatted_line == "":
@@ -406,7 +416,7 @@ def format_vl_output(vl_run_path):
                 initial_config_modify_time = current_config_modify_time
 
             # Format and print log line
-            formatted_line = LogFormatter.format_line_for_console(line, config)
+            formatted_line = LegacyLogFormatter.format_line_for_console(line, config)
             if formatted_line == "\n":
                 print ""
             elif formatted_line == "":

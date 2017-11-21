@@ -76,10 +76,10 @@ class LollygagLogger:
         """Stores the components necessary for the run function
 
         :param stream_handle: an iterable that iterates line by line
-        :param LogLine log_line: the class extended from LogLine that uses the uses the desired parser
+        :param LogLine. log_line: the class extended from LogLine that uses the uses the desired parser
             for the logs to be formatted.
-        :param LegacyLogFormatter log_formatter: an instance extended from LogFormatter that formats the
-            passed LogLine JSON information
+        :param LogFormatter log_formatter: an instance extended from LogFormatter that formats the
+            passed LogLine.
         :ivar Queue queue: The queue that allows for communication between the read and format threads
         :ivar bool read_complete: Identifies whether the read thread is completed reading.
         """
@@ -100,31 +100,41 @@ class LollygagLogger:
 
     def read(self):
         """Continuously reads logs line by line from the stream_handle and stores them as LogLine objects
-        in JSON format to the queue."""
+        to the queue."""
         for unformatted_line in self.stream_handle:
-            self.queue.put(self.log_line(unformatted_line).to_json())
+            self.queue.put(self.log_line(unformatted_line))
         self.read_complete = True
 
     def format(self):
-        """Continuously looks for logs in JSON format within the queue and then formats them according
-        to the log_formatter class
+        """Continuously looks for LogLine objects within the queue and then formats them according to the
+        log_formatter class
         """
         while not self.read_complete:
-            unformatted_json_line = self.queue.get(block=True)
-            self.log_formatter.format(unformatted_json_line)
+            unformatted_log_line = self.queue.get(block=True)
+            self.log_formatter.format(unformatted_log_line)
 
 
 class LogFormatter:
-    """Abstract base class to be used in the LollygagLogger to format incoming JSON LogLine objects and
-    handle them as needed.
-    """
+    """Abstract base class\used in the LollygagLogger to format incoming LogLine objects."""
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def format(self, unformatted_json_line): pass
+    def format(self, log_line):
+        """Subclasses must handle a LogLine object."""
+        pass
 
 
 class LogLine:
+    """Abstract base class used in the LollygagLogger to tokenize a single log."""
+
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def __init__(self, original_line):
+        self.original_line = original_line
+
+
+class LegacyLogLine:
     """Stores log line into its various elements per the vl logging."""
 
     def __init__(self, line=""):
@@ -190,7 +200,7 @@ class LegacyLogFormatter:
         line = unformatted_line.strip("\n\\n")
         if not line:
             return ""
-        log_line = LogLine(line)
+        log_line = LegacyLogLine(line)
 
         # Return original line if unable to read format config file
         if not format_config.sections():
@@ -240,8 +250,8 @@ class LegacyLogFormatter:
         collapses lists and dictionaries that exceed a given length. All specified in the format_config
         file. Doesn't change the values of the log_line object.
 
-        :param LogLine log_line: Line to be condensed and collapsed if requested.
-        :param str element: Name of element within the LogLine object to be condensed
+        :param LegacyLogLine log_line: Line to be condensed and collapsed if requested.
+        :param str element: Name of element within the LegacyLogLine object to be condensed
         :param configparser.ConfigParser format_config: ConfigParser containing the options for desired
             formatting. Refer to Create Config File function for further config details.
         :returns: String of the condensed and collapsed log_line

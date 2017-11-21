@@ -141,7 +141,7 @@ class LogFormatter:
         condense_elements = format_config["CONDENSE ELEMENTS"]
 
         # Don't print line if marked false in config file
-        log_type = log_line.type.lower()
+        log_type = log_line.type.strip().lower()
         if log_type in format_config["DISPLAY LOG TYPES"] \
                 and not LogFormatter.str_to_bool(display_log_types[log_type]):
             return ""

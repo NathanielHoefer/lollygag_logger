@@ -79,45 +79,39 @@ class LollygagLogger:
             logs to be formatted.
         :param log_formatter: the class extended from LogFormatter that formats the passed LogLine JSON
             information
+        :ivar Queue queue: The queue that allows for communication between the read and format threads
+        :ivar bool read_complete: Identifies whether the read thread is completed reading.
         """
 
         self.stream_handle = stream_handle
         self.log_line = log_line
         self.log_formatter = log_formatter
         self.queue = Queue.Queue()
+        self.read_complete = False
 
     def run(self):
         """Executes the read and format threads concurrently."""
-        # TODO
+        threads = [Thread(self.read), Thread(self.format)]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
 
     def read(self):
         """Continuously reads logs line by line from the stream_handle and stores them as LogLine objects
         in JSON format to the queue."""
-
         for unformatted_line in self.stream_handle:
-            if unformatted_line == "\n":
-                self._store("")
-                continue
-            unformatted_line= unformatted_line.strip("\n\\n")
-            if unformatted_line == "":
-                continue
-            else:
-                self._store(unformatted_line)
+            self.queue.put(self.log_line(unformatted_line).to_json())
+        self.read_complete = True
 
     def format(self):
         """Continuously looks for logs in JSON format within the queue and then formats them according
         to the log_formatter class
         """
-
         formatter = self.log_formatter()
-
-        while True:
+        while not self.read_complete:
             unformatted_line = self.queue.get(block=True)
             formatter.format(unformatted_line)
-
-    def _store(self, unformatted_line):
-        """Stores the unformatted line as a LogLine object in JSON format"""
-        self.queue.put(self.log_line(unformatted_line).to_json())
 
 
 class LogLine:
@@ -198,7 +192,7 @@ class LogFormatter:
         condense_elements = format_config["CONDENSE ELEMENTS"]
 
         # Don't print line if marked false in config file
-        log_type = log_line.type.lower()
+        log_type = log_line.type.strip().lower()
         if log_type in format_config["DISPLAY LOG TYPES"] \
                 and not LogFormatter.str_to_bool(display_log_types[log_type]):
             return ""

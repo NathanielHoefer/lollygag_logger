@@ -134,11 +134,11 @@ class LogLine:
         self.original_line = original_line
 
 
-class LegacyLogLine:
-    """Stores log line into its various elements per the vl logging."""
+class ValenceLogLine(LogLine):
+    """Stores log line into its various tokens per the vl logging."""
 
-    def __init__(self, line=""):
-        self.original_line = line
+    def __init__(self, original_line=""):
+        super(ValenceLogLine, self).__init__(original_line)
 
         self.date = ""
         self.time = ""
@@ -147,17 +147,17 @@ class LegacyLogLine:
         self.thread = ""
         self.details = ""
 
-        self._parse_line(line)
+        self._tokenize_line(original_line)
 
     def __str__(self):
         return self.original_line
 
-    def _parse_line(self, input_str):
+    def _tokenize_line(self, input_str):
         """Determines if the log line is in standard vl logging format based on the format of the
         timestamp (I know, its not very thorough, but it works for now). If the line is not in standard
         format, the line is stored in details as is.
 
-        :param str input: The unformatted log line to be parsed.
+        :param str input_str: The unformatted log line to be parsed.
         :return:
         """
         input_str.strip()
@@ -200,7 +200,7 @@ class LegacyLogFormatter:
         line = unformatted_line.strip("\n\\n")
         if not line:
             return ""
-        log_line = LegacyLogLine(line)
+        log_line = LogLine(line)
 
         # Return original line if unable to read format config file
         if not format_config.sections():

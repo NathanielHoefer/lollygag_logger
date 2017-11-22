@@ -174,6 +174,17 @@ class ValenceLogLine(LogLine):
             self.details = input_str
 
 
+class ConsoleOutput(LogFormatter):
+    """Class containing log line format functions"""
+
+    def __init__(self, format_config):
+        self.format_config = format_config
+
+    def format(self, log_line):
+        # TODO - Move LogLine into LogFormatter section rather than in the LogReader
+        pass
+
+
 class LegacyLogFormatter:
     """Class containing log line format functions"""
 

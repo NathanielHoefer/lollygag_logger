@@ -71,6 +71,9 @@ FORMAT_CONFIG_FILE_NAME = "format_config"
 class ValenceLogLine(LogLine):
     """Stores log line into its various tokens per the vl logging."""
 
+    TOKEN_COUNT = 6
+    LOG_LEVELS = ["DEBUG", "INFO", "WARNING", "ERROR"]
+
     def __init__(self, original_line=""):
         super(ValenceLogLine, self).__init__(original_line)
 
@@ -80,6 +83,7 @@ class ValenceLogLine(LogLine):
         self.source = ""
         self.thread = ""
         self.details = ""
+        self.standard_format = False
 
         self._tokenize_line(original_line)
 
@@ -94,18 +98,31 @@ class ValenceLogLine(LogLine):
         :param str input_str: The unformatted log line to be parsed.
         :return:
         """
+
+        # Check to see if there are the expected number of tokens in the line. If not, then mark as
+        # a non-standard vl format, and return
+        # TODO - Check for STEP and TITLE line first and don't use token count as verification
         input_str.strip()
-        is_standard = re.match("[0-9]{4}\-[0-9]{2}\-[0-9]{2}", input_str)
-        if is_standard:
-            split = input_str.split(" ", 5)
-            self.date = split[0]
-            self.time = split[1]
-            self.type = split[2].ljust(5)
-            self.source = split[3]
-            self.thread = split[4]
-            self.details = split[5]
+        split = input_str.split(" ", self.TOKEN_COUNT - 1)
+        if len(split) != self.TOKEN_COUNT:
+            self.standard_format = False
+            return
         else:
-            self.details = input_str
+            self.standard_format = True
+
+        self.date = split[0] if re.match("[0-9]{4}\-[0-9]{2}\-[0-9]{2}", split[0]) else ""
+        self.time = split[1] if re.match("[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{6}", split[1]) else ""
+        if split[2] in self.LOG_LEVELS:
+            self.type = split[2]
+        elif re.match("={5,}", split[2]):
+            self.type = "STEP"
+        elif re.match("-{5,}", split[2]):
+            self.type = "TITLE"
+        else:
+            self.type = "OTHER"
+        self.source = split[3] if re.match("\[.:.\]", split[3]) else ""
+        self.thread = split[4] if re.match("\[.:.\]", split[4]) else ""
+        self.details = split[5]
 
 
 class ConsoleOutput(LogFormatter):
@@ -123,53 +140,57 @@ class ConsoleOutput(LogFormatter):
         self.format_config = format_config
 
     def format(self, unformatted_log_line):
+        pass
+        # # Check to see if line is empty, and create log line object to parse the line
+        # if unformatted_log_line == "\n":
+        #     return "\n"
+        # line = unformatted_log_line.strip("\n\\n")
+        # if not line:
+        #     return ""
+        # log_line = self.log_line_cls(line)
+        #
+        # # Retrieve options
+        # display_log_types = self.format_config["DISPLAY LOG TYPES"]
+        # display_elements = self.format_config["DISPLAY ELEMENTS"]
+        # condense_elements = self.format_config["CONDENSE ELEMENTS"]
+        #
+        # # Don't print line if marked false in config file
+        # log_type = log_line.type.strip().lower()
+        # if log_type in self.format_config["DISPLAY LOG TYPES"] \
+        #         and not LegacyLogFormatter.str_to_bool(display_log_types[log_type]):
+        #     return ""
+        #
+        # # Return only the line details if not a standard log line
+        # standard_logs = (TYPE_DEBUG, TYPE_INFO, TYPE_WARNING, TYPE_ERROR)
+        # if log_type.upper().strip() not in standard_logs:
+        #     return log_line.details
+        #
+        # # Condense and collapse individual line elements from standard log line
+        # elements = []
+        # for elem, val in display_elements.items():
+        #     if LegacyLogFormatter.str_to_bool(val):
+        #         if LegacyLogFormatter.str_to_bool(condense_elements[elem]):
+        #             elements.append(
+        #                 LegacyLogFormatter._static_condense(log_line, elem, self.format_config))
+        #         else:
+        #             elements.append(getattr(log_line, elem))
+        # output = " ".join(elements)
+        #
+        # # Grab max line length from format config file or from console width
+        # if LegacyLogFormatter.str_to_bool(self.format_config["LENGTHS"]["use_console_len"]):
+        #     _, console_width = os.popen('stty size', 'r').read().split()
+        #     max_len = int(console_width)
+        # else:
+        #     max_len = int(self.format_config["LENGTHS"]["max_line_len"])
+        #
+        # # Condense entire log line if beyond max length
+        # if len(output) > max_len:
+        #     output = output[:max_len - 3] + "..."
+        # return output
 
-        # Check to see if line is empty, and create log line object to parse the line
-        if unformatted_log_line == "\n":
-            return "\n"
-        line = unformatted_log_line.strip("\n\\n")
-        if not line:
-            return ""
-        log_line = self.log_line_cls(line)
-
-        # Retrieve options
-        display_log_types = self.format_config["DISPLAY LOG TYPES"]
-        display_elements = self.format_config["DISPLAY ELEMENTS"]
-        condense_elements = self.format_config["CONDENSE ELEMENTS"]
-
-        # Don't print line if marked false in config file
-        log_type = log_line.type.strip().lower()
-        if log_type in self.format_config["DISPLAY LOG TYPES"] \
-                and not LegacyLogFormatter.str_to_bool(display_log_types[log_type]):
-            return ""
-
-        # Return only the line details if not a standard log line
-        standard_logs = (TYPE_DEBUG, TYPE_INFO, TYPE_WARNING, TYPE_ERROR)
-        if log_type.upper().strip() not in standard_logs:
-            return log_line.details
-
-        # Condense and collapse individual line elements from standard log line
-        elements = []
-        for elem, val in display_elements.items():
-            if LegacyLogFormatter.str_to_bool(val):
-                if LegacyLogFormatter.str_to_bool(condense_elements[elem]):
-                    elements.append(
-                        LegacyLogFormatter._static_condense(log_line, elem, self.format_config))
-                else:
-                    elements.append(getattr(log_line, elem))
-        output = " ".join(elements)
-
-        # Grab max line length from format config file or from console width
-        if LegacyLogFormatter.str_to_bool(self.format_config["LENGTHS"]["use_console_len"]):
-            _, console_width = os.popen('stty size', 'r').read().split()
-            max_len = int(console_width)
-        else:
-            max_len = int(self.format_config["LENGTHS"]["max_line_len"])
-
-        # Condense entire log line if beyond max length
-        if len(output) > max_len:
-            output = output[:max_len - 3] + "..."
-        return output
+    def str_to_bool(input):
+        """Evaluates bool value of string input based on LogFormatter.VALID_TRUE_INPUT"""
+        return input.lower() in VALID_TRUE_INPUT
 
 
 class LegacyLogFormatter:

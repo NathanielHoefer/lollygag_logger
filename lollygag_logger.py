@@ -72,20 +72,17 @@ class LollygagLogger:
     lines based on the LogLine class and LogFormatter used.
     """
 
-    def __init__(self, stream_handle, log_line, log_formatter):
+    def __init__(self, stream_handle, log_formatter):
         """Stores the components necessary for the run function
 
-        :param stream_handle: an iterable that iterates line by line
-        :param LogLine. log_line: the class extended from LogLine that uses the uses the desired parser
-            for the logs to be formatted.
-        :param LogFormatter log_formatter: an instance extended from LogFormatter that formats the
+        :ivar stream_handle: an iterable that iterates line by line
+        :ivar LogFormatter log_formatter: an instance extended from LogFormatter that formats the
             passed LogLine.
         :ivar Queue queue: The queue that allows for communication between the read and format threads
         :ivar bool read_complete: Identifies whether the read thread is completed reading.
         """
 
         self.stream_handle = stream_handle
-        self.log_line = log_line
         self.log_formatter = log_formatter
         self.queue = Queue.Queue()
         self.read_complete = False
@@ -101,8 +98,8 @@ class LollygagLogger:
     def read(self):
         """Continuously reads logs line by line from the stream_handle and stores them as LogLine objects
         to the queue."""
-        for unformatted_line in self.stream_handle:
-            self.queue.put(self.log_line(unformatted_line))
+        for unformatted_log_line in self.stream_handle:
+            self.queue.put(unformatted_log_line)
         self.read_complete = True
 
     def format(self):
@@ -175,12 +172,17 @@ class ValenceLogLine(LogLine):
 
 
 class ConsoleOutput(LogFormatter):
-    """Class containing log line format functions"""
+    """Class containing log line format functions.
 
-    def __init__(self, format_config):
+    :ivar log_line_cls: the LogLine class used to parse the unformatted log lines
+    :ivar format_config: the configparser that contains all of the user options
+    """
+
+    def __init__(self, log_line_cls, format_config):
+        self.log_line_cls = log_line_cls
         self.format_config = format_config
 
-    def format(self, log_line):
+    def format(self, unformatted_log_line):
         # TODO - Move LogLine into LogFormatter section rather than in the LogReader
         pass
 

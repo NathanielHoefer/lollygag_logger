@@ -47,7 +47,7 @@ import re
 import argparse
 from threading import Thread
 import Queue
-import vl_console
+from lollygag_logger import LogLine, LogFormatter
 
 # Descriptions for arg parse
 PROGRAM = "Lollygag Logger"
@@ -69,60 +69,82 @@ FORMAT_CONFIG_FILE_NAME = "format_config"
 
 
 class ValenceLogLine(LogLine):
-    """Stores log line into its various tokens per the vl logging."""
+    """Stores log line into its various fields per the vl logging.
 
-    TOKEN_COUNT = 6
+    Lines with all fields matching with the exception of the details token missing will still be
+    considered in standard format. If any other field doesn't match, all of the fields are returned
+    to normal, and the type is considered OTHER with the original line being retained.
+
+    STEP and TITLE types are unique in that the line is stored in the details
+
+    :cvar list LOG_LEVELS: The unique log levels specified by Valence
+    :cvar list FIELDS: The unique sections found within a Valence log in standard format
+    :cvar int TOKEN_COUNT: The number of fields
+    """
+
     LOG_LEVELS = ["DEBUG", "INFO", "WARNING", "ERROR"]
+    FIELDS = ["date", "time", "type", "source", "thread", "details"]
+    TOKEN_COUNT = len(FIELDS)
 
     def __init__(self, original_line=""):
         super(ValenceLogLine, self).__init__(original_line)
-
-        self.date = ""
-        self.time = ""
-        self.type = ""
-        self.source = ""
-        self.thread = ""
-        self.details = ""
-        self.standard_format = False
-
+        self._default_vals()
         self._tokenize_line(original_line)
 
     def __str__(self):
         return self.original_line
 
+    def _default_vals(self):
+        """Set all field to default values."""
+        self.date = ""
+        self.time = ""
+        self.type = "OTHER"
+        self.source = ""
+        self.thread = ""
+        self.details = ""
+        self.standard_format = False
+
     def _tokenize_line(self, input_str):
-        """Determines if the log line is in standard vl logging format based on the format of the
-        timestamp (I know, its not very thorough, but it works for now). If the line is not in standard
-        format, the line is stored in details as is.
+        """Determines if the log line is in standard vl logging format based on regular expressions.
 
         :param str input_str: The unformatted log line to be parsed.
         :return:
         """
 
-        # Check to see if there are the expected number of tokens in the line. If not, then mark as
-        # a non-standard vl format, and return
-        # TODO - Check for STEP and TITLE line first and don't use token count as verification
-        input_str.strip()
-        split = input_str.split(" ", self.TOKEN_COUNT - 1)
-        if len(split) != self.TOKEN_COUNT:
-            self.standard_format = False
+        # Check to see if line is a STEP identified by a row of '-' or a TITLE identified by a row of '='
+        input_str = input_str.strip()
+        if re.match("^={5,}$", input_str):
+            self.type = "TITLE"
+            self.details = input_str
             return
-        else:
-            self.standard_format = True
+        if re.match("^-{5,}$", input_str):
+            self.type = "STEP"
+            self.details = input_str
+            return
 
-        self.date = split[0] if re.match("[0-9]{4}\-[0-9]{2}\-[0-9]{2}", split[0]) else ""
-        self.time = split[1] if re.match("[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{6}", split[1]) else ""
+        # Check to see if there are the expected number of tokens in the line. Currently expecting there
+        # to be 5 or 6 tokens. If not, then mark as a non-standard vl format, and return
+        split = input_str.split(" ", self.TOKEN_COUNT - 1)
+        if not (self.TOKEN_COUNT - 1 <= len(split) <= self.TOKEN_COUNT):
+            return
+
+        # Assign token to proper field if format matches correctly
+        self.date = split[0] if re.match("^\d{4}\-\d{2}\-\d{2}$", split[0]) else ""
+        self.time = split[1] if re.match("^\d{2}:\d{2}:\d{2}\.\d{6}$", split[1]) else ""
         if split[2] in self.LOG_LEVELS:
             self.type = split[2]
-        elif re.match("={5,}", split[2]):
-            self.type = "STEP"
-        elif re.match("-{5,}", split[2]):
-            self.type = "TITLE"
-        else:
-            self.type = "OTHER"
-        self.source = split[3] if re.match("\[.:.\]", split[3]) else ""
-        self.thread = split[4] if re.match("\[.:.\]", split[4]) else ""
-        self.details = split[5]
+        self.source = split[3] if re.match("^\[.*:.*\]$", split[3]) else ""
+        self.thread = split[4] if re.match("^\[.*:.*\]$", split[4]) else ""
+        self.details = split[5] if len(split) == self.TOKEN_COUNT else ""
+
+        # If any of the fields are empty with the exception of details, change type to OTHER and move all
+        # line data to the details field.
+        for field in self.FIELDS:
+            if field is not "details" and getattr(self, field) is "":
+                self._default_vals()
+                return
+
+        self.standard_format = True
 
 
 class ConsoleOutput(LogFormatter):

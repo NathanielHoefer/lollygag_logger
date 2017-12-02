@@ -334,7 +334,7 @@ def create_config_file(filepath=""):
             format_config.set(section, option[0], option[1])
 
     # Write config to file in current working directory
-    filepath = filepath if filepath else FORMAT_CONFIG_FILE_NAME
+    filepath = filepath + FORMAT_CONFIG_FILE_NAME if filepath else FORMAT_CONFIG_FILE_NAME
     with open(filepath, "wb") as configfile:
         format_config.write(configfile)
 

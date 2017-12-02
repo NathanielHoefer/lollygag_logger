@@ -93,7 +93,11 @@ class ValenceLogLine(LogLine):
         self._tokenize_line(original_line)
 
     def __str__(self):
-        return self.original_line
+        if self.standard_format:
+            return " ".join([field for field in self.FIELDS if field != ""])
+        else:
+            return self.original_line
+
 
     def _default_vals(self):
         """Set all field to default values."""
@@ -116,11 +120,9 @@ class ValenceLogLine(LogLine):
         input_str = input_str.strip()
         if re.match("^={5,}$", input_str):
             self.type = "TITLE"
-            self.details = input_str
             return
         if re.match("^-{5,}$", input_str):
             self.type = "STEP"
-            self.details = input_str
             return
 
         # Check to see if there are the expected number of tokens in the line. Currently expecting there
@@ -144,7 +146,6 @@ class ValenceLogLine(LogLine):
             if field is not "details" and getattr(self, field) is "":
                 self._default_vals()
                 return
-
         self.standard_format = True
 
 
@@ -158,62 +159,120 @@ class ValenceConsoleOutput(LogFormatter):
     # Valid values from ConfigParser that result in True
     VALID_TRUE_INPUT = ("true", "yes", "t", "y", "1")
 
+    log_queue = []
+
     def __init__(self, log_line_cls, format_config):
         self.log_line_cls = log_line_cls
         self.format_config = format_config
+        self.log_line = None
 
     def format(self, unformatted_log_line):
-        pass
-        # # Check to see if line is empty, and create log line object to parse the line
-        # if unformatted_log_line == "\n":
-        #     return "\n"
-        # line = unformatted_log_line.strip("\n\\n")
-        # if not line:
-        #     return ""
-        # log_line = self.log_line_cls(line)
-        #
-        # # Retrieve options
-        # display_log_types = self.format_config["DISPLAY LOG TYPES"]
-        # display_elements = self.format_config["DISPLAY FIELDS"]
-        # condense_elements = self.format_config["CONDENSE FIELDS"]
-        #
-        # # Don't print line if marked false in config file
-        # log_type = log_line.type.strip().lower()
-        # if log_type in self.format_config["DISPLAY LOG TYPES"] \
-        #         and not LegacyLogFormatter.str_to_bool(display_log_types[log_type]):
-        #     return ""
-        #
-        # # Return only the line details if not a standard log line
-        # standard_logs = (TYPE_DEBUG, TYPE_INFO, TYPE_WARNING, TYPE_ERROR)
-        # if log_type.upper().strip() not in standard_logs:
-        #     return log_line.details
-        #
-        # # Condense and collapse individual line elements from standard log line
-        # elements = []
-        # for elem, val in display_elements.items():
-        #     if LegacyLogFormatter.str_to_bool(val):
-        #         if LegacyLogFormatter.str_to_bool(condense_elements[elem]):
-        #             elements.append(
-        #                 LegacyLogFormatter._static_condense(log_line, elem, self.format_config))
-        #         else:
-        #             elements.append(getattr(log_line, elem))
-        # output = " ".join(elements)
-        #
-        # # Grab max line length from format config file or from console width
-        # if LegacyLogFormatter.str_to_bool(self.format_config["LENGTHS"]["use_console_len"]):
-        #     _, console_width = os.popen('stty size', 'r').read().split()
-        #     max_len = int(console_width)
-        # else:
-        #     max_len = int(self.format_config["LENGTHS"]["max_line_len"])
-        #
-        # # Condense entire log line if beyond max length
-        # if len(output) > max_len:
-        #     output = output[:max_len - 3] + "..."
-        # return output
+        """Prints the formatted log line to the console based on the format config file options."""
 
-    def str_to_bool(self, str_bool_val):
+        # Check to see if line is empty, and create log line object to parse the line
+        if unformatted_log_line == "\n":
+            print ""
+            return
+        line = unformatted_log_line.strip("\n\\n")
+        if not line:
+            return
+        self.log_line = self.log_line_cls(line)
+
+        # Skip line if type is marked to not display
+        display_log_types = self.format_config["DISPLAY LOG TYPES"]
+        log_type = self.log_line.type.strip().lower()
+        if not self._str_to_bool(display_log_types[log_type]):
+            return
+
+        # Remove and condense fields in standard logs per format config file
+        if self.log_line.standard_format:
+            self._remove_fields()
+            self._condense_fields()
+
+        # Grab max line length from format config file or from console width
+        formatted_line = str(self.log_line)
+        if self._str_to_bool(self.format_config["LENGTHS"]["use_console_len"]):
+            _, console_width = os.popen('stty size', 'r').read().split()
+            max_len = int(console_width)
+        else:
+            max_len = int(self.format_config["LENGTHS"]["max_line_len"])
+
+        # Condense entire log line if beyond max length
+        if len(formatted_line) > max_len:
+            formatted_line = formatted_line[:max_len - 3] + "..."
+        print formatted_line
+
+    def _str_to_bool(self, str_bool_val):
         """Evaluates bool value of string input based on LogFormatter.VALID_TRUE_INPUT"""
         return str_bool_val.lower() in self.VALID_TRUE_INPUT
+
+    def _remove_fields(self):
+        """Remove field from line if marked not to display."""
+        display_fields = self.format_config["DISPLAY FIELDS"]
+        for field, val in display_fields.items():
+            if not self._str_to_bool(val):
+                setattr(self.log_line, field, "")
+
+    def _condense_fields(self):
+        """Condense and collapse individual line fields to the specified length in format config."""
+        condense_fields = self.format_config["CONDENSE FIELDS"]
+        for field, val in condense_fields.items():
+            if self._str_to_bool(val):
+                self._condense_field(field)
+
+    def _condense_field(self, field):
+        """Condenses each field of a log line per the format config file to a specific length, and
+        collapses lists and dictionaries that exceed a given length. All specified in the format_config
+        file and updates the log_line object.
+
+        :param str field: The LogLine field to be condensed.
+        """
+
+        collapse_dict = self.format_config["COLLAPSE STRUCTURES"]["dict"]
+        collapse_list = self.format_config["COLLAPSE STRUCTURES"]["list"]
+        condense_len = int(self.format_config["LENGTHS"]["condensed_field_len"])
+        current_field_str = getattr(self.log_line, field)
+
+        # Collapse dicts or lists if specified
+        if collapse_dict:
+            current_field_str = self._collapse_struct(current_field_str, "dict")
+        if collapse_list:
+            current_field_str = self._collapse_struct(current_field_str, "list")
+
+        # Condense length of element if it exceeds specified length
+        if len(current_field_str) > condense_len:
+            current_field_str = "".join([current_field_str[:condense_len - 3], "..."])
+        setattr(self.log_line, field, current_field_str)
+
+    def _collapse_struct(self, field_str, data_struct):
+        """Shortens the display of the first encountered list or dictionary to a specified length within
+        a given string.
+
+        Should update to locate recursively, but not extremely important right now.
+
+        :param str field_str: The log line element str containing the data structure
+        :param str data_struct: "list" or "dict" indicating what data structure to collapse
+        :return: String of the element with the specified collapsed structure.
+        """
+        # Determine struct entered
+        if data_struct == "dict":
+            start_char = "{"
+            end_char = "}"
+        elif data_struct == "list":
+            start_char = "["
+            end_char = "]"
+        else:
+            return field_str
+
+        # Initialize collapse values - probably can find library to do this more efficiently
+        start_index = field_str.find(start_char)
+        end_index = field_str.find(end_char)
+        collapse_len = int(self.format_config["LENGTHS"]["collapsed_struct_len"])
+
+        # Collapse first data structure found - should make this to
+        if 0 <= start_index < end_index and end_index - start_index > collapse_len:
+            return "".join([field_str[:start_index + collapse_len - 4], "...", end_char])
+        return field_str
 
 
 def create_config_file(filepath=""):
@@ -264,7 +323,7 @@ def create_config_file(filepath=""):
     config_fields["LENGTHS"] = [
         ("use_console_len",     "True"),    # Use console width for max log line length
         ("max_line_len",        "200"),     # Max length of log line to be printed
-        ("condensed_elem_len",  "100"),     # This value includes the "..."
+        ("condensed_field_len", "100"),     # This value includes the "..."
         ("collapsed_struct_len", "30")]     # This value includes the "[" and "...]"
 
     # Create and add sections and options to configparser object
@@ -280,193 +339,6 @@ def create_config_file(filepath=""):
         format_config.write(configfile)
 
     return format_config
-
-
-class LegacyLogFormatter:
-    """Class containing log line format functions"""
-
-    # Valid values from ConfigParser that result in True
-    VALID_TRUE_INPUT = ("true", "yes", "t", "y", "1")
-
-    @staticmethod
-    def format_line_for_console(unformatted_line, format_config):
-        """With the options within the format_config, the unformatted log line is formatted and returned.
-
-        In order for the line to be fully formatted, the log must contain the following elements and
-        order, otherwise the line will be only has the option to be condensed.
-        <Date: 9999-99-99> <Time: 99:99:99.999999> <Type> <Source> <Thread> <Details>
-
-        :param str unformatted_line: Any single line of log information
-        :param configparser.ConfigParser format_config: ConfigParser containing the options for desired
-            formatting. Refer to Create Config File function for further details.
-        :return: String of updated log line.
-        """
-
-        # Check to see if line is empty, and create log line object to parse the line
-        if unformatted_line == "\n":
-            return "\n"
-        line = unformatted_line.strip("\n\\n")
-        if not line:
-            return ""
-        log_line = LogLine(line)
-
-        # Return original line if unable to read format config file
-        if not format_config.sections():
-            return str(log_line)
-
-        # Retrieve options
-        display_log_types = format_config["DISPLAY LOG TYPES"]
-        display_elements = format_config["DISPLAY FIELDS"]
-        condense_elements = format_config["CONDENSE FIELDS"]
-
-        # Don't print line if marked false in config file
-        log_type = log_line.type.strip().lower()
-        if log_type in format_config["DISPLAY LOG TYPES"] \
-                and not LegacyLogFormatter.str_to_bool(display_log_types[log_type]):
-            return ""
-
-        # Return only the line details if not a standard log line
-        standard_logs = (TYPE_DEBUG, TYPE_INFO, TYPE_WARNING, TYPE_ERROR)
-        if log_type.upper().strip() not in standard_logs:
-            return log_line.details
-
-        # Condense and collapse individual line elements from standard log line
-        elements = []
-        for elem, val in display_elements.items():
-            if LegacyLogFormatter.str_to_bool(val):
-                if LegacyLogFormatter.str_to_bool(condense_elements[elem]):
-                    elements.append(LegacyLogFormatter._static_condense(log_line, elem, format_config))
-                else:
-                    elements.append(getattr(log_line, elem))
-        output = " ".join(elements)
-
-        # Grab max line length from format config file or from console width
-        if LegacyLogFormatter.str_to_bool(format_config["LENGTHS"]["use_console_len"]):
-            _, console_width = os.popen('stty size', 'r').read().split()
-            max_len = int(console_width)
-        else:
-            max_len = int(format_config["LENGTHS"]["max_line_len"])
-
-        # Condense entire log line if beyond max length
-        if len(output) > max_len:
-            output = output[:max_len - 3] + "..."
-        return output
-
-    @staticmethod
-    def _static_condense(log_line, element, format_config):
-        """Condenses each element of a log line per the format config file to a specific length, and
-        collapses lists and dictionaries that exceed a given length. All specified in the format_config
-        file. Doesn't change the values of the log_line object.
-
-        :param LegacyLogLine log_line: Line to be condensed and collapsed if requested.
-        :param str element: Name of element within the LegacyLogLine object to be condensed
-        :param configparser.ConfigParser format_config: ConfigParser containing the options for desired
-            formatting. Refer to Create Config File function for further config details.
-        :returns: String of the condensed and collapsed log_line
-        """
-
-        collapse_dict = format_config["COLLAPSE STRUCTURES"]["dict"]
-        collapse_list = format_config["COLLAPSE STRUCTURES"]["list"]
-        condense_len = int(format_config["LENGTHS"]["condensed_elem_len"])
-        current_str = getattr(log_line, element)
-
-        # Collapse dicts or lists if specified
-        if collapse_dict:
-            current_str = LegacyLogFormatter._collapse(current_str, "dict", format_config)
-        if collapse_list:
-            current_str = LegacyLogFormatter._collapse(current_str, "list", format_config)
-
-        # Condense length of element if it exceeds specified length
-        if len(current_str) > condense_len:
-            current_str = "".join([current_str[:condense_len - 3], "..."])
-        return current_str
-
-    @staticmethod
-    def _collapse(str_element, data_struct, format_config):
-        """Shortens the display of the first encountered list or dictionarie to a specified length within
-        a given string.
-
-        Should update to locate recursively, but not extremely important right now.
-
-        :param str str_element: The log line element str containing the data structure
-        :param str data_struct: "list" or "dict" indicating what data structure to collapse
-        :param configparser.ConfigParser format_config: ConfigParser containing the options for desired
-            formatting. Refer to Create Config File function for further config details.
-        :return: String of the element with the specified collapsed structure.
-        """
-        # Determine struct entered
-        if data_struct == "dict":
-            start_char = "{"
-            end_char = "}"
-        elif data_struct == "list":
-            start_char = "["
-            end_char = "]"
-        else:
-            return str_element
-
-        # Initialize collapse values - probably can find library to do this more efficiently
-        start_index = str_element.find(start_char)
-        end_index = str_element.find(end_char)
-        collapse_len = int(format_config["LENGTHS"]["collapsed_struct_len"])
-
-        # Collapse first data structure found - should make this to
-        if 0 <= start_index < end_index and end_index - start_index > collapse_len:
-            return "".join([str_element[:start_index + collapse_len - 4], "...", end_char])
-        return str_element
-
-    @classmethod
-    def str_to_bool(cls, input):
-        """Evaluates bool value of string input based on LogFormatter.VALID_TRUE_INPUT"""
-        return input.lower() in cls.VALID_TRUE_INPUT
-
-
-def create_config_file(filepath=""):
-    """Creates a config parser file within the current working directory containing the options for
-    formatting log lines.
-
-    :param str filepath: File path to store format config file. Default is current working directory.
-    """
-
-    config = configparser.ConfigParser()
-
-    # Log lines identified by the following types to be printed or ignored
-    config.add_section("DISPLAY LOG TYPES")
-    config.set("DISPLAY LOG TYPES", "debug", "False")
-    config.set("DISPLAY LOG TYPES", "info", "True")
-
-    # Elements within each log line to be printed or ignored
-    config.add_section("DISPLAY FIELDS")
-    config.set("DISPLAY FIELDS", "date", "False")
-    config.set("DISPLAY FIELDS", "time", "True")
-    config.set("DISPLAY FIELDS", "type", "True")
-    config.set("DISPLAY FIELDS", "source", "True")
-    config.set("DISPLAY FIELDS", "thread", "False")
-    config.set("DISPLAY FIELDS", "details", "True")
-
-    # Elements within each log line to be condensed to the specified length under the LENGTHS section -
-    # condensed_elem_len
-    config.add_section("CONDENSE FIELDS")
-    config.set("CONDENSE FIELDS", "date", "False")
-    config.set("CONDENSE FIELDS", "time", "False")
-    config.set("CONDENSE FIELDS", "type", "False")
-    config.set("CONDENSE FIELDS", "source", "True")
-    config.set("CONDENSE FIELDS", "thread", "True")
-    config.set("CONDENSE FIELDS", "details", "True")
-
-    # Data structures within elements to be condensed to be collapsed to the specified length under the
-    # LENGTHS section - collapsed_struct_len
-    config.add_section("COLLAPSE STRUCTURES")
-    config.set("COLLAPSE STRUCTURES", "list", "True")
-    config.set("COLLAPSE STRUCTURES", "dict", "True")
-
-    # Various length options
-    config.add_section("LENGTHS")
-
-
-    # Write config to file in current working directory
-    filepath = filepath if filepath else FORMAT_CONFIG_FILE_NAME
-    with open(filepath, "wb") as configfile:
-        config.write(configfile)
 
 
 def format_print_file_to_console(filepath):

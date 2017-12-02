@@ -37,7 +37,7 @@ class TestTypeTokenTitle(unittest.TestCase):
     def test_five_equal(self):
         line = LogLine("=====")
         self.assertEqual(line.type, "TITLE")
-        self.assertEqual(line.details, "=====")
+        self.assertEqual(line.original_line, "=====")
 
     def test_long_equal(self):
         line = LogLine("===============================================================================")
@@ -46,7 +46,6 @@ class TestTypeTokenTitle(unittest.TestCase):
     def test_four_equal(self):
         line = LogLine("====")
         self.assertEqual(line.type, "OTHER")
-        self.assertEqual(line.details, "")
 
     def test_bad_begin(self):
         line = LogLine("bad=====")
@@ -66,7 +65,7 @@ class TestTypeTokenStep(unittest.TestCase):
     def test_five_equal(self):
         line = LogLine("-----")
         self.assertEqual(line.type, "STEP")
-        self.assertEqual(line.details, "-----")
+        self.assertEqual(line.original_line, "-----")
 
     def test_long_equal(self):
         line = LogLine("-------------------------------------------------------------------------------")
@@ -75,7 +74,6 @@ class TestTypeTokenStep(unittest.TestCase):
     def test_four_equal(self):
         line = LogLine("----")
         self.assertEqual(line.type, "OTHER")
-        self.assertEqual(line.details, "")
 
     def test_bad_begin(self):
         line = LogLine("bad-----")
@@ -181,14 +179,15 @@ class TestStandardFormat(unittest.TestCase):
         self.assertEqual(line.details, "")
 
     def test_full_title(self):
-        line = LogLine("===============================================================")
+        line = LogLine("=========================================================")
         self.assertFalse(line.standard_format)
         self.assertEqual(line.date, "")
         self.assertEqual(line.time, "")
         self.assertEqual(line.type, "TITLE")
         self.assertEqual(line.source, "")
         self.assertEqual(line.thread, "")
-        self.assertEqual(line.details, "===============================================================")
+        self.assertEqual(line.details, "")
+        self.assertEqual(line.original_line, "=========================================================")
 
     def test_not_sf(self):
         line = LogLine("Test Suite: Starting Teardown of TsBulkVolOperations")

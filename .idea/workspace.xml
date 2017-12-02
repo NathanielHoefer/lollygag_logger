@@ -3,6 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="62c82476-33e8-460f-991d-9b151f209b90" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/testing/vl_logline_unittest.py" afterPath="$PROJECT_DIR$/testing/vl_logline_unittest.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/vl_lollygag_logger.py" afterPath="$PROJECT_DIR$/vl_lollygag_logger.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -19,8 +20,8 @@
           <file leaf-file-name="vl_lollygag_logger.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/vl_lollygag_logger.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="143">
-                  <caret line="224" column="0" lean-forward="true" selection-start-line="224" selection-start-column="0" selection-end-line="224" selection-end-column="0" />
+                <state relative-caret-position="2513">
+                  <caret line="340" column="24" lean-forward="false" selection-start-line="340" selection-start-column="24" selection-end-line="340" selection-end-column="24" />
                   <folding>
                     <element signature="e#1927#1966#0" expanded="true" />
                   </folding>
@@ -43,12 +44,12 @@
         </leaf>
       </split-first>
       <split-second>
-        <leaf>
+        <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
           <file leaf-file-name="vl_logline_unittest.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/testing/vl_logline_unittest.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="13">
-                  <caret line="6" column="0" lean-forward="false" selection-start-line="6" selection-start-column="0" selection-end-line="6" selection-end-column="0" />
+                <state relative-caret-position="600">
+                  <caret line="190" column="0" lean-forward="true" selection-start-line="190" selection-start-column="0" selection-end-line="190" selection-end-column="0" />
                   <folding>
                     <element signature="e#290#346#0" expanded="true" />
                   </folding>
@@ -109,7 +110,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -127,6 +127,7 @@
         </subPane>
       </pane>
       <pane id="Scope" />
+      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -177,12 +178,17 @@
       <option name="presentableId" value="Default" />
       <updated>1512085028328</updated>
     </task>
+    <task id="LOCAL-00001" summary="Update create_config_file for better execution and cleanliness">
+      <created>1512176034423</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1512176034423</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="Unittests_in_vl_logline_unittest_py - 2017.11.30 at 19h 28m 45s.xml">
-      <configuration name="Unittests in vl_logline_unittest.py" configurationId="tests" />
-    </history-entry>
     <history-entry file="Unittests_in_vl_logline_unittest_py - 2017.11.30 at 19h 29m 16s.xml">
       <configuration name="Unittests in vl_logline_unittest.py" configurationId="tests" />
     </history-entry>
@@ -208,6 +214,9 @@
       <configuration name="Unittests in vl_logline_unittest.py" configurationId="tests" />
     </history-entry>
     <history-entry file="Unittests_in_vl_logline_unittest_py - 2017.11.30 at 19h 59m 31s.xml">
+      <configuration name="Unittests in vl_logline_unittest.py" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittests_in_vl_logline_unittest_py - 2017.12.01 at 21h 36m 52s.xml">
       <configuration name="Unittests in vl_logline_unittest.py" configurationId="tests" />
     </history-entry>
   </component>
@@ -238,11 +247,45 @@
   <component name="VcsContentAnnotationSettings">
     <option name="myLimit" value="2678400000" />
   </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Update create_config_file for better execution and cleanliness" />
+    <option name="LAST_COMMIT_MESSAGE" value="Update create_config_file for better execution and cleanliness" />
+  </component>
   <component name="XDebuggerManager">
     <breakpoint-manager />
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/vl_lollygag_logger.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2730">
+          <caret line="220" column="25" lean-forward="false" selection-start-line="220" selection-start-column="25" selection-end-line="220" selection-end-column="25" />
+          <folding>
+            <element signature="e#1927#1966#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lollygag_logger.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#1927#1966#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/testing/vl_logline_unittest.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="585">
+          <caret line="46" column="30" lean-forward="true" selection-start-line="46" selection-start-column="30" selection-end-line="46" selection-end-column="30" />
+          <folding>
+            <element signature="e#290#346#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/testing/vl_logline_unittest.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -290,16 +333,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/testing/vl_logline_unittest.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="13">
-          <caret line="6" column="0" lean-forward="false" selection-start-line="6" selection-start-column="0" selection-end-line="6" selection-end-column="0" />
-          <folding>
-            <element signature="e#290#346#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/lollygag_logger.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -314,7 +347,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="308">
           <caret line="575" column="8" lean-forward="false" selection-start-line="575" selection-start-column="8" selection-end-line="575" selection-end-column="11" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -322,14 +354,23 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="308">
           <caret line="544" column="8" lean-forward="false" selection-start-line="544" selection-start-column="8" selection-end-line="544" selection-end-column="8" />
-          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/testing/vl_logline_unittest.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="600">
+          <caret line="190" column="0" lean-forward="true" selection-start-line="190" selection-start-column="0" selection-end-line="190" selection-end-column="0" />
+          <folding>
+            <element signature="e#290#346#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/vl_lollygag_logger.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="143">
-          <caret line="224" column="0" lean-forward="true" selection-start-line="224" selection-start-column="0" selection-end-line="224" selection-end-column="0" />
+        <state relative-caret-position="2513">
+          <caret line="340" column="24" lean-forward="false" selection-start-line="340" selection-start-column="24" selection-end-line="340" selection-end-column="24" />
           <folding>
             <element signature="e#1927#1966#0" expanded="true" />
           </folding>

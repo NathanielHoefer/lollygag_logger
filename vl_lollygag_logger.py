@@ -166,6 +166,13 @@ class ValenceConsoleOutput(LogFormatter):
         self.format_config = format_config
         self.log_line = None
 
+        # Format config sections stored individually as dicts
+        self.sect_display_log_types = self.format_config["DISPLAY LOG TYPES"]
+        self.sect_display_fields = self.format_config["DISPLAY FIELDS"]
+        self.sect_condense_fields = self.format_config["CONDENSE FIELDS"]
+        self.sect_collapse_structs = self.format_config["COLLAPSE STRUCTURES"]
+        self.sect_lengths = self.format_config["LENGTHS"]
+
     def format(self, unformatted_log_line):
         """Prints the formatted log line to the console based on the format config file options."""
 
@@ -179,9 +186,8 @@ class ValenceConsoleOutput(LogFormatter):
         self.log_line = self.log_line_cls(line)
 
         # Skip line if type is marked to not display
-        display_log_types = self.format_config["DISPLAY LOG TYPES"]
         log_type = self.log_line.type.strip().lower()
-        if not self._str_to_bool(display_log_types[log_type]):
+        if not self._str_to_bool(self.sect_display_log_types[log_type]):
             return
 
         # Remove and condense fields in standard logs per format config file
@@ -191,11 +197,11 @@ class ValenceConsoleOutput(LogFormatter):
 
         # Grab max line length from format config file or from console width
         formatted_line = str(self.log_line)
-        if self._str_to_bool(self.format_config["LENGTHS"]["use_console_len"]):
+        if self._str_to_bool(self.sect_lengths["use_console_len"]):
             _, console_width = os.popen('stty size', 'r').read().split()
             max_len = int(console_width)
         else:
-            max_len = int(self.format_config["LENGTHS"]["max_line_len"])
+            max_len = int(self.sect_lengths["max_line_len"])
 
         # Condense entire log line if beyond max length
         if len(formatted_line) > max_len:
@@ -208,15 +214,13 @@ class ValenceConsoleOutput(LogFormatter):
 
     def _remove_fields(self):
         """Remove field from line if marked not to display."""
-        display_fields = self.format_config["DISPLAY FIELDS"]
-        for field, val in display_fields.items():
+        for field, val in self.sect_display_fields.items():
             if not self._str_to_bool(val):
                 setattr(self.log_line, field, "")
 
     def _condense_fields(self):
         """Condense and collapse individual line fields to the specified length in format config."""
-        condense_fields = self.format_config["CONDENSE FIELDS"]
-        for field, val in condense_fields.items():
+        for field, val in self.sect_condense_fields.items():
             if self._str_to_bool(val):
                 self._condense_field(field)
 
@@ -228,9 +232,9 @@ class ValenceConsoleOutput(LogFormatter):
         :param str field: The LogLine field to be condensed.
         """
 
-        collapse_dict = self.format_config["COLLAPSE STRUCTURES"]["dict"]
-        collapse_list = self.format_config["COLLAPSE STRUCTURES"]["list"]
-        condense_len = int(self.format_config["LENGTHS"]["condensed_field_len"])
+        collapse_dict = self.sect_collapse_structs["dict"]
+        collapse_list = self.sect_collapse_structs["list"]
+        condense_len = int(self.sect_lengths["condensed_field_len"])
         current_field_str = getattr(self.log_line, field)
 
         # Collapse dicts or lists if specified

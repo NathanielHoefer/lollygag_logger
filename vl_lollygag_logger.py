@@ -45,6 +45,7 @@ import os
 import sys
 import re
 import argparse
+from collections import OrderedDict
 from threading import Thread
 import Queue
 from lollygag_logger import LogLine, LogFormatter
@@ -65,7 +66,7 @@ TYPE_STEP = "STEP"
 TYPE_TITLE = "TITLE"
 TYPE_OTHER = "OTHER"
 
-FORMAT_CONFIG_FILE_NAME = "format_config"
+FORMAT_CONFIG_FILE_NAME = "format_config.ini"
 
 
 class ValenceLogLine(LogLine):
@@ -147,7 +148,7 @@ class ValenceLogLine(LogLine):
         self.standard_format = True
 
 
-class ConsoleOutput(LogFormatter):
+class ValenceConsoleOutput(LogFormatter):
     """Class containing log line format functions.
 
     :ivar log_line_cls: the LogLine class used to parse the unformatted log lines
@@ -173,8 +174,8 @@ class ConsoleOutput(LogFormatter):
         #
         # # Retrieve options
         # display_log_types = self.format_config["DISPLAY LOG TYPES"]
-        # display_elements = self.format_config["DISPLAY ELEMENTS"]
-        # condense_elements = self.format_config["CONDENSE ELEMENTS"]
+        # display_elements = self.format_config["DISPLAY FIELDS"]
+        # condense_elements = self.format_config["CONDENSE FIELDS"]
         #
         # # Don't print line if marked false in config file
         # log_type = log_line.type.strip().lower()
@@ -210,9 +211,75 @@ class ConsoleOutput(LogFormatter):
         #     output = output[:max_len - 3] + "..."
         # return output
 
-    def str_to_bool(input):
+    def str_to_bool(self, str_bool_val):
         """Evaluates bool value of string input based on LogFormatter.VALID_TRUE_INPUT"""
-        return input.lower() in VALID_TRUE_INPUT
+        return str_bool_val.lower() in self.VALID_TRUE_INPUT
+
+
+def create_config_file(filepath=""):
+    """Creates a config parser file within the current working directory containing the options for
+    formatting log lines.
+
+    :param str filepath: File path to store format config file. Default is current working directory.
+    """
+
+    config_fields = OrderedDict()
+
+    # Log lines identified by the following types to be printed or ignored
+    config_fields["DISPLAY LOG TYPES"] = [
+        ("debug",   "False"),
+        ("info",    "True"),
+        ("step",    "True"),
+        ("title",   "True"),
+        ("warning", "True"),
+        ("error",   "True"),
+        ("other",   "True")]
+
+    # Elements within each log line to be printed or ignored
+    config_fields["DISPLAY FIELDS"] = [
+        ("date",    "False"),
+        ("time",    "True"),
+        ("type",    "True"),
+        ("source",  "True"),
+        ("thread",  "False"),
+        ("details", "True")]
+
+    # Elements within each log line to be condensed to the specified length under the LENGTHS
+    # section - condensed_elem_len
+    config_fields["CONDENSE FIELDS"] = [
+        ("date",    "False"),
+        ("time",    "False"),
+        ("type",    "False"),
+        ("source",  "True"),
+        ("thread",  "True"),
+        ("details", "True")]
+
+    # Data structures within elements to be condensed to be collapsed to the specified length under
+    # the LENGTHS section - collapsed_struct_len
+    config_fields["COLLAPSE STRUCTURES"] = [
+        ("list", "True"),
+        ("dict", "True")]
+
+    # Various length options
+    config_fields["LENGTHS"] = [
+        ("use_console_len",     "True"),    # Use console width for max log line length
+        ("max_line_len",        "200"),     # Max length of log line to be printed
+        ("condensed_elem_len",  "100"),     # This value includes the "..."
+        ("collapsed_struct_len", "30")]     # This value includes the "[" and "...]"
+
+    # Create and add sections and options to configparser object
+    format_config = configparser.ConfigParser()
+    for section, options in config_fields.items():
+        format_config.add_section(section)
+        for option in options:
+            format_config.set(section, option[0], option[1])
+
+    # Write config to file in current working directory
+    filepath = filepath if filepath else FORMAT_CONFIG_FILE_NAME
+    with open(filepath, "wb") as configfile:
+        format_config.write(configfile)
+
+    return format_config
 
 
 class LegacyLogFormatter:
@@ -249,8 +316,8 @@ class LegacyLogFormatter:
 
         # Retrieve options
         display_log_types = format_config["DISPLAY LOG TYPES"]
-        display_elements = format_config["DISPLAY ELEMENTS"]
-        condense_elements = format_config["CONDENSE ELEMENTS"]
+        display_elements = format_config["DISPLAY FIELDS"]
+        condense_elements = format_config["CONDENSE FIELDS"]
 
         # Don't print line if marked false in config file
         log_type = log_line.type.strip().lower()
@@ -368,23 +435,23 @@ def create_config_file(filepath=""):
     config.set("DISPLAY LOG TYPES", "info", "True")
 
     # Elements within each log line to be printed or ignored
-    config.add_section("DISPLAY ELEMENTS")
-    config.set("DISPLAY ELEMENTS", "date", "False")
-    config.set("DISPLAY ELEMENTS", "time", "True")
-    config.set("DISPLAY ELEMENTS", "type", "True")
-    config.set("DISPLAY ELEMENTS", "source", "True")
-    config.set("DISPLAY ELEMENTS", "thread", "False")
-    config.set("DISPLAY ELEMENTS", "details", "True")
+    config.add_section("DISPLAY FIELDS")
+    config.set("DISPLAY FIELDS", "date", "False")
+    config.set("DISPLAY FIELDS", "time", "True")
+    config.set("DISPLAY FIELDS", "type", "True")
+    config.set("DISPLAY FIELDS", "source", "True")
+    config.set("DISPLAY FIELDS", "thread", "False")
+    config.set("DISPLAY FIELDS", "details", "True")
 
     # Elements within each log line to be condensed to the specified length under the LENGTHS section -
     # condensed_elem_len
-    config.add_section("CONDENSE ELEMENTS")
-    config.set("CONDENSE ELEMENTS", "date", "False")
-    config.set("CONDENSE ELEMENTS", "time", "False")
-    config.set("CONDENSE ELEMENTS", "type", "False")
-    config.set("CONDENSE ELEMENTS", "source", "True")
-    config.set("CONDENSE ELEMENTS", "thread", "True")
-    config.set("CONDENSE ELEMENTS", "details", "True")
+    config.add_section("CONDENSE FIELDS")
+    config.set("CONDENSE FIELDS", "date", "False")
+    config.set("CONDENSE FIELDS", "time", "False")
+    config.set("CONDENSE FIELDS", "type", "False")
+    config.set("CONDENSE FIELDS", "source", "True")
+    config.set("CONDENSE FIELDS", "thread", "True")
+    config.set("CONDENSE FIELDS", "details", "True")
 
     # Data structures within elements to be condensed to be collapsed to the specified length under the
     # LENGTHS section - collapsed_struct_len
@@ -394,10 +461,7 @@ def create_config_file(filepath=""):
 
     # Various length options
     config.add_section("LENGTHS")
-    config.set("LENGTHS", "use_console_len", "True")  # Use console width for max log line length
-    config.set("LENGTHS", "max_line_len", "200")  # Max length of log line to be printed
-    config.set("LENGTHS", "condensed_elem_len", "100")  # This value includes the "..."
-    config.set("LENGTHS", "collapsed_struct_len", "30")  # This value includes the "[" and "...]"
+
 
     # Write config to file in current working directory
     filepath = filepath if filepath else FORMAT_CONFIG_FILE_NAME

@@ -45,9 +45,9 @@ import os
 import sys
 import re
 import argparse
-from collections import OrderedDict
 from threading import Thread
 import Queue
+from vl_config_file import *
 from lollygag_logger import LogLine, LogFormatter
 
 # Descriptions for arg parse
@@ -65,8 +65,6 @@ TYPE_ERROR = "ERROR"
 TYPE_STEP = "STEP"
 TYPE_TITLE = "TITLE"
 TYPE_OTHER = "OTHER"
-
-FORMAT_CONFIG_FILE_NAME = "format_config.ini"
 
 
 class ValenceLogLine(LogLine):
@@ -97,7 +95,6 @@ class ValenceLogLine(LogLine):
             return " ".join([field for field in self.FIELDS if field != ""])
         else:
             return self.original_line
-
 
     def _default_vals(self):
         """Set all field to default values."""
@@ -167,11 +164,11 @@ class ValenceConsoleOutput(LogFormatter):
         self.log_line = None
 
         # Format config sections stored individually as dicts
-        self.sect_display_log_types = self.format_config["DISPLAY LOG TYPES"]
-        self.sect_display_fields = self.format_config["DISPLAY FIELDS"]
-        self.sect_condense_fields = self.format_config["CONDENSE FIELDS"]
-        self.sect_collapse_structs = self.format_config["COLLAPSE STRUCTURES"]
-        self.sect_lengths = self.format_config["LENGTHS"]
+        self.sect_display_log_types = self.format_config[DISPLAY_LOG_TYPES_SECT]
+        self.sect_display_fields = self.format_config[DISPLAY_FIELDS_SECT]
+        self.sect_condense_fields = self.format_config[CONDENSE_FIELDS_SECT]
+        self.sect_collapse_structs = self.format_config[COLLAPSE_STRUCTS_SECT]
+        self.sect_lengths = self.format_config[LENGTHS_SECT]
 
     def format(self, unformatted_log_line):
         """Prints the formatted log line to the console based on the format config file options."""
@@ -271,78 +268,12 @@ class ValenceConsoleOutput(LogFormatter):
         # Initialize collapse values - probably can find library to do this more efficiently
         start_index = field_str.find(start_char)
         end_index = field_str.find(end_char)
-        collapse_len = int(self.format_config["LENGTHS"]["collapsed_struct_len"])
+        collapse_len = int(self.format_config[LENGTHS_SECT]["collapsed_struct_len"])
 
         # Collapse first data structure found - should make this to
         if 0 <= start_index < end_index and end_index - start_index > collapse_len:
             return "".join([field_str[:start_index + collapse_len - 4], "...", end_char])
         return field_str
-
-
-def create_config_file(filepath=""):
-    """Creates a config parser file within the current working directory containing the options for
-    formatting log lines.
-
-    :param str filepath: File path to store format config file. Default is current working directory.
-    """
-
-    config_fields = OrderedDict()
-
-    # Log lines identified by the following types to be printed or ignored
-    config_fields["DISPLAY LOG TYPES"] = [
-        ("debug",   "False"),
-        ("info",    "True"),
-        ("step",    "True"),
-        ("title",   "True"),
-        ("warning", "True"),
-        ("error",   "True"),
-        ("other",   "True")]
-
-    # Elements within each log line to be printed or ignored
-    config_fields["DISPLAY FIELDS"] = [
-        ("date",    "False"),
-        ("time",    "True"),
-        ("type",    "True"),
-        ("source",  "True"),
-        ("thread",  "False"),
-        ("details", "True")]
-
-    # Elements within each log line to be condensed to the specified length under the LENGTHS
-    # section - condensed_elem_len
-    config_fields["CONDENSE FIELDS"] = [
-        ("date",    "False"),
-        ("time",    "False"),
-        ("type",    "False"),
-        ("source",  "True"),
-        ("thread",  "True"),
-        ("details", "True")]
-
-    # Data structures within elements to be condensed to be collapsed to the specified length under
-    # the LENGTHS section - collapsed_struct_len
-    config_fields["COLLAPSE STRUCTURES"] = [
-        ("list", "True"),
-        ("dict", "True")]
-
-    # Various length options
-    config_fields["LENGTHS"] = [
-        ("use_console_len",     "True"),    # Use console width for max log line length
-        ("max_line_len",        "200"),     # Max length of log line to be printed
-        ("condensed_field_len", "100"),     # This value includes the "..."
-        ("collapsed_struct_len", "30")]     # This value includes the "[" and "...]"
-
-    # Create and add sections and options to configparser object
-    format_config = configparser.ConfigParser()
-    for section, options in config_fields.items():
-        format_config.add_section(section)
-        for option in options:
-            format_config.set(section, option[0], option[1])
-
-    # Write config to file in current working directory
-    filepath = filepath + FORMAT_CONFIG_FILE_NAME if filepath else FORMAT_CONFIG_FILE_NAME
-    with open(filepath, "wb") as configfile:
-        format_config.write(configfile)
-
-    return format_config
 
 
 def format_print_file_to_console(filepath):

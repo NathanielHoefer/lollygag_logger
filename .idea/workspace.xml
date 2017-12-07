@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="62c82476-33e8-460f-991d-9b151f209b90" name="Default" comment="">
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/vl_config_file.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/testing/vl_console_out_unittest.py" afterPath="$PROJECT_DIR$/testing/vl_console_out_unittest.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/vl_lollygag_logger.py" afterPath="$PROJECT_DIR$/vl_lollygag_logger.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -13,16 +15,28 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="FileEditorManager">
-    <splitter split-orientation="horizontal" split-proportion="0.5">
+    <splitter split-orientation="horizontal" split-proportion="0.4624506">
       <split-first>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-          <file leaf-file-name="vl_lollygag_logger.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="vl_lollygag_logger.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/vl_lollygag_logger.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="378">
-                  <caret line="165" column="42" lean-forward="true" selection-start-line="165" selection-start-column="42" selection-end-line="165" selection-end-column="42" />
+                <state relative-caret-position="-163">
+                  <caret line="261" column="35" lean-forward="true" selection-start-line="261" selection-start-column="35" selection-end-line="261" selection-end-column="35" />
                   <folding>
                     <element signature="e#1927#1966#0" expanded="true" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="vl_config_file.py" pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/vl_config_file.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="143">
+                  <caret line="11" column="0" lean-forward="true" selection-start-line="11" selection-start-column="0" selection-end-line="11" selection-end-column="0" />
+                  <folding>
+                    <element signature="e#0#35#0" expanded="true" />
                   </folding>
                 </state>
               </provider>
@@ -47,7 +61,7 @@
           <file leaf-file-name="vl_logline_unittest.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/testing/vl_logline_unittest.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="797">
+                <state relative-caret-position="1109">
                   <caret line="203" column="0" lean-forward="false" selection-start-line="203" selection-start-column="0" selection-end-line="204" selection-end-column="19" />
                   <folding>
                     <element signature="e#290#346#0" expanded="true" />
@@ -59,8 +73,8 @@
           <file leaf-file-name="vl_console_out_unittest.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/testing/vl_console_out_unittest.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="403">
-                  <caret line="31" column="19" lean-forward="true" selection-start-line="31" selection-start-column="19" selection-end-line="31" selection-end-column="19" />
+                <state relative-caret-position="182">
+                  <caret line="53" column="0" lean-forward="false" selection-start-line="53" selection-start-column="0" selection-end-line="74" selection-end-column="44" />
                   <folding>
                     <element signature="e#295#356#0" expanded="true" />
                   </folding>
@@ -84,6 +98,7 @@
       <find>DISPLAY ELEMENTS</find>
       <find>ONDENSE ELEMENTS</find>
       <find>config</find>
+      <find>DISP_FIELDS_SECT</find>
     </findStrings>
     <replaceStrings>
       <replace />
@@ -100,6 +115,7 @@
         <option value="$PROJECT_DIR$/testing/vl_logline_unittest.py" />
         <option value="$PROJECT_DIR$/testing/vl_console_out_unittest.py" />
         <option value="$PROJECT_DIR$/vl_lollygag_logger.py" />
+        <option value="$PROJECT_DIR$/vl_config_file.py" />
       </list>
     </option>
   </component>
@@ -122,6 +138,8 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scratches" />
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -138,8 +156,6 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scratches" />
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -237,39 +253,46 @@
       <option name="project" value="LOCAL" />
       <updated>1512253940476</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Move configparser access in ValenceConsoleOutput to __init__ for ivar access.">
+      <created>1512254473183</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1512254473183</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="Unittests_in_vl_console_out_unittest_py - 2017.12.02 at 16h 26m 44s.xml">
+    <history-entry file="Unittests_in_vl_console_out_unittest_py - 2017.12.07 at 16h 47m 33s.xml">
       <configuration name="Unittests in vl_console_out_unittest.py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_vl_console_out_unittest_py - 2017.12.02 at 16h 27m 28s.xml">
+    <history-entry file="Unittests_in_vl_console_out_unittest_py - 2017.12.07 at 16h 47m 43s.xml">
       <configuration name="Unittests in vl_console_out_unittest.py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_vl_logline_unittest_py - 2017.11.30 at 19h 43m 11s.xml">
-      <configuration name="Unittests in vl_logline_unittest.py" configurationId="tests" />
+    <history-entry file="Unittests_in_vl_console_out_unittest_py - 2017.12.07 at 16h 48m 04s.xml">
+      <configuration name="Unittests in vl_console_out_unittest.py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_vl_logline_unittest_py - 2017.11.30 at 19h 45m 26s.xml">
-      <configuration name="Unittests in vl_logline_unittest.py" configurationId="tests" />
+    <history-entry file="Unittests_in_vl_console_out_unittest_py - 2017.12.07 at 16h 48m 35s.xml">
+      <configuration name="Unittests in vl_console_out_unittest.py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_vl_logline_unittest_py - 2017.11.30 at 19h 47m 01s.xml">
-      <configuration name="Unittests in vl_logline_unittest.py" configurationId="tests" />
+    <history-entry file="Unittests_in_vl_console_out_unittest_py - 2017.12.07 at 16h 48m 41s.xml">
+      <configuration name="Unittests in vl_console_out_unittest.py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_vl_logline_unittest_py - 2017.11.30 at 19h 49m 35s.xml">
-      <configuration name="Unittests in vl_logline_unittest.py" configurationId="tests" />
+    <history-entry file="Unittests_in_vl_console_out_unittest_py - 2017.12.07 at 16h 49m 08s.xml">
+      <configuration name="Unittests in vl_console_out_unittest.py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_vl_logline_unittest_py - 2017.11.30 at 19h 57m 25s.xml">
-      <configuration name="Unittests in vl_logline_unittest.py" configurationId="tests" />
+    <history-entry file="Unittests_in_vl_console_out_unittest_py - 2017.12.07 at 16h 49m 11s.xml">
+      <configuration name="Unittests in vl_console_out_unittest.py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_vl_logline_unittest_py - 2017.11.30 at 19h 59m 31s.xml">
-      <configuration name="Unittests in vl_logline_unittest.py" configurationId="tests" />
+    <history-entry file="Unittests_in_vl_console_out_unittest_py - 2017.12.07 at 16h 49m 30s.xml">
+      <configuration name="Unittests in vl_console_out_unittest.py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_vl_logline_unittest_py - 2017.12.01 at 21h 36m 52s.xml">
-      <configuration name="Unittests in vl_logline_unittest.py" configurationId="tests" />
+    <history-entry file="Unittests_in_vl_console_out_unittest_py - 2017.12.07 at 16h 50m 35s.xml">
+      <configuration name="Unittests in vl_console_out_unittest.py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_vl_logline_unittest_py - 2017.12.02 at 16h 26m 40s.xml">
-      <configuration name="Unittests in vl_logline_unittest.py" configurationId="tests" />
+    <history-entry file="Unittests_in_vl_console_out_unittest_py - 2017.12.07 at 16h 56m 44s.xml">
+      <configuration name="Unittests in vl_console_out_unittest.py" configurationId="tests" />
     </history-entry>
   </component>
   <component name="ToolWindowManager">
@@ -279,9 +302,10 @@
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.07760417" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32912722" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32947367" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32912722" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32912722" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
@@ -292,7 +316,6 @@
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32912722" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
     </layout>
   </component>
@@ -303,13 +326,56 @@
     <MESSAGE value="Update create_config_file for better execution and cleanliness" />
     <MESSAGE value="Reformat ValenceConsoleOutput, ready for unittesting." />
     <MESSAGE value="Create initial unittest for ValenceConsoleOutput." />
-    <option name="LAST_COMMIT_MESSAGE" value="Create initial unittest for ValenceConsoleOutput." />
+    <MESSAGE value="Move configparser access in ValenceConsoleOutput to __init__ for ivar access." />
+    <option name="LAST_COMMIT_MESSAGE" value="Move configparser access in ValenceConsoleOutput to __init__ for ivar access." />
   </component>
   <component name="XDebuggerManager">
-    <breakpoint-manager />
+    <breakpoint-manager>
+      <option name="time" value="1" />
+    </breakpoint-manager>
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/vl_lollygag_logger.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2119">
+          <caret line="173" column="57" lean-forward="false" selection-start-line="173" selection-start-column="57" selection-end-line="173" selection-end-column="57" />
+          <folding>
+            <element signature="e#1927#1966#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lollygag_logger.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#1927#1966#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/testing/vl_logline_unittest.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2626">
+          <caret line="203" column="0" lean-forward="false" selection-start-line="203" selection-start-column="0" selection-end-line="204" selection-end-column="19" />
+          <folding>
+            <element signature="e#290#346#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/testing/vl_console_out_unittest.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="351">
+          <caret line="32" column="0" lean-forward="true" selection-start-line="32" selection-start-column="0" selection-end-line="32" selection-end-column="0" />
+          <folding>
+            <element signature="e#295#356#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/vl_lollygag_logger.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -433,7 +499,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/testing/vl_logline_unittest.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="797">
+        <state relative-caret-position="1109">
           <caret line="203" column="0" lean-forward="false" selection-start-line="203" selection-start-column="0" selection-end-line="204" selection-end-column="19" />
           <folding>
             <element signature="e#290#346#0" expanded="true" />
@@ -441,22 +507,32 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/vl_lollygag_logger.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-163">
+          <caret line="261" column="35" lean-forward="true" selection-start-line="261" selection-start-column="35" selection-end-line="261" selection-end-column="35" />
+          <folding>
+            <element signature="e#1927#1966#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/testing/vl_console_out_unittest.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="403">
-          <caret line="31" column="19" lean-forward="true" selection-start-line="31" selection-start-column="19" selection-end-line="31" selection-end-column="19" />
+        <state relative-caret-position="182">
+          <caret line="53" column="0" lean-forward="false" selection-start-line="53" selection-start-column="0" selection-end-line="74" selection-end-column="44" />
           <folding>
             <element signature="e#295#356#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/vl_lollygag_logger.py">
+    <entry file="file://$PROJECT_DIR$/vl_config_file.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="378">
-          <caret line="165" column="42" lean-forward="true" selection-start-line="165" selection-start-column="42" selection-end-line="165" selection-end-column="42" />
+        <state relative-caret-position="143">
+          <caret line="11" column="0" lean-forward="true" selection-start-line="11" selection-start-column="0" selection-end-line="11" selection-end-column="0" />
           <folding>
-            <element signature="e#1927#1966#0" expanded="true" />
+            <element signature="e#0#35#0" expanded="true" />
           </folding>
         </state>
       </provider>

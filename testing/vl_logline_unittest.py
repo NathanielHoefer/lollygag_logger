@@ -159,7 +159,8 @@ class TestDetailsToken(unittest.TestCase):
 class TestStandardFormat(unittest.TestCase):
 
     def test_full_standard_format(self):
-        line = LogLine("2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] reco")
+        log = "2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] reco"
+        line = LogLine(log)
         self.assertTrue(line.standard_format)
         self.assertEqual(line.date, "2017-10-30")
         self.assertEqual(line.time, "19:13:32.209878")
@@ -167,6 +168,7 @@ class TestStandardFormat(unittest.TestCase):
         self.assertEqual(line.source, "[valence:42]")
         self.assertEqual(line.thread, "[MainProcess:MainThread]")
         self.assertEqual(line.details, "reco")
+        self.assertEqual(str(line), log)
 
     def test_full_standard_format_no_details(self):
         line = LogLine("2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] ")

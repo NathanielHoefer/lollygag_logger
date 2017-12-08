@@ -1,3 +1,11 @@
+"""
+=========================================================================================================
+Valence Config File Methods and Constants
+=========================================================================================================
+by Nathaniel Hoefer
+Last Updated: 12/2/2017
+"""
+
 from collections import OrderedDict
 import configparser
 

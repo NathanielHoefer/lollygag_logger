@@ -92,7 +92,8 @@ class ValenceLogLine(LogLine):
 
     def __str__(self):
         if self.standard_format:
-            return " ".join([field for field in self.FIELDS if field != ""])
+            return " ".join([getattr(self, field)
+                             for field in self.FIELDS if getattr(self, field) != ""])
         else:
             return self.original_line
 
@@ -194,7 +195,7 @@ class ValenceConsoleOutput(LogFormatter):
 
         # Grab max line length from format config file or from console width
         formatted_line = str(self.log_line)
-        if self._str_to_bool(self.sect_lengths["use_console_len"]):
+        if self._str_to_bool(self.sect_lengths["use_console_len"]) and sys.stdin.isatty():
             _, console_width = os.popen('stty size', 'r').read().split()
             max_len = int(console_width)
         else:

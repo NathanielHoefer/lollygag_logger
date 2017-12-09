@@ -302,5 +302,27 @@ class CondenseFieldsFormatting(unittest.TestCase):
         os.remove(FORMAT_CONFIG_FILE_NAME)
 
 
+class MaxLineFormatting(unittest.TestCase):
+
+    def setUp(self):
+        self.format_config = create_config_file()
+        self.log_formatter = Output(LogLine, self.format_config)
+
+        with open("test.log", "r") as test_log_file:
+            self.test_lines = test_log_file.readlines()
+        self.test_lines = [x for x in self.test_lines if x[0] is not "#" and x.strip() is not ""]
+
+    def test_max_len(self):
+        self.log_formatter.sect_lengths["max_line_len"] = "100"
+        output = []
+        with Capturing(output) as output:
+            self.log_formatter.format(self.test_lines[21])
+        self.assertTrue(len(output) == 1)
+        self.assertEqual(output[0], self.test_lines[22].strip())
+
+    def tearDown(self):
+        os.remove(FORMAT_CONFIG_FILE_NAME)
+
+
 if __name__ == "__main__":
     unittest.main()

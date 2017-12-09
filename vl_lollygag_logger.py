@@ -220,9 +220,9 @@ class ValenceConsoleOutput(LogFormatter):
         """Condense and collapse individual line fields to the specified length in format config."""
         for field, val in self.sect_condense_fields.items():
             if self._str_to_bool(val):
-                self._condense_field(field)
+                self.condense_field(field)
 
-    def _condense_field(self, field):
+    def condense_field(self, field):
         """Condenses each field of a log line per the format config file to a specific length, and
         collapses lists and dictionaries that exceed a given length. All specified in the format_config
         file and updates the log_line object.
@@ -237,20 +237,24 @@ class ValenceConsoleOutput(LogFormatter):
 
         # Collapse dicts or lists if specified
         if collapse_dict:
-            current_field_str = self._collapse_struct(current_field_str, "dict")
+            current_field_str = self.collapse_struct(current_field_str, "dict")
         if collapse_list:
-            current_field_str = self._collapse_struct(current_field_str, "list")
+            current_field_str = self.collapse_struct(current_field_str, "list")
 
         # Condense length of element if it exceeds specified length
         if len(current_field_str) > condense_len:
             current_field_str = "".join([current_field_str[:condense_len - 3], "..."])
         setattr(self.log_line, field, current_field_str)
+        return current_field_str
 
-    def _collapse_struct(self, field_str, data_struct):
+    def collapse_struct(self, field_str, data_struct):
         """Shortens the display of the first encountered list or dictionary to a specified length within
-        a given string.
+        a given string. If the length of the structure (including the '[]' or '{}' is >= the
+        collapsed_struct_len specified in config file, then the structure will be reduced to that length
+        and indicated by an ellipse. Ex: [abcdefghijklmnopqrstuvwxyzab] -> [abcdefghijklmnopqrstuvwxy...]
 
-        Should update to locate recursively, but not extremely important right now.
+        Currently only minimizes the out-most structure while ignoring the inner structures. Will look
+        to fix this in the future if time allows.
 
         :param str field_str: The log line element str containing the data structure
         :param str data_struct: "list" or "dict" indicating what data structure to collapse
@@ -272,7 +276,7 @@ class ValenceConsoleOutput(LogFormatter):
         collapse_len = int(self.format_config[LENGTHS_SECT]["collapsed_struct_len"])
 
         # Collapse first data structure found - should make this to
-        if 0 <= start_index < end_index and end_index - start_index > collapse_len:
+        if 0 <= start_index < end_index and end_index - start_index + 1 >= collapse_len:
             return "".join([field_str[:start_index + collapse_len - 4], "...", end_char])
         return field_str
 

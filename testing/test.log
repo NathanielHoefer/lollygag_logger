@@ -1,4 +1,5 @@
-# Display Log Types: Elements 0-6
+# Display Log Types: Elements 0-6 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 2017-10-30 19:13:32.208116 DEBUG [res.core.absolute.implementation:636] [MainProcess:MainThread] Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc/10.0; {"params": {"IDs": [203, 204]}, "method": "Delete", "id": 54}.
 2017-10-30 19:13:32.208116 INFO [res.core.absolute.implementation:636] [MainProcess:MainThread] Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc/10.0; {"params": {"IDs": [203, 204]}, "method": "Delete", "id": 54}.
 2017-10-30 19:13:32.208116 WARNING [res.core.absolute.implementation:636] [MainProcess:MainThread] Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc/10.0; {"params": {"IDs": [203, 204]}, "method": "Delete", "id": 54}.
@@ -7,7 +8,9 @@
 =========================================================================================================
 Test Case 0: Starting Teardown of DeletingValues
 
-# Display Fields
+
+
+# Display Fields: Elements 7-13 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 # Original Line: Element 7
 2017-10-30 19:13:32.208116 INFO [res.core.absolute:636] [MainProcess:MainThread] Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc; {"params": {"IDs": [203]}}.
@@ -29,3 +32,10 @@ Test Case 0: Starting Teardown of DeletingValues
 
 # Expected Hidden Details: Element 13
 2017-10-30 19:13:32.208116 INFO [res.core.absolute:636] [MainProcess:MainThread]
+
+
+
+# Condense Fields: Elements 7-13 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+# At length, no structure
+Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc; {"params": {"IDs": [203]}}.

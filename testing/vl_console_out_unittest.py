@@ -225,5 +225,76 @@ class DisplayFieldsFormatting(unittest.TestCase):
         os.remove(FORMAT_CONFIG_FILE_NAME)
 
 
+class CollapseStructFormatting(unittest.TestCase):
+
+    def setUp(self):
+        self.format_config = create_config_file()
+        self.format_config.set(COLLAPSE_STRUCTS_SECT, "list", "True")
+        self.format_config.set(COLLAPSE_STRUCTS_SECT, "dict", "True")
+        self.format_config.set(LENGTHS_SECT, "condensed_field_len", "100")
+        self.format_config.set(LENGTHS_SECT, "collapsed_struct_len", "30")
+        self.log_formatter = Output(LogLine, self.format_config)
+
+    def test_collapse_empty_list(self):
+        self.assertEqual(self.log_formatter.collapse_struct("[]", "list"), "[]")
+
+    def test_collapse_empty_dict(self):
+        self.assertEqual(self.log_formatter.collapse_struct("{}", "dict"), "{}")
+
+    def test_collapse_at_len_list(self):
+        self.assertEqual(self.log_formatter.collapse_struct("[abcdefghijklmnopqrstuvwxyzab]", "list"),
+                         "[abcdefghijklmnopqrstuvwxy...]")
+
+    def test_collapse_at_len_dict(self):
+        self.assertEqual(self.log_formatter.collapse_struct("{abcdefghijklmnopqrstuvwxyzab}", "dict"),
+                         "{abcdefghijklmnopqrstuvwxy...}")
+
+    def test_collapse_one_under(self):
+        self.assertEqual(self.log_formatter.collapse_struct("[abcdefghijklmnopqrstuvwxyza]", "list"),
+                         "[abcdefghijklmnopqrstuvwxyza]")
+
+    def test_collapse_no_list(self):
+        self.assertEqual(self.log_formatter.collapse_struct("abcdefghijklmnopqrstuvwxyzabcdef", "list"),
+                         "abcdefghijklmnopqrstuvwxyzabcdef")
+
+    def tearDown(self):
+        os.remove(FORMAT_CONFIG_FILE_NAME)
+
+
+class CondenseFieldsFormatting(unittest.TestCase):
+
+    def setUp(self):
+        self.format_config = create_config_file()
+        self.format_config.set(CONDENSE_FIELDS_SECT, "details", "True")
+        self.format_config.set(COLLAPSE_STRUCTS_SECT, "list", "True")
+        self.format_config.set(COLLAPSE_STRUCTS_SECT, "dict", "True")
+        self.format_config.set(LENGTHS_SECT, "condensed_field_len", "100")
+        self.format_config.set(LENGTHS_SECT, "collapsed_struct_len", "30")
+        self.log_formatter = Output(LogLine, self.format_config)
+
+        with open("test.log", "r") as test_log_file:
+            self.test_lines = test_log_file.readlines()
+        self.test_lines = [x for x in self.test_lines if x[0] is not "#" and x.strip() is not ""]
+
+    def test_at_len_no_struct(self):
+        log_line = LogLine()
+
+    def test_at_len_struct(self):
+        pass
+
+    def test_one_over_len(self):
+        pass
+
+
+    # def test_dont_collapse_struct_at_len_list(self):
+    #     log_formatter = Output(LogLine, self.format_config)
+    #     self.format_config.set(COLLAPSE_STRUCTS_SECT, "list", "False")
+    #     self.assertEqual(log_formatter.collapse_struct("[abcdefghijklmnopqrstuvwxyzab]", "list"),
+    #                      "[abcdefghijklmnopqrstuvwxyzab]")
+
+    def tearDown(self):
+        os.remove(FORMAT_CONFIG_FILE_NAME)
+
+
 if __name__ == "__main__":
     unittest.main()

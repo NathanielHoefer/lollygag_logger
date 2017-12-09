@@ -236,9 +236,9 @@ class ValenceConsoleOutput(LogFormatter):
         current_field_str = getattr(self.log_line, field)
 
         # Collapse dicts or lists if specified
-        if collapse_dict:
+        if self._str_to_bool(collapse_dict):
             current_field_str = self.collapse_struct(current_field_str, "dict")
-        if collapse_list:
+        if self._str_to_bool(collapse_list):
             current_field_str = self.collapse_struct(current_field_str, "list")
 
         # Condense length of element if it exceeds specified length
@@ -249,7 +249,7 @@ class ValenceConsoleOutput(LogFormatter):
 
     def collapse_struct(self, field_str, data_struct):
         """Shortens the display of the first encountered list or dictionary to a specified length within
-        a given string. If the length of the structure (including the '[]' or '{}' is >= the
+        a given string. If the length of the structure (including the '[]' or '{}' is > the
         collapsed_struct_len specified in config file, then the structure will be reduced to that length
         and indicated by an ellipse. Ex: [abcdefghijklmnopqrstuvwxyzab] -> [abcdefghijklmnopqrstuvwxy...]
 
@@ -276,8 +276,9 @@ class ValenceConsoleOutput(LogFormatter):
         collapse_len = int(self.format_config[LENGTHS_SECT]["collapsed_struct_len"])
 
         # Collapse first data structure found - should make this to
-        if 0 <= start_index < end_index and end_index - start_index + 1 >= collapse_len:
-            return "".join([field_str[:start_index + collapse_len - 4], "...", end_char])
+        if 0 <= start_index < end_index and end_index - start_index >= collapse_len:
+            return "".join([field_str[:start_index + collapse_len - 4], "...", end_char,
+                            field_str[end_index + 1:]])
         return field_str
 
 

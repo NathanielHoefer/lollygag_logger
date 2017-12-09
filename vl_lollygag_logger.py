@@ -202,9 +202,7 @@ class ValenceConsoleOutput(LogFormatter):
             max_len = int(self.sect_lengths["max_line_len"])
 
         # Condense entire log line if beyond max length
-        if len(formatted_line) > max_len:
-            formatted_line = formatted_line[:max_len - 3] + "..."
-        print formatted_line
+        print self.condense(formatted_line, max_len)
 
     def _str_to_bool(self, str_bool_val):
         """Evaluates bool value of string input based on LogFormatter.VALID_TRUE_INPUT"""
@@ -242,8 +240,7 @@ class ValenceConsoleOutput(LogFormatter):
             current_field_str = self.collapse_struct(current_field_str, "list")
 
         # Condense length of element if it exceeds specified length
-        if len(current_field_str) > condense_len:
-            current_field_str = "".join([current_field_str[:condense_len - 3], "..."])
+        current_field_str = self.condense(current_field_str, condense_len)
         setattr(self.log_line, field, current_field_str)
         return current_field_str
 
@@ -275,11 +272,25 @@ class ValenceConsoleOutput(LogFormatter):
         end_index = field_str.find(end_char)
         collapse_len = int(self.format_config[LENGTHS_SECT]["collapsed_struct_len"])
 
-        # Collapse first data structure found - should make this to
-        if 0 <= start_index < end_index and end_index - start_index >= collapse_len:
-            return "".join([field_str[:start_index + collapse_len - 4], "...", end_char,
-                            field_str[end_index + 1:]])
+        # Collapse first data structure found
+        if 0 <= start_index < end_index:
+            struct = "".join([start_char,
+                             self.condense(field_str[start_index + 1: end_index], collapse_len - 2),
+                             end_char])
+            return "".join([field_str[:start_index], struct, field_str[end_index + 1:]])
         return field_str
+
+    def condense(self, str_line, max_len):
+        """Condenses the string if it is greater than the max length, appending ellipses.
+
+        :param str str_line: Line to be condensed
+        :param int max_len: The maximum length of the line
+        """
+
+        if len(str_line) > max_len:
+            return "".join([str_line[:max_len - 3], "..."])
+        else:
+            return str_line
 
 
 def format_print_file_to_console(filepath):

@@ -37,5 +37,23 @@ Test Case 0: Starting Teardown of DeletingValues
 
 # Condense Fields: Elements 7-13 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-# At length, no structure
-Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc; {"params": {"IDs": [203]}}.
+# At length, no structure: Element 14
+Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc; "params": "IDs": 2031, 21455.
+
+# At length, containing list
+# Original: Element 15
+Sending HTTP POST request to server_url: https://10.10.10.10/json; {"params": "IDs": 2031, 214, 25}.
+# Formatted: Element 16
+Sending HTTP POST request to server_url: https://10.10.10.10/json; {"params": "IDs": 2031, 21...}.
+
+# One over length
+# Original: Element 17
+Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc; "params": "IDs": 20312, 21455.
+# Formatted: Element 18
+Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc; "params": "IDs": 20312, 21...
+
+# One over length, containing list but not collapsing
+# Original: Element 19
+Sending HTTP POST request to server_url: https://10.10.10.10/json; {"params": "IDs": 2031, 214, 255}.
+# Formatted: Element 20
+Sending HTTP POST request to server_url: https://10.10.10.10/json; {"params": "IDs": 2031, 214, 2...

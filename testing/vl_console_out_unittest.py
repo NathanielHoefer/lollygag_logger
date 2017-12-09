@@ -243,15 +243,15 @@ class CollapseStructFormatting(unittest.TestCase):
 
     def test_collapse_at_len_list(self):
         self.assertEqual(self.log_formatter.collapse_struct("[abcdefghijklmnopqrstuvwxyzab]", "list"),
-                         "[abcdefghijklmnopqrstuvwxy...]")
+                         "[abcdefghijklmnopqrstuvwxyzab]")
 
     def test_collapse_at_len_dict(self):
         self.assertEqual(self.log_formatter.collapse_struct("{abcdefghijklmnopqrstuvwxyzab}", "dict"),
-                         "{abcdefghijklmnopqrstuvwxy...}")
+                         "{abcdefghijklmnopqrstuvwxyzab}")
 
-    def test_collapse_one_under(self):
-        self.assertEqual(self.log_formatter.collapse_struct("[abcdefghijklmnopqrstuvwxyza]", "list"),
-                         "[abcdefghijklmnopqrstuvwxyza]")
+    def test_collapse_one_over(self):
+        self.assertEqual(self.log_formatter.collapse_struct("[abcdefghijklmnopqrstuvwxyzabc]", "list"),
+                         "[abcdefghijklmnopqrstuvwxy...]")
 
     def test_collapse_no_list(self):
         self.assertEqual(self.log_formatter.collapse_struct("abcdefghijklmnopqrstuvwxyzabcdef", "list"),
@@ -277,20 +277,26 @@ class CondenseFieldsFormatting(unittest.TestCase):
         self.test_lines = [x for x in self.test_lines if x[0] is not "#" and x.strip() is not ""]
 
     def test_at_len_no_struct(self):
-        log_line = LogLine()
+        log_line = LogLine(self.test_lines[14].strip())
+        self.log_formatter.log_line = log_line
+        self.assertEqual(self.log_formatter.condense_field("original_line"), self.test_lines[14].strip())
 
     def test_at_len_struct(self):
-        pass
+        log_line = LogLine(self.test_lines[15].strip())
+        self.log_formatter.log_line = log_line
+        self.assertEqual(self.log_formatter.condense_field("original_line"), self.test_lines[16].strip())
 
     def test_one_over_len(self):
-        pass
+        log_line = LogLine(self.test_lines[17].strip())
+        self.log_formatter.log_line = log_line
+        self.assertEqual(self.log_formatter.condense_field("original_line"), self.test_lines[18].strip())
 
-
-    # def test_dont_collapse_struct_at_len_list(self):
-    #     log_formatter = Output(LogLine, self.format_config)
-    #     self.format_config.set(COLLAPSE_STRUCTS_SECT, "list", "False")
-    #     self.assertEqual(log_formatter.collapse_struct("[abcdefghijklmnopqrstuvwxyzab]", "list"),
-    #                      "[abcdefghijklmnopqrstuvwxyzab]")
+    def test_over_len_no_struct_collapse(self):
+        log_formatter = Output(LogLine, self.format_config)
+        log_formatter.sect_collapse_structs["dict"] = "False"
+        log_line = LogLine(self.test_lines[19].strip())
+        log_formatter.log_line = log_line
+        self.assertEqual(log_formatter.condense_field("original_line"), self.test_lines[20].strip())
 
     def tearDown(self):
         os.remove(FORMAT_CONFIG_FILE_NAME)

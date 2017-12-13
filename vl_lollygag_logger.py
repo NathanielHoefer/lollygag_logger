@@ -48,7 +48,7 @@ import argparse
 from threading import Thread
 import Queue
 from vl_config_file import *
-from lollygag_logger import LogLine, LogFormatter
+from lollygag_logger import LogLine, LogFormatter, LollygagLogger
 
 # Descriptions for arg parse
 PROGRAM = "Lollygag Logger"
@@ -386,7 +386,17 @@ if __name__ == '__main__':
             file_path = arg_path
         else:
             file_path = os.getcwd() + "/" + arg_path
-        format_print_file_to_console(file_path)
+
+        config_path = file_path[:file_path.rfind("/") + 1] + FORMAT_CONFIG_FILE_NAME
+        if not os.path.isfile(config_path):
+            create_config_file(config_path)
+        config = configparser.ConfigParser()
+        config.read(config_path)
+
+        with open(file_path, "r") as logfile:
+            logger = LollygagLogger(logfile, ValenceConsoleOutput(ValenceLogLine, config))
+            logger.run()
+
     elif args.vl_suite_path:
         format_vl_output(args.vl_suite_path)
     else:

@@ -8,8 +8,11 @@ Last Updated: 12/2/2017
 
 from collections import OrderedDict
 import configparser
+import os
 
-FORMAT_CONFIG_FILE_NAME = "format_config.ini"
+DEFAULT_CONFIG_DIR = os.path.expanduser("~")
+FORMAT_CONFIG_FILE_NAME = ".logger_format.config"
+DEFAULT_CONFIG_PATH = DEFAULT_CONFIG_DIR + "/" + FORMAT_CONFIG_FILE_NAME
 
 # Section names
 DISPLAY_LOG_TYPES_SECT = "DISPLAY LOG TYPES"
@@ -19,11 +22,12 @@ COLLAPSE_STRUCTS_SECT = "COLLAPSE STRUCTURES"
 LENGTHS_SECT = "LENGTHS"
 
 
-def create_config_file(filepath=""):
+def create_config_file(file_directory=""):
     """Creates a config parser file within the current working directory containing the options for
     formatting log lines.
 
-    :param str filepath: File path to store format config file. Default is current working directory.
+    :param str file_directory: File directory to store format config file. If not specified, then will
+        store in the user's home directory.
     """
 
     config_fields = OrderedDict()
@@ -72,14 +76,21 @@ def create_config_file(filepath=""):
 
     # Create and add sections and options to configparser object
     format_config = configparser.ConfigParser()
-    for section, options in config_fields.items():
-        format_config.add_section(section)
-        for option in options:
-            format_config.set(section, option[0], option[1])
+    if file_directory:
+        config_path = file_directory + "/" + FORMAT_CONFIG_FILE_NAME
+    else:
+        config_path = DEFAULT_CONFIG_DIR + "/" + FORMAT_CONFIG_FILE_NAME
 
-    # Write config to file in current working directory
-    filepath = filepath if filepath else FORMAT_CONFIG_FILE_NAME
-    with open(filepath, "wb") as configfile:
-        format_config.write(configfile)
+    # If format config file doesn't already exist, create and write, otherwise read from existing file.
+    if not os.path.isfile(config_path):
+        for section, options in config_fields.items():
+            format_config.add_section(section)
+            for option in options:
+                format_config.set(section, option[0], option[1])
+        with open(config_path, "wb") as configfile:
+            format_config.write(configfile)
+    else:
+        format_config.read(config_path)
 
     return format_config
+

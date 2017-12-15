@@ -31,7 +31,7 @@ class Capturing(list):
 class InitialFormatting(unittest.TestCase):
 
     def setUp(self):
-        self.format_config = create_config_file()
+        self.format_config = create_config_file(os.getcwd())
 
     def test_initialization(self):
         log_formatter = Output(LogLine, self.format_config)
@@ -48,13 +48,13 @@ class InitialFormatting(unittest.TestCase):
         self.assertTrue(output[0] == "")
 
     def tearDown(self):
-        os.remove(FORMAT_CONFIG_FILE_NAME)
+        os.remove(os.getcwd() + "/" + FORMAT_CONFIG_FILE_NAME)
 
 
 class DisplayLogTypesFormatting(unittest.TestCase):
 
     def setUp(self):
-        self.format_config = create_config_file()
+        self.format_config = create_config_file(os.getcwd())
         self.format_config.set(DISPLAY_LOG_TYPES_SECT, "debug", "True")
         self.format_config.set(DISPLAY_LOG_TYPES_SECT, "info", "True")
         self.format_config.set(DISPLAY_LOG_TYPES_SECT, "step", "True")
@@ -134,13 +134,13 @@ class DisplayLogTypesFormatting(unittest.TestCase):
         self.assertTrue(len(output) == 0)
 
     def tearDown(self):
-        os.remove(FORMAT_CONFIG_FILE_NAME)
+        os.remove(os.getcwd() + "/" + FORMAT_CONFIG_FILE_NAME)
 
 
 class DisplayFieldsFormatting(unittest.TestCase):
 
     def setUp(self):
-        self.format_config = create_config_file()
+        self.format_config = create_config_file(os.getcwd())
         self.format_config.set(DISPLAY_FIELDS_SECT, "date", "True")
         self.format_config.set(DISPLAY_FIELDS_SECT, "time", "True")
         self.format_config.set(DISPLAY_FIELDS_SECT, "type", "True")
@@ -222,13 +222,13 @@ class DisplayFieldsFormatting(unittest.TestCase):
         self.assertEqual(output[0], self.test_lines[13].strip())
 
     def tearDown(self):
-        os.remove(FORMAT_CONFIG_FILE_NAME)
+        os.remove(os.getcwd() + "/" + FORMAT_CONFIG_FILE_NAME)
 
 
 class CollapseStructFormatting(unittest.TestCase):
 
     def setUp(self):
-        self.format_config = create_config_file()
+        self.format_config = create_config_file(os.getcwd())
         self.format_config.set(COLLAPSE_STRUCTS_SECT, "list", "True")
         self.format_config.set(COLLAPSE_STRUCTS_SECT, "dict", "True")
         self.format_config.set(LENGTHS_SECT, "condensed_field_len", "100")
@@ -258,13 +258,13 @@ class CollapseStructFormatting(unittest.TestCase):
                          "abcdefghijklmnopqrstuvwxyzabcdef")
 
     def tearDown(self):
-        os.remove(FORMAT_CONFIG_FILE_NAME)
+        os.remove(os.getcwd() + "/" + FORMAT_CONFIG_FILE_NAME)
 
 
 class CondenseFieldsFormatting(unittest.TestCase):
 
     def setUp(self):
-        self.format_config = create_config_file()
+        self.format_config = create_config_file(os.getcwd())
         self.format_config.set(CONDENSE_FIELDS_SECT, "details", "True")
         self.format_config.set(COLLAPSE_STRUCTS_SECT, "list", "True")
         self.format_config.set(COLLAPSE_STRUCTS_SECT, "dict", "True")
@@ -299,13 +299,13 @@ class CondenseFieldsFormatting(unittest.TestCase):
         self.assertEqual(log_formatter.condense_field("original_line"), self.test_lines[20].strip())
 
     def tearDown(self):
-        os.remove(FORMAT_CONFIG_FILE_NAME)
+        os.remove(os.getcwd() + "/" + FORMAT_CONFIG_FILE_NAME)
 
 
 class MaxLineFormatting(unittest.TestCase):
 
     def setUp(self):
-        self.format_config = create_config_file()
+        self.format_config = create_config_file(os.getcwd())
         self.log_formatter = Output(LogLine, self.format_config)
 
         with open("test.log", "r") as test_log_file:
@@ -321,7 +321,7 @@ class MaxLineFormatting(unittest.TestCase):
         self.assertEqual(output[0], self.test_lines[22].strip())
 
     def tearDown(self):
-        os.remove(FORMAT_CONFIG_FILE_NAME)
+        os.remove(os.getcwd() + "/" + FORMAT_CONFIG_FILE_NAME)
 
 
 if __name__ == "__main__":

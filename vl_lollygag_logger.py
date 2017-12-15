@@ -54,8 +54,13 @@ from lollygag_logger import LogLine, LogFormatter, LollygagLogger
 PROGRAM = "Lollygag Logger"
 DESCRIPTION = "This script will print out formatted logs from a log file or format the output of the " \
               "vl run command."
-ARG_FILE_DESC = "Path of the log file to print."
-ARG_VL_DESC = "The path to the suite as used in the 'vl run' command."
+ARG_VL_DESC = "By default, the path to suite as in the vl_run command. Also used by -read and -at2 flags"
+ARG_FILE_DESC = "Read from log file in vl_path."
+ARG_AT2_DESC = "Fetch AT2 Task Instance logs from taskID in vl_path"
+ARG_FIND_DESC = "Highlight specified string found in the logs."
+ARG_LIST_DESC = "List specified test case or step. For test case, match 'Test Case #'. If" \
+                "specifying step, list full name out as seen in logs."
+ARG_SAVE_DESC = "Save log output to specified file."
 
 # Types of logs found during vl execution
 TYPE_DEBUG = "DEBUG"
@@ -65,6 +70,8 @@ TYPE_ERROR = "ERROR"
 TYPE_STEP = "STEP"
 TYPE_TITLE = "TITLE"
 TYPE_OTHER = "OTHER"
+
+
 
 
 class ValenceLogLine(LogLine):
@@ -293,111 +300,44 @@ class ValenceConsoleOutput(LogFormatter):
             return str_line
 
 
-def format_print_file_to_console(filepath):
-    """Prints a log file to the console using format information found within a format config file within
-    the same directory as the log file. If the format config file isn't found, a new one is created using
-    default settings. Refer to Create Config File function for further config details.
-
-    :param str filepath: File path of the log file to be printed.
-    """
-
-    # Create new format config file if it doesn't already exist in the same directory as the log file
-    config_path = filepath[:filepath.rfind("/") + 1] + FORMAT_CONFIG_FILE_NAME
-    if not os.path.isfile(config_path):
-        create_config_file(config_path)
-    config = configparser.ConfigParser()
-    config.read(config_path)
-
-    # Open the log file, format each line, and print to the console.
-    with open(filepath, "r") as logfile:
-        for line in logfile.readlines():
-            formatted_line = LegacyLogFormatter.format_line_for_console(line, config)
-            if formatted_line == "\n":
-                print ""
-            elif formatted_line == "":
-                continue
-            else:
-                print formatted_line
-
-
-def format_vl_output(vl_run_path):
-    """Captures the log lines from the output of a "vl run <vl_run_path>" and formats them as specified
-    in a format config file. This function will need to be call in the same location as a typical vl run
-    would be called in to ensure that the suite path is correct.
-
-    The format config file is generated in the current working directory and
-    can be updated. Refer to Create Config File function for further config details.
-
-    :param str vl_run_path: The path to the suite to be executed
-    :return:
-    """
-
-    # Create new format config file if it doesn't already exist in the current working directory
-    config_path = os.getcwd() + "/" + FORMAT_CONFIG_FILE_NAME
-    if not os.path.isfile(config_path):
-        create_config_file()
-    config = configparser.ConfigParser()
-    config.read(config_path)
-    initial_config_modify_time = os.path.getmtime(config_path)
-
-    # Begin vl run subprocess
-    proc = subprocess.Popen(["vl", "run", vl_run_path], stdout=subprocess.PIPE,
-                            bufsize=1, universal_newlines=False)
-    try:
-
-        # Capture output from vl run, format it, and print it to the console
-        for line in iter(proc.stdout.readline, b''):
-
-            # Check for format config file update
-            current_config_modify_time = os.path.getmtime(config_path)
-            if current_config_modify_time > initial_config_modify_time:
-                config.read(config_path)
-                initial_config_modify_time = current_config_modify_time
-
-            # Format and print log line
-            formatted_line = LegacyLogFormatter.format_line_for_console(line, config)
-            if formatted_line == "\n":
-                print ""
-            elif formatted_line == "":
-                continue
-            else:
-                print formatted_line
-            sys.stdout.flush()
-
-        proc.stdout.close()
-        proc.wait()
-    except KeyboardInterrupt:
-        proc.kill()
-
-
 if __name__ == '__main__':
 
     # Argument setup and parsing
     parser = argparse.ArgumentParser(prog=PROGRAM, description=DESCRIPTION)
     group = parser.add_mutually_exclusive_group()
-    group.add_argument("-f", action="store", dest="log_filepath", help=ARG_FILE_DESC)
-    group.add_argument("-vl", action="store", dest="vl_suite_path", help=ARG_VL_DESC)
+    parser.add_argument("vl_path", help=ARG_VL_DESC)
+    group.add_argument("-r", "--read", action="store_true", help=ARG_FILE_DESC)
+    group.add_argument("-at2", action="store_true", help=ARG_AT2_DESC)
+    parser.add_argument("-f", "--find", action="store", dest="find_str", help=ARG_FIND_DESC)
+    parser.add_argument("-l", "--list", action="store", dest="list_step", help=ARG_LIST_DESC)
+    parser.add_argument("-s", "--save", action="store", dest="save_path", help=ARG_SAVE_DESC)
     args = parser.parse_args()
 
     # Validate that args exist and execute printing the logs
-    if args.log_filepath:
-        arg_path = args.log_filepath
-        if arg_path[0] == "/" or arg_path[0] == "~":
-            file_path = arg_path
+    if args.vl_path:
+        config = create_config_file()
+        if not args.read and not args.at2:
+            # Begin vl run subprocess
+            proc = subprocess.Popen(["vl", "run", args.vl_path], stdout=subprocess.PIPE,
+                                    bufsize=1, universal_newlines=False)
+            try:
+                logger = LollygagLogger(iter(proc.stdout.readline, b''),
+                                        ValenceConsoleOutput(ValenceLogLine, config))
+                logger.run()
+                proc.stdout.close()
+                proc.wait()
+            except KeyboardInterrupt:
+                proc.kill()
+        elif args.read:
+            arg_path = args.vl_path
+            if arg_path[0] == "/" or arg_path[0] == "~":
+                file_path = arg_path
+            else:
+                file_path = os.getcwd() + "/" + arg_path
+            with open(file_path, "r") as logfile:
+                logger = LollygagLogger(logfile, ValenceConsoleOutput(ValenceLogLine, config))
+                logger.run()
+        elif args.at2:
+            print "AT2 option selected. TaskID: {0}.".format(args.vl_path)
         else:
-            file_path = os.getcwd() + "/" + arg_path
-
-        config_path = file_path[:file_path.rfind("/") + 1] + FORMAT_CONFIG_FILE_NAME
-        if not os.path.isfile(config_path):
-            create_config_file(config_path)
-        config = configparser.ConfigParser()
-        config.read(config_path)
-
-        with open(file_path, "r") as logfile:
-            logger = LollygagLogger(logfile, ValenceConsoleOutput(ValenceLogLine, config))
-            logger.run()
-
-    elif args.vl_suite_path:
-        format_vl_output(args.vl_suite_path)
-    else:
-        print "Please pass valid arguments"
+            print "Please pass valid arguments"

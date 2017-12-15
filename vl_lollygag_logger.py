@@ -159,6 +159,10 @@ class ValenceConsoleOutput(LogFormatter):
 
     :ivar log_line_cls: the LogLine class used to parse the unformatted log lines
     :ivar format_config: the configparser that contains all of the user options
+    :ivar find_str: String to highlight if contained in line.
+    :ivar list_step: The step or test case to be printed. For test case, match 'Test Case #'. If
+        specifying step, list full name out as seen in logs. If empty, all logs will be printed.
+    :ivar save_file: File to save the formatted logs to. If empty, logs won't be saved.
     """
 
     # Valid values from ConfigParser that result in True
@@ -166,10 +170,13 @@ class ValenceConsoleOutput(LogFormatter):
 
     log_queue = []
 
-    def __init__(self, log_line_cls, format_config):
+    def __init__(self, log_line_cls, format_config, find_str="", list_step="", save_file=""):
         self.log_line_cls = log_line_cls
         self.format_config = format_config
         self.log_line = None
+        self.find_str = find_str
+        self.list_step = list_step
+        self.save_file = save_file
 
         # Format config sections stored individually as dicts
         self.sect_display_log_types = self.format_config[DISPLAY_LOG_TYPES_SECT]
@@ -316,13 +323,14 @@ if __name__ == '__main__':
     # Validate that args exist and execute printing the logs
     if args.vl_path:
         config = create_config_file()
+        vl_console_output = ValenceConsoleOutput(ValenceLogLine, config,
+                                      args.find_str, args.list_step, args.save_path)
         if not args.read and not args.at2:
             # Begin vl run subprocess
             proc = subprocess.Popen(["vl", "run", args.vl_path], stdout=subprocess.PIPE,
                                     bufsize=1, universal_newlines=False)
             try:
-                logger = LollygagLogger(iter(proc.stdout.readline, b''),
-                                        ValenceConsoleOutput(ValenceLogLine, config))
+                logger = LollygagLogger(iter(proc.stdout.readline, b''), vl_console_output)
                 logger.run()
                 proc.stdout.close()
                 proc.wait()
@@ -335,7 +343,7 @@ if __name__ == '__main__':
             else:
                 file_path = os.getcwd() + "/" + arg_path
             with open(file_path, "r") as logfile:
-                logger = LollygagLogger(logfile, ValenceConsoleOutput(ValenceLogLine, config))
+                logger = LollygagLogger(logfile, vl_console_output)
                 logger.run()
         elif args.at2:
             print "AT2 option selected. TaskID: {0}.".format(args.vl_path)

@@ -38,17 +38,14 @@ Improvements to implement:
 =========================================================================================================
 """
 
-from abc import ABCMeta, abstractmethod
 import subprocess
-import configparser
-import os
 import sys
 import re
 import argparse
-from threading import Thread
-import Queue
 from vl_config_file import *
 from lollygag_logger import LogLine, LogFormatter, LollygagLogger
+import requests
+from requests import auth
 
 # Descriptions for arg parse
 PROGRAM = "Lollygag Logger"
@@ -374,6 +371,31 @@ if __name__ == '__main__':
                 logger = LollygagLogger(logfile, vl_console_output)
                 logger.run()
         elif args.at2:
+
+            AT2_USER = config[AT2_TASKINSTANCE_CREDENTIALS]["username"]
+            AT2_PASS = config[AT2_TASKINSTANCE_CREDENTIALS]["password"]
+
+            if not AT2_USER or not AT2_PASS:
+                print "Please enter username and password in " \
+                      "the {0} file.".format(FORMAT_CONFIG_FILE_NAME)
+                exit(0)
+
+            STEP_ID = args.vl_path
+            AT2_STREAM_URL = 'https://autotest2.solidfire.net/stream/stdout/{}/'.format(STEP_ID)
+            AUTH = auth.HTTPBasicAuth(AT2_USER, AT2_PASS)
+            session = requests.Session()
+            session.auth = AUTH
+
+            resp = requests.Response()  # dummy for now
+
+            try:
+                resp = session.get(AT2_STREAM_URL, stream=True)
+                logger = LollygagLogger(resp.iter_lines(), vl_console_output)
+                logger.run()
+            except BaseException:  # pylint: disable=broad-except
+                raise
+            finally:
+                resp.close()
             print "AT2 option selected. TaskID: {0}.".format(args.vl_path)
         else:
             print "Please pass valid arguments"

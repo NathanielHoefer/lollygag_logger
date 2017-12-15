@@ -15,6 +15,7 @@ FORMAT_CONFIG_FILE_NAME = ".logger_format.config"
 DEFAULT_CONFIG_PATH = DEFAULT_CONFIG_DIR + "/" + FORMAT_CONFIG_FILE_NAME
 
 # Section names
+AT2_TASKINSTANCE_CREDENTIALS = "AT2 LOG CREDENTIALS"
 DISPLAY_LOG_TYPES_SECT = "DISPLAY LOG TYPES"
 DISPLAY_FIELDS_SECT = "DISPLAY FIELDS"
 CONDENSE_FIELDS_SECT = "CONDENSE FIELDS"
@@ -31,6 +32,11 @@ def create_config_file(file_directory=""):
     """
 
     config_fields = OrderedDict()
+
+    # Username and password for grabbing AT2 logs from a task instance ID.
+    config_fields[AT2_TASKINSTANCE_CREDENTIALS] = [
+        ("username", ""),
+        ("password", "")]
 
     # Log lines identified by the following types to be printed or ignored
     config_fields[DISPLAY_LOG_TYPES_SECT] = [

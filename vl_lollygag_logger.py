@@ -154,6 +154,69 @@ class ValenceLogLine(LogLine):
         self.standard_format = True
 
 
+class ValenceHeader(LogLine):
+    """Stores the Valence header and its individual tokens.
+
+    A header is either a title, identified by '=', or a step, identified by '-'. Looks for a
+    colon-separated header for parsing the line, otherwise the empty values will be used for all but the
+    original line member variable.
+
+    :ivar str original_line: The line as it was entered
+    :ivar str type: Either 'title' or 'step'
+    :ivar bool suite: True if header is a title and describes a suite specifically, otherwise False
+    :ivar str test_name: Name of the test case or suite following the 'Ts' or 'Tc' format.
+    :ivar str test_info: Information prior to the colon
+    :ivar str test_instruction: Information after the colon
+    :ivar int test_number: Step or test case number if there is one.
+    """
+
+    def __init__(self, original_line="", type=""):
+        super(ValenceHeader, self).__init__(original_line)
+        self.type = type
+        self._default_vals()
+        self._tokenize_line(original_line)
+
+    def __str__(self):
+        border = "="*105 if self.type == "title" else "-"*105
+        return "\n".join([border, self.original_line, border])
+
+    def _default_vals(self):
+        """Set all field to default values."""
+        self.suite = False
+        self.test_name = ""
+        self.test_info = ""
+        self.test_instruction = ""
+        self.test_number = 0
+
+    def _tokenize_line(self, input_str):
+        """Splits the input into the various tokens based on whether the header is a title or a step.
+
+        :param str input_str: Log line found in a valence header to be tokenized.
+        """
+
+        # Don't try to parse if header not in test case or suite
+        split = input_str.split(":")
+        if len(split) <= 1:
+            return
+
+        self.test_info = split[0].strip() if len(split) == 2 else ""
+        self.test_instruction = split[1].strip() if len(split) == 2 else ""
+
+        if self.type == "title":
+            self.suite = True if self.test_info == "Test Suite" else False
+            if self.suite:
+                self.test_name = re.search("Ts\w*", self.original_line).group()
+            else:
+                self.test_name = re.search("Tc\w*", self.original_line).group()
+                self.test_number = int(re.search("\d+", self.test_info).group())
+        elif self.type == "step":
+            self.test_name = re.search("Tc\w*", self.original_line).group()
+            self.test_number = int(re.search("\d+", self.test_info).group())
+        else:
+            self._default_vals()
+            return
+
+
 class ValenceConsoleOutput(LogFormatter):
     """Class containing log line format functions.
 

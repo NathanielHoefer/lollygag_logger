@@ -38,17 +38,14 @@ Improvements to implement:
 =========================================================================================================
 """
 
-from abc import ABCMeta, abstractmethod
 import subprocess
-import configparser
-import os
 import sys
 import re
 import argparse
-from threading import Thread
-import Queue
 from vl_config_file import *
 from lollygag_logger import LogLine, LogFormatter, LollygagLogger
+import requests
+from requests import auth
 
 # Descriptions for arg parse
 PROGRAM = "Lollygag Logger"
@@ -90,7 +87,8 @@ class ValenceLogLine(LogLine):
 
     LOG_LEVELS = ["DEBUG", "INFO", "WARNING", "ERROR"]
     FIELDS = ["date", "time", "type", "source", "thread", "details"]
-    TOKEN_COUNT = len(FIELDS)
+    VALENCE_TOKEN_COUNT = len(FIELDS)
+    AT2_TOKEN_COUNT = VALENCE_TOKEN_COUNT - 1
 
     def __init__(self, original_line=""):
         super(ValenceLogLine, self).__init__(original_line)
@@ -113,6 +111,7 @@ class ValenceLogLine(LogLine):
         self.thread = ""
         self.details = ""
         self.standard_format = False
+        self.at2_log = False
 
     def _tokenize_line(self, input_str):
         """Determines if the log line is in standard vl logging format based on regular expressions.
@@ -130,27 +129,53 @@ class ValenceLogLine(LogLine):
             self.type = "STEP"
             return
 
-        # Check to see if there are the expected number of tokens in the line. Currently expecting there
-        # to be 5 or 6 tokens. If not, then mark as a non-standard vl format, and return
-        split = input_str.split(" ", self.TOKEN_COUNT - 1)
-        if not (self.TOKEN_COUNT - 1 <= len(split) <= self.TOKEN_COUNT):
+        # Identifies if the log is int AT2 standard format based on the format of the time stamp. AT2
+        # logs don't include the thread field, so determine token count if in AT2 format.
+        current_token_count = 0
+        if re.search("\d{2}:\d{2}:\d{2}\,\d{3}", input_str):
+            self.at2_log = True
+            current_token_count = self.AT2_TOKEN_COUNT
+        else:
+            current_token_count = self.VALENCE_TOKEN_COUNT
+
+        # Check to see if there are the expected number of tokens in the line. If not, then mark as a
+        # non-standard vl format, and return.
+        split = input_str.split(" ", current_token_count - 1)
+        if not (current_token_count - 1 <= len(split) <= current_token_count):
             return
+
 
         # Assign token to proper field if format matches correctly
         self.date = split[0] if re.match("^\d{4}\-\d{2}\-\d{2}$", split[0]) else ""
-        self.time = split[1] if re.match("^\d{2}:\d{2}:\d{2}\.\d{6}$", split[1]) else ""
+
+        # Check to see if logs are in valence format or AT2 format based on time
+        if re.match("^\d{2}:\d{2}:\d{2}\.\d{6}$", split[1]):
+            self.time = split[1]
+        elif re.match("^\d{2}:\d{2}:\d{2}\,\d{3}$", split[1]):
+            self.time = split[1]
+        else:
+            self.time = ""
         if split[2] in self.LOG_LEVELS:
             self.type = split[2]
         self.source = split[3] if re.match("^\[.*:.*\]$", split[3]) else ""
-        self.thread = split[4] if re.match("^\[.*:.*\]$", split[4]) else ""
-        self.details = split[5] if len(split) == self.TOKEN_COUNT else ""
+        if self.at2_log:  # Special case to check if logs are being read from AT2 based on time stamp
+            self.details = split[4] if len(split) == self.AT2_TOKEN_COUNT else ""
+        else:
+            self.thread = split[4] if re.match("^\[.*:.*\]$", split[4]) else ""
+            self.details = split[5] if len(split) == self.VALENCE_TOKEN_COUNT else ""
 
         # If any of the fields are empty with the exception of details, change type to OTHER and move all
         # line data to the details field.
         for field in self.FIELDS:
-            if field is not "details" and getattr(self, field) is "":
-                self._default_vals()
-                return
+            if self.at2_log:
+                if (field is not "details" and field is not "thread")\
+                        and getattr(self, field) is "":
+                    self._default_vals()
+                    return
+            else:
+                if field is not "details" and getattr(self, field) is "":
+                    self._default_vals()
+                    return
         self.standard_format = True
 
 
@@ -409,6 +434,31 @@ if __name__ == '__main__':
                 logger = LollygagLogger(logfile, vl_console_output)
                 logger.run()
         elif args.at2:
+
+            AT2_USER = config[AT2_TASKINSTANCE_CREDENTIALS]["username"]
+            AT2_PASS = config[AT2_TASKINSTANCE_CREDENTIALS]["password"]
+
+            if not AT2_USER or not AT2_PASS:
+                print "Please enter username and password in " \
+                      "the {0} file.".format(FORMAT_CONFIG_FILE_NAME)
+                exit(0)
+
+            STEP_ID = args.vl_path
+            AT2_STREAM_URL = 'https://autotest2.solidfire.net/stream/stdout/{}/'.format(STEP_ID)
+            AUTH = auth.HTTPBasicAuth(AT2_USER, AT2_PASS)
+            session = requests.Session()
+            session.auth = AUTH
+
+            resp = requests.Response()  # dummy for now
+
+            try:
+                resp = session.get(AT2_STREAM_URL, stream=True)
+                logger = LollygagLogger(resp.iter_lines(), vl_console_output)
+                logger.run()
+            except BaseException:  # pylint: disable=broad-except
+                raise
+            finally:
+                resp.close()
             print "AT2 option selected. TaskID: {0}.".format(args.vl_path)
         else:
             print "Please pass valid arguments"

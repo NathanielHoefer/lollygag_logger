@@ -133,6 +133,22 @@ class DisplayLogTypesFormatting(unittest.TestCase):
             log_formatter.format(self.test_lines[6])
         self.assertTrue(len(output) == 0)
 
+    def test_hide_at2_debug(self):
+        log_formatter = Output(LogLine, self.format_config)
+        self.format_config.set(DISPLAY_LOG_TYPES_SECT, "debug", "False")
+        output = []
+        with Capturing(output) as output:
+            log_formatter.format(self.test_lines[23])
+        self.assertTrue(len(output) == 0)
+
+    def test_hide_at2_info(self):
+        log_formatter = Output(LogLine, self.format_config)
+        self.format_config.set(DISPLAY_LOG_TYPES_SECT, "info", "False")
+        output = []
+        with Capturing(output) as output:
+            log_formatter.format(self.test_lines[24])
+        self.assertTrue(len(output) == 0)
+
     def tearDown(self):
         os.remove(os.getcwd() + "/" + FORMAT_CONFIG_FILE_NAME)
 
@@ -220,6 +236,51 @@ class DisplayFieldsFormatting(unittest.TestCase):
             log_formatter.format(self.test_lines[7])
         self.assertTrue(len(output) == 1)
         self.assertEqual(output[0], self.test_lines[13].strip())
+
+    def test_hide_at2_date(self):
+        log_formatter = Output(LogLine, self.format_config)
+        self.format_config.set(DISPLAY_FIELDS_SECT, "date", "False")
+        output = []
+        with Capturing(output) as output:
+            log_formatter.format(self.test_lines[25])
+        self.assertTrue(len(output) == 1)
+        self.assertEqual(output[0], self.test_lines[26].strip())
+
+    def test_hide_at2_time(self):
+        log_formatter = Output(LogLine, self.format_config)
+        self.format_config.set(DISPLAY_FIELDS_SECT, "time", "False")
+        output = []
+        with Capturing(output) as output:
+            log_formatter.format(self.test_lines[25])
+        self.assertTrue(len(output) == 1)
+        self.assertEqual(output[0], self.test_lines[27].strip())
+
+    def test_hide_at2_type(self):
+        log_formatter = Output(LogLine, self.format_config)
+        self.format_config.set(DISPLAY_FIELDS_SECT, "type", "False")
+        output = []
+        with Capturing(output) as output:
+            log_formatter.format(self.test_lines[25])
+        self.assertTrue(len(output) == 1)
+        self.assertEqual(output[0], self.test_lines[28].strip())
+
+    def test_hide_at2_source(self):
+        log_formatter = Output(LogLine, self.format_config)
+        self.format_config.set(DISPLAY_FIELDS_SECT, "source", "False")
+        output = []
+        with Capturing(output) as output:
+            log_formatter.format(self.test_lines[25])
+        self.assertTrue(len(output) == 1)
+        self.assertEqual(output[0], self.test_lines[29].strip())
+
+    def test_hide_at2_details(self):
+        log_formatter = Output(LogLine, self.format_config)
+        self.format_config.set(DISPLAY_FIELDS_SECT, "details", "False")
+        output = []
+        with Capturing(output) as output:
+            log_formatter.format(self.test_lines[25])
+        self.assertTrue(len(output) == 1)
+        self.assertEqual(output[0], self.test_lines[30].strip())
 
     def tearDown(self):
         os.remove(os.getcwd() + "/" + FORMAT_CONFIG_FILE_NAME)

@@ -11,10 +11,11 @@ import unittest
 from lollygag_logger.vl_lollygag_logger import ValenceHeader
 
 
+
 class TitleParse(unittest.TestCase):
 
     def setUp(self):
-        with open("test.log", "r") as test_log_file:
+        with open("test_logs/test.log", "r") as test_log_file:
             self.test_lines = test_log_file.readlines()
         self.test_lines = [x for x in self.test_lines if x[0] is not "#" and x.strip() is not ""]
 

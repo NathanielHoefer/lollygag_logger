@@ -6,8 +6,9 @@ by Nathaniel Hoefer
 Last Updated: 11/30/2017
 """
 
-from vl_lollygag_logger import ValenceLogLine as LogLine
 import unittest
+
+from lollygag_logger.vl_lollygag_logger import ValenceLogLine as LogLine
 
 
 class TestDateToken(unittest.TestCase):

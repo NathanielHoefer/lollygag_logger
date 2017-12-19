@@ -44,6 +44,7 @@ import re
 import argparse
 from vl_config_file import *
 from lollygag_logger import LogLine, LogFormatter, LollygagLogger
+import helpers
 import requests
 from requests import auth
 
@@ -195,14 +196,15 @@ class ValenceHeader(LogLine):
     :ivar int test_number: Step or test case number if there is one.
     """
 
-    def __init__(self, original_line="", type=""):
+    def __init__(self, original_line="", type="", max_len=105):
         super(ValenceHeader, self).__init__(original_line)
         self.type = type
+        self.max_len = max_len
         self._default_vals()
         self._tokenize_line(original_line)
 
     def __str__(self):
-        border = "="*105 if self.type == "title" else "-"*105
+        border = "="*self.max_len if self.type == "title" else "-"*self.max_len
         return "\n".join([border, self.original_line, border])
 
     def _default_vals(self):
@@ -253,9 +255,6 @@ class ValenceConsoleOutput(LogFormatter):
     :ivar save_file: File to save the formatted logs to. If empty, logs won't be saved.
     """
 
-    # Valid values from ConfigParser that result in True
-    VALID_TRUE_INPUT = ("true", "yes", "t", "y", "1")
-
     log_queue = []
 
     def __init__(self, log_line_cls, format_config, find_str="", list_step="", save_file=""):
@@ -273,6 +272,10 @@ class ValenceConsoleOutput(LogFormatter):
         self.sect_collapse_structs = self.format_config[COLLAPSE_STRUCTS_SECT]
         self.sect_lengths = self.format_config[LENGTHS_SECT]
 
+        # Variables needed for titles and steps
+        self.waiting_for_title = False
+        self.waiting_for_step = False
+
     def format(self, unformatted_log_line):
         """Prints the formatted log line to the console based on the format config file options."""
 
@@ -287,7 +290,7 @@ class ValenceConsoleOutput(LogFormatter):
 
         # Skip line if type is marked to not display
         log_type = self.log_line.type.strip().lower()
-        if not self._str_to_bool(self.sect_display_log_types[log_type]):
+        if not helpers.str_to_bool(self.sect_display_log_types[log_type]):
             return
 
         # Remove and condense fields in standard logs per format config file
@@ -297,102 +300,37 @@ class ValenceConsoleOutput(LogFormatter):
 
         # Grab max line length from format config file or from console width
         formatted_line = str(self.log_line)
-        if self._str_to_bool(self.sect_lengths["use_console_len"]) and sys.stdin.isatty():
-            _, console_width = os.popen('stty size', 'r').read().split()
-            max_len = int(console_width)
-        else:
-            max_len = int(self.sect_lengths["max_line_len"])
 
         # Condense entire log line if beyond max length
-        print self.condense(formatted_line, max_len)
-
-    def _str_to_bool(self, str_bool_val):
-        """Evaluates bool value of string input based on LogFormatter.VALID_TRUE_INPUT"""
-        return str_bool_val.lower() in self.VALID_TRUE_INPUT
+        print helpers.condense(formatted_line, self._calc_max_len())
 
     def _remove_fields(self):
         """Remove field from line if marked not to display."""
         for field, val in self.sect_display_fields.items():
-            if not self._str_to_bool(val):
+            if not helpers.str_to_bool(val):
                 setattr(self.log_line, field, "")
 
     def _condense_fields(self):
         """Condense and collapse individual line fields to the specified length in format config."""
-        for field, val in self.sect_condense_fields.items():
-            if self._str_to_bool(val):
-                self.condense_field(field)
-
-    def condense_field(self, field):
-        """Condenses each field of a log line per the format config file to a specific length, and
-        collapses lists and dictionaries that exceed a given length. All specified in the format_config
-        file and updates the log_line object.
-
-        :param str field: The LogLine field to be condensed.
-        """
-
-        collapse_dict = self.sect_collapse_structs["dict"]
-        collapse_list = self.sect_collapse_structs["list"]
-        condense_len = int(self.sect_lengths["condensed_field_len"])
-        current_field_str = getattr(self.log_line, field)
-
-        # Collapse dicts or lists if specified
-        if self._str_to_bool(collapse_dict):
-            current_field_str = self.collapse_struct(current_field_str, "dict")
-        if self._str_to_bool(collapse_list):
-            current_field_str = self.collapse_struct(current_field_str, "list")
-
-        # Condense length of element if it exceeds specified length
-        current_field_str = self.condense(current_field_str, condense_len)
-        setattr(self.log_line, field, current_field_str)
-        return current_field_str
-
-    def collapse_struct(self, field_str, data_struct):
-        """Shortens the display of the first encountered list or dictionary to a specified length within
-        a given string. If the length of the structure (including the '[]' or '{}' is > the
-        collapsed_struct_len specified in config file, then the structure will be reduced to that length
-        and indicated by an ellipse. Ex: [abcdefghijklmnopqrstuvwxyzab] -> [abcdefghijklmnopqrstuvwxy...]
-
-        Currently only minimizes the out-most structure while ignoring the inner structures. Will look
-        to fix this in the future if time allows.
-
-        :param str field_str: The log line element str containing the data structure
-        :param str data_struct: "list" or "dict" indicating what data structure to collapse
-        :return: String of the element with the specified collapsed structure.
-        """
-        # Determine struct entered
-        if data_struct == "dict":
-            start_char = "{"
-            end_char = "}"
-        elif data_struct == "list":
-            start_char = "["
-            end_char = "]"
-        else:
-            return field_str
-
-        # Initialize collapse values - probably can find library to do this more efficiently
-        start_index = field_str.find(start_char)
-        end_index = field_str.find(end_char)
+        collapse_dict = helpers.str_to_bool(self.sect_collapse_structs["dict"])
+        collapse_list = helpers.str_to_bool(self.sect_collapse_structs["list"])
         collapse_len = int(self.format_config[LENGTHS_SECT]["collapsed_struct_len"])
+        condense_len = int(self.sect_lengths["condensed_field_len"])
 
-        # Collapse first data structure found
-        if 0 <= start_index < end_index:
-            struct = "".join([start_char,
-                             self.condense(field_str[start_index + 1: end_index], collapse_len - 2),
-                             end_char])
-            return "".join([field_str[:start_index], struct, field_str[end_index + 1:]])
-        return field_str
+        for field, val in self.sect_condense_fields.items():
+            if helpers.str_to_bool(val):
+                current_field_str = getattr(self.log_line, field)
+                current_field_str = helpers.condense_field(current_field_str, condense_len,
+                                                           collapse_dict, collapse_list, collapse_len)
+                setattr(self.log_line, field, current_field_str)
 
-    def condense(self, str_line, max_len):
-        """Condenses the string if it is greater than the max length, appending ellipses.
-
-        :param str str_line: Line to be condensed
-        :param int max_len: The maximum length of the line
-        """
-
-        if len(str_line) > max_len:
-            return "".join([str_line[:max_len - 3], "..."])
+    def _calc_max_len(self):
+        """Returns max length of the logline to be printed based on the format config file."""
+        if helpers.str_to_bool(self.sect_lengths["use_console_len"]) and sys.stdin.isatty():
+            _, console_width = os.popen('stty size', 'r').read().split()
+            return int(console_width)
         else:
-            return str_line
+            return int(self.sect_lengths["max_line_len"])
 
 
 if __name__ == '__main__':

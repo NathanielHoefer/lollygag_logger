@@ -6,16 +6,9 @@ by Nathaniel Hoefer
 Last Updated: 12/2/2017
 """
 
-from vl_lollygag_logger import ValenceConsoleOutput as Output
-from vl_lollygag_logger import ValenceLogLine as LogLine
-from vl_lollygag_logger import ValenceHeader
-from vl_config_file import *
-from vl_console_out_unittest import Capturing
-import os
 import unittest
 
-from cStringIO import StringIO
-import sys
+from lollygag_logger.vl_lollygag_logger import ValenceHeader
 
 
 class TitleParse(unittest.TestCase):

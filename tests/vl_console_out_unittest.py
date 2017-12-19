@@ -62,7 +62,7 @@ class DisplayLogTypesFormatting(unittest.TestCase):
         self.format_config.set(DISPLAY_LOG_TYPES_SECT, "error", "True")
         self.format_config.set(DISPLAY_LOG_TYPES_SECT, "other", "True")
 
-        with open("test.log", "r") as test_log_file:
+        with open("test_logs/test.log", "r") as test_log_file:
             self.test_lines = test_log_file.readlines()
         self.test_lines = [x for x in self.test_lines if x[0] is not "#" and x.strip() is not ""]
 
@@ -163,7 +163,7 @@ class DisplayFieldsFormatting(unittest.TestCase):
         self.format_config.set(DISPLAY_FIELDS_SECT, "thread", "True")
         self.format_config.set(DISPLAY_FIELDS_SECT, "details", "True")
 
-        with open("test.log", "r") as test_log_file:
+        with open("test_logs/test.log", "r") as test_log_file:
             self.test_lines = test_log_file.readlines()
         self.test_lines = [x for x in self.test_lines if x[0] is not "#" and x.strip() is not ""]
         self.original_line = self.test_lines[7]
@@ -285,90 +285,13 @@ class DisplayFieldsFormatting(unittest.TestCase):
         os.remove(os.getcwd() + "/" + FORMAT_CONFIG_FILE_NAME)
 
 
-class CollapseStructFormatting(unittest.TestCase):
-
-    def setUp(self):
-        self.format_config = create_config_file(os.getcwd())
-        self.format_config.set(COLLAPSE_STRUCTS_SECT, "list", "True")
-        self.format_config.set(COLLAPSE_STRUCTS_SECT, "dict", "True")
-        self.format_config.set(LENGTHS_SECT, "condensed_field_len", "100")
-        self.format_config.set(LENGTHS_SECT, "collapsed_struct_len", "30")
-        self.log_formatter = Output(LogLine, self.format_config)
-
-    def test_collapse_empty_list(self):
-        self.assertEqual(self.log_formatter.collapse_struct("[]", "list"), "[]")
-
-    def test_collapse_empty_dict(self):
-        self.assertEqual(self.log_formatter.collapse_struct("{}", "dict"), "{}")
-
-    def test_collapse_at_len_list(self):
-        self.assertEqual(self.log_formatter.collapse_struct("[abcdefghijklmnopqrstuvwxyzab]", "list"),
-                         "[abcdefghijklmnopqrstuvwxyzab]")
-
-    def test_collapse_at_len_dict(self):
-        self.assertEqual(self.log_formatter.collapse_struct("{abcdefghijklmnopqrstuvwxyzab}", "dict"),
-                         "{abcdefghijklmnopqrstuvwxyzab}")
-
-    def test_collapse_one_over(self):
-        self.assertEqual(self.log_formatter.collapse_struct("[abcdefghijklmnopqrstuvwxyzabc]", "list"),
-                         "[abcdefghijklmnopqrstuvwxy...]")
-
-    def test_collapse_no_list(self):
-        self.assertEqual(self.log_formatter.collapse_struct("abcdefghijklmnopqrstuvwxyzabcdef", "list"),
-                         "abcdefghijklmnopqrstuvwxyzabcdef")
-
-    def tearDown(self):
-        os.remove(os.getcwd() + "/" + FORMAT_CONFIG_FILE_NAME)
-
-
-class CondenseFieldsFormatting(unittest.TestCase):
-
-    def setUp(self):
-        self.format_config = create_config_file(os.getcwd())
-        self.format_config.set(CONDENSE_FIELDS_SECT, "details", "True")
-        self.format_config.set(COLLAPSE_STRUCTS_SECT, "list", "True")
-        self.format_config.set(COLLAPSE_STRUCTS_SECT, "dict", "True")
-        self.format_config.set(LENGTHS_SECT, "condensed_field_len", "100")
-        self.format_config.set(LENGTHS_SECT, "collapsed_struct_len", "30")
-        self.log_formatter = Output(LogLine, self.format_config)
-
-        with open("test.log", "r") as test_log_file:
-            self.test_lines = test_log_file.readlines()
-        self.test_lines = [x for x in self.test_lines if x[0] is not "#" and x.strip() is not ""]
-
-    def test_at_len_no_struct(self):
-        log_line = LogLine(self.test_lines[14].strip())
-        self.log_formatter.log_line = log_line
-        self.assertEqual(self.log_formatter.condense_field("original_line"), self.test_lines[14].strip())
-
-    def test_at_len_struct(self):
-        log_line = LogLine(self.test_lines[15].strip())
-        self.log_formatter.log_line = log_line
-        self.assertEqual(self.log_formatter.condense_field("original_line"), self.test_lines[16].strip())
-
-    def test_one_over_len(self):
-        log_line = LogLine(self.test_lines[17].strip())
-        self.log_formatter.log_line = log_line
-        self.assertEqual(self.log_formatter.condense_field("original_line"), self.test_lines[18].strip())
-
-    def test_over_len_no_struct_collapse(self):
-        log_formatter = Output(LogLine, self.format_config)
-        log_formatter.sect_collapse_structs["dict"] = "False"
-        log_line = LogLine(self.test_lines[19].strip())
-        log_formatter.log_line = log_line
-        self.assertEqual(log_formatter.condense_field("original_line"), self.test_lines[20].strip())
-
-    def tearDown(self):
-        os.remove(os.getcwd() + "/" + FORMAT_CONFIG_FILE_NAME)
-
-
 class MaxLineFormatting(unittest.TestCase):
 
     def setUp(self):
         self.format_config = create_config_file(os.getcwd())
         self.log_formatter = Output(LogLine, self.format_config)
 
-        with open("test.log", "r") as test_log_file:
+        with open("test_logs/test.log", "r") as test_log_file:
             self.test_lines = test_log_file.readlines()
         self.test_lines = [x for x in self.test_lines if x[0] is not "#" and x.strip() is not ""]
 

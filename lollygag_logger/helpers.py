@@ -47,7 +47,9 @@ def collapse_struct(field_str, data_struct, collapse_len=30):
     if 0 <= start_index < end_index:
         struct = "".join([start_char,
                           condense(field_str[start_index + 1: end_index], collapse_len - 2), end_char])
-        return "".join([field_str[:start_index], struct, field_str[end_index + 1:]])
+        val = "".join([field_str[:start_index], struct, field_str[end_index + 1:]])
+        return val
+
     return field_str
 
 
@@ -66,9 +68,9 @@ def condense_field(field_str, condense_len=50,
     # Collapse dicts or lists if specified
     current_field_str = field_str
     if collapse_dict:
-        current_field_str = collapse_struct(field_str, "dict", collapse_len)
+        current_field_str = collapse_struct(current_field_str, "dict", collapse_len)
     if collapse_list:
-        current_field_str = collapse_struct(field_str, "list", collapse_len)
+        current_field_str = collapse_struct(current_field_str, "list", collapse_len)
 
     # Condense length of element if it exceeds specified length
     return condense(current_field_str, condense_len)

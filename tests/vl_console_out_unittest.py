@@ -6,14 +6,13 @@ by Nathaniel Hoefer
 Last Updated: 12/2/2017
 """
 
-from vl_lollygag_logger import ValenceConsoleOutput as Output
-from vl_lollygag_logger import ValenceLogLine as LogLine
-from vl_config_file import *
-import os
-import unittest
-
-from cStringIO import StringIO
 import sys
+import unittest
+from cStringIO import StringIO
+
+from lollygag_logger.vl_config_file import *
+from lollygag_logger.vl_lollygag_logger import ValenceConsoleOutput as Output
+from lollygag_logger.vl_lollygag_logger import ValenceLogLine as LogLine
 
 
 class Capturing(list):

@@ -60,9 +60,38 @@ Sending HTTP POST request to server_url: https://10.10.10.10/json; {"params": "I
 
 
 
-# Max Line Length: Elements 14-20 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Max Line Length: Elements 21-22 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 # Entered: Element 21
 Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc; "params": "IDs": 20313, 21455.
 # Expected: Element 22
 Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc; "params": "IDs": 20313, 21...
+
+
+
+# Display AT2 Log Types: Elements 23-24 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+2017-11-27 21:34:15,389 DEBUG [autologger.main:241] JSON-RPC-POST: method=RemoveAccount, url=https://10.117.207.128/json-rpc/10.0, id=5450
+2017-11-27 21:34:15,436 INFO [tests.suites_refresh.bulk_volume.cases.bulk_volume_operations:774] Deleting all accounts on target cluster
+
+
+
+# Display AT2 Fields: Elements 25-30 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+# Original Line: Element 25
+2017-11-27 21:34:15,436 INFO [res.core.absolute:636] Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc; {"params": {"IDs": [203]}}.
+
+# Expected Hidden Date: Element 26
+21:34:15,436 INFO [res.core.absolute:636] Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc; {"params": {"IDs": [203]}}.
+
+# Expected Hidden Time: Element 27
+2017-11-27 INFO [res.core.absolute:636] Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc; {"params": {"IDs": [203]}}.
+
+# Expected Hidden Type: Element 28
+2017-11-27 21:34:15,436 [res.core.absolute:636] Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc; {"params": {"IDs": [203]}}.
+
+# Expected Hidden Source: Element 29
+2017-11-27 21:34:15,436 INFO Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc; {"params": {"IDs": [203]}}.
+
+# Expected Hidden Details: Element 30
+2017-11-27 21:34:15,436 INFO [res.core.absolute:636]

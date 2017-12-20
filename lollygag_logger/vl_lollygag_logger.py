@@ -45,6 +45,7 @@ import argparse
 from vl_config_file import *
 from lollygag_logger import LogLine, LogFormatter, LollygagLogger
 import helpers
+from enums import ColorType
 import requests
 from requests import auth
 
@@ -102,6 +103,16 @@ class ValenceLogLine(LogLine):
                              for field in self.FIELDS if getattr(self, field) != ""])
         else:
             return self.original_line
+
+    def color_type(self):
+        """Returns the log line with the log type surrounded by an ANSI escape color sequence."""
+        if self.standard_format:
+            fields = [getattr(self, field) for field in self.FIELDS]
+            fields[2] = ColorType.color_by_type(fields[2].lower(), fields[2])
+            fields = [x for x in fields if x != ""]
+        else:
+            fields = [ColorType.color_by_type(self.type.lower(), self.original_line)]
+        return " ".join(fields)
 
     def _default_vals(self):
         """Set all field to default values."""
@@ -295,15 +306,17 @@ class ValenceConsoleOutput(LogFormatter):
             self._read_vals_from_config_file()
             self.format_config_mod_time = current_config_mod_time
 
+        print_in_color = helpers.str_to_bool(self.format_config[COLORS]["use_colors"])
+
         # Construct header object and print
         log_type = self.log_line.type.strip().lower()
         formatted_line = self._combine_header_logs(log_type)
         if formatted_line:
-            if str(formatted_line):
-                print str(formatted_line)
+            output = str(formatted_line)
+            if output:
+                print ColorType.color_by_type(formatted_line.type, output) if print_in_color else output
             return
-        elif log_type == "step" or log_type == "title" \
-                or any(self.waiting_for_header.values()):
+        elif log_type == "step" or log_type == "title" or any(self.waiting_for_header.values()):
             return
 
         # Skip line if type is marked to not display
@@ -315,11 +328,13 @@ class ValenceConsoleOutput(LogFormatter):
             self._remove_fields()
             self._condense_fields()
 
-        # Grab max line length from format config file or from console width
-        formatted_line = str(self.log_line)
+        # Add color to the type field
+        if helpers.str_to_bool(self.format_config[COLORS]["use_colors"]):
+            formatted_line = self.log_line.color_type()
+        else:
+            formatted_line = str(self.log_line)
 
         # Condense entire log line if beyond max length
-
         print helpers.condense(formatted_line, self._calc_max_len())
 
     def _combine_header_logs(self, log_type):

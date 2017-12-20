@@ -281,7 +281,6 @@ class ValenceConsoleOutput(LogFormatter):
         """Prints the formatted log line to the console based on the format config file options."""
 
         # Check to see if line is empty, and create log line object to parse the line
-        # import pdb; pdb.set_trace()
         if unformatted_log_line == "\n":
             print ""
             return
@@ -320,6 +319,7 @@ class ValenceConsoleOutput(LogFormatter):
         formatted_line = str(self.log_line)
 
         # Condense entire log line if beyond max length
+
         print helpers.condense(formatted_line, self._calc_max_len())
 
     def _combine_header_logs(self, log_type):

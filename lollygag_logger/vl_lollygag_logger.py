@@ -218,7 +218,7 @@ class ValenceHeader(LogLine):
         if self.original_line == "Expect: Pass":
             return ""
         else:
-            return "\n".join([border, self.original_line, border])
+            return "\n".join([border, self.original_line, border, ""])
 
     def _default_vals(self):
         """Set all field to default values."""
@@ -280,6 +280,7 @@ class ValenceConsoleOutput(LogFormatter):
         self.find_str = find_str
         self.list_step = list_step
         self.save_file = save_file
+        self.duplicate_blank_line = False
 
         # Format config sections stored individually as dicts
         self._read_vals_from_config_file()
@@ -293,7 +294,9 @@ class ValenceConsoleOutput(LogFormatter):
 
         # Check to see if line is empty, and create log line object to parse the line
         if unformatted_log_line == "\n":
-            print ""
+            if not self.duplicate_blank_line:
+                self.duplicate_blank_line = True
+                print ""
             return
         line = unformatted_log_line.strip("\n\\n")
         if not line:
@@ -312,9 +315,9 @@ class ValenceConsoleOutput(LogFormatter):
         log_type = self.log_line.type.strip().lower()
         formatted_line = self._combine_header_logs(log_type)
         if formatted_line:
-            output = str(formatted_line)
-            if output:
-                print ColorType.color_by_type(formatted_line.type, output) if print_in_color else output
+            log_output = str(formatted_line)
+            if log_output:
+                print ColorType.color_by_type(formatted_line.type, log_output) if print_in_color else log_output
             return
         elif log_type == "step" or log_type == "title" or any(self.waiting_for_header.values()):
             return
@@ -335,7 +338,14 @@ class ValenceConsoleOutput(LogFormatter):
             formatted_line = str(self.log_line)
 
         # Condense entire log line if beyond max length
-        print helpers.condense(formatted_line, self._calc_max_len())
+        log_output = helpers.condense(formatted_line, self._calc_max_len())
+        # print log_output
+        if log_output.strip("\n\\n"):
+            print log_output
+        elif not self.duplicate_blank_line:
+            self.duplicate_blank_line = True
+            print log_output
+        self.duplicate_blank_line = False
 
     def _combine_header_logs(self, log_type):
         formatted_header = None

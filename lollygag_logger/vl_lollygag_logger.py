@@ -204,7 +204,10 @@ class ValenceHeader(LogLine):
 
     def __str__(self):
         border = "="*self.max_len if self.type == "title" else "-"*self.max_len
-        return "\n".join([border, self.original_line, border])
+        if self.original_line == "Expect: Pass":
+            return ""
+        else:
+            return "\n".join([border, self.original_line, border])
 
     def _default_vals(self):
         """Set all field to default values."""
@@ -278,6 +281,7 @@ class ValenceConsoleOutput(LogFormatter):
         """Prints the formatted log line to the console based on the format config file options."""
 
         # Check to see if line is empty, and create log line object to parse the line
+        # import pdb; pdb.set_trace()
         if unformatted_log_line == "\n":
             print ""
             return
@@ -296,10 +300,11 @@ class ValenceConsoleOutput(LogFormatter):
         log_type = self.log_line.type.strip().lower()
         formatted_line = self._combine_header_logs(log_type)
         if formatted_line:
-            print str(formatted_line)
+            if str(formatted_line):
+                print str(formatted_line)
+            return
         elif log_type == "step" or log_type == "title" \
                 or any(self.waiting_for_header.values()):
-            val = any(self.waiting_for_header.values())
             return
 
         # Skip line if type is marked to not display
@@ -390,7 +395,7 @@ if __name__ == '__main__':
     if args.vl_path:
         config = create_config_file()
         vl_console_output = ValenceConsoleOutput(ValenceLogLine, config,
-                                      args.find_str, args.list_step, args.save_path)
+                                                 args.find_str, args.list_step, args.save_path)
         if not args.read and not args.at2:
             # Begin vl run subprocess
             proc = subprocess.Popen(["vl", "run", args.vl_path], stdout=subprocess.PIPE,

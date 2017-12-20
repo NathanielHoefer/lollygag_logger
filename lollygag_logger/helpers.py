@@ -86,3 +86,14 @@ def condense(str_line, max_len):
         return "".join([str_line[:max_len - 3], "..."])
     else:
         return str_line
+
+
+def color_str(str_input, color):
+    """Colors the string using escape sequence for ANSI/VT100 terminals
+
+        :param str str_input: String to be colored
+        :param str color: Escape sequence using the following format: 033[<code>m
+        :return: str surrounded by escape sequence
+    """
+
+    return color + str_input + '\033[0m'

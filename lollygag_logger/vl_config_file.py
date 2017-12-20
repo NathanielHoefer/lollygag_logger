@@ -21,6 +21,7 @@ DISPLAY_FIELDS_SECT = "DISPLAY FIELDS"
 CONDENSE_FIELDS_SECT = "CONDENSE FIELDS"
 COLLAPSE_STRUCTS_SECT = "COLLAPSE STRUCTURES"
 LENGTHS_SECT = "LENGTHS"
+COLORS = "COLORS"
 
 
 def create_config_file(file_directory=""):
@@ -79,6 +80,10 @@ def create_config_file(file_directory=""):
         ("max_line_len",        "200"),     # Max length of log line to be printed
         ("condensed_field_len", "100"),     # This value includes the "..."
         ("collapsed_struct_len", "30")]     # This value includes the "[" and "...]"
+
+    config_fields[COLORS] = [
+        ("use_colors", "True")
+    ]
 
     # Create and add sections and options to configparser object
     format_config = configparser.ConfigParser()

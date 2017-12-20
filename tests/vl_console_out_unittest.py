@@ -175,7 +175,7 @@ class HeaderFormatting(unittest.TestCase):
 
         self.format_config.set(COLLAPSE_STRUCTS_SECT, "list", "False")
         self.format_config.set(COLLAPSE_STRUCTS_SECT, "dict", "False")
-        self.format_config.set(LENGTHS_SECT, "max_line_len", "500")
+        self.format_config.set(LENGTHS_SECT, "max_line_len", "105")
         with open(CONFIG_PATH, "wb") as configfile:
             self.format_config.write(configfile)
 
@@ -205,7 +205,37 @@ class HeaderFormatting(unittest.TestCase):
             for line in self.test_lines[:5]:
                 log_formatter.format(line)
         self.assertTrue(len(output) == 1)
+        self.assertEqual(output[0], self.test_lines[3].strip())
+
+    def test_show_step(self):
+        self.format_config.set(DISPLAY_LOG_TYPES_SECT, "step", "True")
+        with open(CONFIG_PATH, "wb") as configfile:
+            self.format_config.write(configfile)
+        log_formatter = Output(LogLine, self.format_config, format_config_filepath=CONFIG_PATH)
+        output = []
+        with Capturing(output) as output:
+            for line in self.test_lines[4:9]:
+                log_formatter.format(line)
+        self.assertTrue(len(output) == 4)
         self.assertEqual(output[0], self.test_lines[4].strip())
+        self.assertEqual(output[1], self.test_lines[5].strip())
+        self.assertEqual(output[2], self.test_lines[7].strip())
+        self.assertEqual(output[3], self.test_lines[8].strip())
+
+    def test_show_title(self):
+        self.format_config.set(DISPLAY_LOG_TYPES_SECT, "title", "True")
+        with open(CONFIG_PATH, "wb") as configfile:
+            self.format_config.write(configfile)
+        log_formatter = Output(LogLine, self.format_config, format_config_filepath=CONFIG_PATH)
+        output = []
+        with Capturing(output) as output:
+            for line in self.test_lines[:4]:
+                log_formatter.format(line)
+        self.assertTrue(len(output) == 4)
+        self.assertEqual(output[0], self.test_lines[0].strip())
+        self.assertEqual(output[1], self.test_lines[1].strip())
+        self.assertEqual(output[2], self.test_lines[2].strip())
+        self.assertEqual(output[3], self.test_lines[3].strip())
 
     def tearDown(self):
         os.remove(os.getcwd() + "/" + FORMAT_CONFIG_FILE_NAME)

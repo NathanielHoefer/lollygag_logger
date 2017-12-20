@@ -122,17 +122,17 @@ class ValenceLogLine(LogLine):
         """
 
         # Check to see if line is a STEP identified by a row of '-' or a TITLE identified by a row of '='
+        # each with a minimum of 30 chars
         input_str = input_str.strip()
-        if re.match("^={5,}$", input_str):
+        if re.match("^={30,}$", input_str):
             self.type = "TITLE"
             return
-        if re.match("^-{5,}$", input_str):
+        if re.match("^-{30,}$", input_str):
             self.type = "STEP"
             return
 
         # Identifies if the log is int AT2 standard format based on the format of the time stamp. AT2
         # logs don't include the thread field, so determine token count if in AT2 format.
-        current_token_count = 0
         if re.search("\d{2}:\d{2}:\d{2}\,\d{3}", input_str):
             self.at2_log = True
             current_token_count = self.AT2_TOKEN_COUNT
@@ -144,7 +144,6 @@ class ValenceLogLine(LogLine):
         split = input_str.split(" ", current_token_count - 1)
         if not (current_token_count - 1 <= len(split) <= current_token_count):
             return
-
 
         # Assign token to proper field if format matches correctly
         self.date = split[0] if re.match("^\d{4}\-\d{2}\-\d{2}$", split[0]) else ""
@@ -222,8 +221,8 @@ class ValenceHeader(LogLine):
         """
 
         # Don't try to parse if header not in test case or suite
-        split = input_str.split(":")
-        if len(split) <= 1:
+        split = input_str.split(":", 1)
+        if len(split) <= 1 or input_str == "Expect: Pass":
             return
 
         self.test_info = split[0].strip() if len(split) == 2 else ""
@@ -257,24 +256,23 @@ class ValenceConsoleOutput(LogFormatter):
 
     log_queue = []
 
-    def __init__(self, log_line_cls, format_config, find_str="", list_step="", save_file=""):
+    def __init__(self, log_line_cls, format_config, format_config_filepath="",
+                 find_str="", list_step="", save_file=""):
         self.log_line_cls = log_line_cls
         self.format_config = format_config
+        self.format_config_filepath = format_config_filepath if format_config_filepath \
+            else DEFAULT_CONFIG_PATH
         self.log_line = None
         self.find_str = find_str
         self.list_step = list_step
         self.save_file = save_file
 
         # Format config sections stored individually as dicts
-        self.sect_display_log_types = self.format_config[DISPLAY_LOG_TYPES_SECT]
-        self.sect_display_fields = self.format_config[DISPLAY_FIELDS_SECT]
-        self.sect_condense_fields = self.format_config[CONDENSE_FIELDS_SECT]
-        self.sect_collapse_structs = self.format_config[COLLAPSE_STRUCTS_SECT]
-        self.sect_lengths = self.format_config[LENGTHS_SECT]
+        self._read_vals_from_config_file()
+        self.format_config_mod_time = os.path.getmtime(self.format_config_filepath)
 
         # Variables needed for titles and steps
-        self.waiting_for_title = False
-        self.waiting_for_step = False
+        self.waiting_for_header = {"title": False, "step": False}
 
     def format(self, unformatted_log_line):
         """Prints the formatted log line to the console based on the format config file options."""
@@ -288,8 +286,23 @@ class ValenceConsoleOutput(LogFormatter):
             return
         self.log_line = self.log_line_cls(line)
 
-        # Skip line if type is marked to not display
+        # Update format config values if file has been updated
+        current_config_mod_time = os.path.getmtime(self.format_config_filepath)
+        if current_config_mod_time > self.format_config_mod_time:
+            self._read_vals_from_config_file()
+            self.format_config_mod_time = current_config_mod_time
+
+        # Construct header object and print
         log_type = self.log_line.type.strip().lower()
+        formatted_line = self._combine_header_logs(log_type)
+        if formatted_line:
+            print str(formatted_line)
+        elif log_type == "step" or log_type == "title" \
+                or any(self.waiting_for_header.values()):
+            val = any(self.waiting_for_header.values())
+            return
+
+        # Skip line if type is marked to not display
         if not helpers.str_to_bool(self.sect_display_log_types[log_type]):
             return
 
@@ -303,6 +316,24 @@ class ValenceConsoleOutput(LogFormatter):
 
         # Condense entire log line if beyond max length
         print helpers.condense(formatted_line, self._calc_max_len())
+
+    def _combine_header_logs(self, log_type):
+        formatted_header = None
+        for header_type, is_waiting in self.waiting_for_header.items():
+            if log_type == header_type and not is_waiting:
+                self.waiting_for_header[header_type] = True
+            elif log_type == "other" and is_waiting:
+                formatted_header = ValenceHeader(self.log_line.original_line, header_type,
+                                                 self._calc_max_len())
+                break
+            elif log_type == header_type and is_waiting:
+                self.waiting_for_header[header_type] = False
+            else:
+                self.waiting_for_header[header_type] = False
+        if formatted_header and helpers.str_to_bool(self.sect_display_log_types[formatted_header.type]):
+            return formatted_header
+        else:
+            return None
 
     def _remove_fields(self):
         """Remove field from line if marked not to display."""
@@ -323,6 +354,15 @@ class ValenceConsoleOutput(LogFormatter):
                 current_field_str = helpers.condense_field(current_field_str, condense_len,
                                                            collapse_dict, collapse_list, collapse_len)
                 setattr(self.log_line, field, current_field_str)
+
+    def _read_vals_from_config_file(self):
+        """Reads all of the values from the format .ini file"""
+        self.format_config.read(self.format_config_filepath)
+        self.sect_display_log_types = self.format_config[DISPLAY_LOG_TYPES_SECT]
+        self.sect_display_fields = self.format_config[DISPLAY_FIELDS_SECT]
+        self.sect_condense_fields = self.format_config[CONDENSE_FIELDS_SECT]
+        self.sect_collapse_structs = self.format_config[COLLAPSE_STRUCTS_SECT]
+        self.sect_lengths = self.format_config[LENGTHS_SECT]
 
     def _calc_max_len(self):
         """Returns max length of the logline to be printed based on the format config file."""

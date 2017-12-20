@@ -3,16 +3,14 @@
 ValenceHeader Unittest
 =========================================================================================================
 by Nathaniel Hoefer
-Last Updated: 12/2/2017
+Last Updated: 12/19/2017
 """
 
 import unittest
-
 from lollygag_logger.vl_lollygag_logger import ValenceHeader
 
 
-
-class TitleParse(unittest.TestCase):
+class HeaderParse(unittest.TestCase):
 
     def setUp(self):
         with open("test_logs/test.log", "r") as test_log_file:
@@ -55,29 +53,6 @@ class TitleParse(unittest.TestCase):
         self.assertEqual(header.test_info, "Starting Step 2 for TcGenericTestCase")
         self.assertEqual(header.test_instruction, "Completed Monitoring")
         self.assertEqual(header.test_number, 2)
-
-
-# class HeaderParse(unittest.TestCase):
-#
-#     def setup(self):
-#         self.format_config = create_config_file(os.getcwd())
-#         self.log_formatter = Output(LogLine, self.format_config)
-#
-#         with open("test.log", "r") as test_log_file:
-#             self.test_lines = test_log_file.readlines()
-#         self.test_lines = [x for x in self.test_lines if x[0] is not "#" and x.strip() is not ""]
-#
-#     def test_title_parse(self):
-#         multi_line_title = [self.test_lines[5], self.test_lines[6], self.test_lines[5]]
-#         output = []
-#         with Capturing(output) as output:
-#             for line in multi_line_title:
-#                 self.log_formatter.format(line)
-#
-#         self.assertEqual(multi_line_title, output)
-#
-#     def tearDown(self):
-#         os.remove(os.getcwd() + "/" + FORMAT_CONFIG_FILE_NAME)
 
 
 if __name__ == "__main__":

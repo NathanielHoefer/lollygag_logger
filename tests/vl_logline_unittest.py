@@ -35,13 +35,17 @@ class TestTimeToken(unittest.TestCase):
 
 class TestTypeTokenTitle(unittest.TestCase):
 
-    def test_five_equal(self):
-        line = LogLine("=====")
-        self.assertEqual(line.type, "TITLE")
-        self.assertEqual(line.original_line, "=====")
+    def test_under_minimum(self):
+        line = LogLine("=============================")
+        self.assertEqual(line.type, "OTHER")
+        self.assertEqual(line.original_line, "=============================")
 
     def test_long_equal(self):
         line = LogLine("===============================================================================")
+        self.assertEqual(line.type, "TITLE")
+
+    def test_at_minimum(self):
+        line = LogLine("==============================")
         self.assertEqual(line.type, "TITLE")
 
     def test_four_equal(self):
@@ -63,14 +67,19 @@ class TestTypeTokenTitle(unittest.TestCase):
 
 class TestTypeTokenStep(unittest.TestCase):
 
-    def test_five_equal(self):
-        line = LogLine("-----")
+    def test_under_minimum(self):
+        line = LogLine("-----------------------------")
         self.assertEqual(line.type, "STEP")
-        self.assertEqual(line.original_line, "-----")
+        self.assertEqual(line.original_line, "-----------------------------")
 
     def test_long_equal(self):
         line = LogLine("-------------------------------------------------------------------------------")
         self.assertEqual(line.type, "STEP")
+
+    def test_under_minimum(self):
+        line = LogLine("------------------------------")
+        self.assertEqual(line.type, "STEP")
+        self.assertEqual(line.original_line, "------------------------------")
 
     def test_four_equal(self):
         line = LogLine("----")

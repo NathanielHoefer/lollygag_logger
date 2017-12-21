@@ -42,6 +42,7 @@ import subprocess
 import sys
 import re
 import argparse
+import datetime
 from vl_config_file import *
 from lollygag_logger import LogLine, LogFormatter, LollygagLogger
 import helpers
@@ -99,15 +100,14 @@ class ValenceLogLine(LogLine):
 
     def __str__(self):
         if self.standard_format:
-            return " ".join([getattr(self, field)
-                             for field in self.FIELDS if getattr(self, field) != ""])
+            return " ".join([field for field in self._list_fields_as_str() if field != ""])
         else:
             return self.original_line
 
     def color_type(self):
         """Returns the log line with the log type surrounded by an ANSI escape color sequence."""
         if self.standard_format:
-            fields = [getattr(self, field) for field in self.FIELDS]
+            fields = self._list_fields_as_str()
             fields[2] = ColorType.color_by_type(fields[2].lower(), fields[2])
             fields = [x for x in fields if x != ""]
         else:
@@ -158,12 +158,13 @@ class ValenceLogLine(LogLine):
 
         # Assign token to proper field if format matches correctly
         self.date = split[0] if re.match("^\d{4}\-\d{2}\-\d{2}$", split[0]) else ""
+        self._str_to_date()
 
         # Check to see if logs are in valence format or AT2 format based on time
-        if re.match("^\d{2}:\d{2}:\d{2}\.\d{6}$", split[1]):
+        if re.match("^\d{2}:\d{2}:\d{2}\.\d{6}$", split[1]) \
+                or re.match("^\d{2}:\d{2}:\d{2}\,\d{3}$", split[1]):
             self.time = split[1]
-        elif re.match("^\d{2}:\d{2}:\d{2}\,\d{3}$", split[1]):
-            self.time = split[1]
+            self._str_to_time()
         else:
             self.time = ""
         if split[2] in self.LOG_LEVELS:
@@ -188,6 +189,40 @@ class ValenceLogLine(LogLine):
                     self._default_vals()
                     return
         self.standard_format = True
+
+    def _list_fields_as_str(self):
+        str_fields_list = [getattr(self, field) for field in self.FIELDS]
+        str_fields_list[0] = self._date_to_str()
+        str_fields_list[1] = self._time_to_str()
+        return str_fields_list
+
+    def _date_to_str(self):
+        if self.date:
+            return self.date.strftime("%Y-%m-%d")
+        else:
+            return ""
+
+    def _time_to_str(self):
+        if not self.time:
+            return ""
+
+        if self.at2_log:
+            time = self.time.strftime("%H:%M:%S,%f")[:-3]
+        else:
+            time = self.time.strftime("%H:%M:%S.%f")
+        return time
+
+    def _str_to_date(self):
+        if not self.date:
+            return
+        date = re.split("-", self.date)
+        self.date = datetime.date(int(date[0]), int(date[1]), int(date[2]))
+
+    def _str_to_time(self):
+        if not self.time:
+            return
+        time = re.split(":|;|\.|\,", self.time)
+        self.time = datetime.time(int(time[0]), int(time[1]), int(time[2]), int(time[3].ljust(6, "0")))
 
 
 class ValenceHeader(LogLine):
@@ -288,6 +323,7 @@ class ValenceConsoleOutput(LogFormatter):
 
         # Variables needed for titles and steps
         self.waiting_for_header = {"title": False, "step": False}
+        self.executed_suites = []
 
     def format(self, unformatted_log_line):
         """Prints the formatted log line to the console based on the format config file options."""
@@ -339,7 +375,7 @@ class ValenceConsoleOutput(LogFormatter):
 
         # Condense entire log line if beyond max length
         log_output = helpers.condense(formatted_line, self._calc_max_len())
-        # print log_output
+        # TODO - Resolve color condensing issue
         if log_output.strip("\n\\n"):
             print log_output
         elif not self.duplicate_blank_line:

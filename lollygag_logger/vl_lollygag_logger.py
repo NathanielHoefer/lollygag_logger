@@ -43,6 +43,7 @@ import sys
 import re
 import argparse
 import datetime
+from collections import OrderedDict
 from vl_config_file import *
 from lollygag_logger import LogLine, LogFormatter, LollygagLogger
 import helpers
@@ -262,6 +263,8 @@ class ValenceHeader(LogLine):
         self.test_info = ""
         self.test_instruction = ""
         self.test_number = 0
+        self.start_time = None
+        self.end_time = None
 
     def _tokenize_line(self, input_str):
         """Splits the input into the various tokens based on whether the header is a title or a step.
@@ -323,7 +326,12 @@ class ValenceConsoleOutput(LogFormatter):
 
         # Variables needed for titles and steps
         self.waiting_for_header = {"title": False, "step": False}
-        self.executed_suites = []
+        self.executed_suites = OrderedDict()
+        self.current_suite_name = ""
+        self.current_suite_number = 0
+        self.current_test_case = ""
+        self.current_test_case_number = 0
+        self.last_log_time = None
 
     def format(self, unformatted_log_line):
         """Prints the formatted log line to the console based on the format config file options."""
@@ -339,6 +347,10 @@ class ValenceConsoleOutput(LogFormatter):
             return
         self.log_line = self.log_line_cls(line)
 
+        # Store last log time
+        if self.log_line.standard_format and self.log_line.time:
+            self.last_log_time = self.log_line.time
+
         # Update format config values if file has been updated
         current_config_mod_time = os.path.getmtime(self.format_config_filepath)
         if current_config_mod_time > self.format_config_mod_time:
@@ -353,6 +365,7 @@ class ValenceConsoleOutput(LogFormatter):
         if formatted_line:
             log_output = str(formatted_line)
             if log_output:
+                # self._store_header(log_output)
                 print ColorType.color_by_type(formatted_line.type, log_output) if print_in_color else log_output
             return
         elif log_type == "step" or log_type == "title" or any(self.waiting_for_header.values()):
@@ -420,6 +433,47 @@ class ValenceConsoleOutput(LogFormatter):
                 current_field_str = helpers.condense_field(current_field_str, condense_len,
                                                            collapse_dict, collapse_list, collapse_len)
                 setattr(self.log_line, field, current_field_str)
+
+    def _store_header(self, header):
+
+        if self.last_log_time:
+            header.start_time = self.last_log_time
+
+        if header.type == "title" and header.suite:
+            if header.test_name == self.current_suite_name:
+                self.executed_suites[header.test_name][header.test_info] = OrderedDict()
+            """
+            TODO - Figure out data structure for storing headers
+            
+            {'TsBulkVolume': 
+                {'Starting Setup'
+                    [
+                        Starting Setup header
+                    ]
+                {Test Case 0: 
+                    {
+                    Starting Setup
+                    Start Test
+                    Step 0
+                    Step 1
+                    Starting Teardown
+                    }
+                }
+                {Test Case 1: 
+                    {
+                    Starting Setup
+                    Start Test
+                    Step 0
+                    Step 1
+                    Starting Teardown
+                    }
+            }
+            """
+
+            self.current_suite_number += 1
+        elif header.type == "title":
+            self.executed_suites[self.current_suite_number][self.current_suite_name].append({})
+
 
     def _read_vals_from_config_file(self):
         """Reads all of the values from the format .ini file"""

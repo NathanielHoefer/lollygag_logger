@@ -65,6 +65,7 @@ class DisplayLogTypesFormatting(unittest.TestCase):
         self.format_config.set(DISPLAY_LOG_TYPES_SECT, "warning", "True")
         self.format_config.set(DISPLAY_LOG_TYPES_SECT, "error", "True")
         self.format_config.set(DISPLAY_LOG_TYPES_SECT, "other", "True")
+        self.format_config.set(COLORS, "use_colors", "False")
         with open(CONFIG_PATH, "wb") as configfile:
             self.format_config.write(configfile)
 
@@ -176,6 +177,8 @@ class HeaderFormatting(unittest.TestCase):
         self.format_config.set(COLLAPSE_STRUCTS_SECT, "list", "False")
         self.format_config.set(COLLAPSE_STRUCTS_SECT, "dict", "False")
         self.format_config.set(LENGTHS_SECT, "max_line_len", "105")
+        self.format_config.set(COLORS, "use_colors", "False")
+
         with open(CONFIG_PATH, "wb") as configfile:
             self.format_config.write(configfile)
 
@@ -216,11 +219,11 @@ class HeaderFormatting(unittest.TestCase):
         with Capturing(output) as output:
             for line in self.test_lines[4:9]:
                 log_formatter.format(line)
-        self.assertTrue(len(output) == 4)
+        self.assertTrue(len(output) == 5)
         self.assertEqual(output[0], self.test_lines[4].strip())
         self.assertEqual(output[1], self.test_lines[5].strip())
         self.assertEqual(output[2], self.test_lines[7].strip())
-        self.assertEqual(output[3], self.test_lines[8].strip())
+        self.assertEqual(output[4], self.test_lines[8].strip())
 
     def test_show_title(self):
         self.format_config.set(DISPLAY_LOG_TYPES_SECT, "title", "True")
@@ -231,11 +234,11 @@ class HeaderFormatting(unittest.TestCase):
         with Capturing(output) as output:
             for line in self.test_lines[:4]:
                 log_formatter.format(line)
-        self.assertTrue(len(output) == 4)
+        self.assertTrue(len(output) == 5)
         self.assertEqual(output[0], self.test_lines[0].strip())
         self.assertEqual(output[1], self.test_lines[1].strip())
         self.assertEqual(output[2], self.test_lines[2].strip())
-        self.assertEqual(output[3], self.test_lines[3].strip())
+        self.assertEqual(output[4], self.test_lines[3].strip())
 
     def tearDown(self):
         os.remove(os.getcwd() + "/" + FORMAT_CONFIG_FILE_NAME)
@@ -254,6 +257,7 @@ class DisplayFieldsFormatting(unittest.TestCase):
         self.format_config.set(DISPLAY_FIELDS_SECT, "thread", "True")
         self.format_config.set(DISPLAY_FIELDS_SECT, "details", "True")
         self.format_config.set(DISPLAY_LOG_TYPES_SECT, "info", "True")
+        self.format_config.set(COLORS, "use_colors", "False")
         with open(CONFIG_PATH, "wb") as configfile:
             self.format_config.write(configfile)
 
@@ -483,6 +487,8 @@ class MaxLineFormatting(unittest.TestCase):
 
     def test_max_len(self):
         self.log_formatter.sect_lengths["max_line_len"] = "100"
+        self.format_config.set(COLORS, "use_colors", "False")
+
         output = []
         with Capturing(output) as output:
             self.log_formatter.format(self.test_lines[21])

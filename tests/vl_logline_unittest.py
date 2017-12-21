@@ -7,6 +7,7 @@ Last Updated: 11/30/2017
 """
 
 import unittest
+import datetime
 
 from lollygag_logger.vl_lollygag_logger import ValenceLogLine as LogLine
 
@@ -15,7 +16,7 @@ class TestDateToken(unittest.TestCase):
 
     def test_correct_format(self):
         line = LogLine("2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] reco")
-        self.assertEqual(line.date, "2017-10-30")
+        self.assertEqual(line.date, datetime.date(2017, 10, 30))
 
     def test_bad_format(self):
         line = LogLine("201-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] re")
@@ -26,7 +27,7 @@ class TestTimeToken(unittest.TestCase):
 
     def test_correct_format(self):
         line = LogLine("2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] reco")
-        self.assertEqual(line.time, "19:13:32.209878")
+        self.assertEqual(line.time, datetime.time(19, 13, 32, 209878))
 
     def test_bad_format(self):
         line = LogLine("2017-10-30 19:13:32.20987 DEBUG [valence:42] [MainProcess:MainThread] reco")
@@ -172,8 +173,8 @@ class TestStandardFormat(unittest.TestCase):
         log = "2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] reco"
         line = LogLine(log)
         self.assertTrue(line.standard_format)
-        self.assertEqual(line.date, "2017-10-30")
-        self.assertEqual(line.time, "19:13:32.209878")
+        self.assertEqual(line.date, datetime.date(2017, 10, 30))
+        self.assertEqual(line.time, datetime.time(19, 13, 32, 209878))
         self.assertEqual(line.type, "DEBUG")
         self.assertEqual(line.source, "[valence:42]")
         self.assertEqual(line.thread, "[MainProcess:MainThread]")
@@ -183,8 +184,8 @@ class TestStandardFormat(unittest.TestCase):
     def test_full_standard_format_no_details(self):
         line = LogLine("2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] ")
         self.assertTrue(line.standard_format)
-        self.assertEqual(line.date, "2017-10-30")
-        self.assertEqual(line.time, "19:13:32.209878")
+        self.assertEqual(line.date, datetime.date(2017, 10, 30))
+        self.assertEqual(line.time, datetime.time(19, 13, 32, 209878))
         self.assertEqual(line.type, "DEBUG")
         self.assertEqual(line.source, "[valence:42]")
         self.assertEqual(line.thread, "[MainProcess:MainThread]")

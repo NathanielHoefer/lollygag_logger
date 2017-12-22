@@ -9,7 +9,7 @@ Last Updated: 11/30/2017
 import unittest
 import datetime
 
-from lollygag_logger.vl_lollygag_logger import ValenceLogLine as LogLine
+from lollygag_logger.vl_logger import ValenceLogLine as LogLine
 
 
 class TestDateToken(unittest.TestCase):

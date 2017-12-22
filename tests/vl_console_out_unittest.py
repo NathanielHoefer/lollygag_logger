@@ -11,8 +11,8 @@ import unittest
 from cStringIO import StringIO
 
 from lollygag_logger.vl_config_file import *
-from lollygag_logger.vl_lollygag_logger import ValenceConsoleOutput as Output
-from lollygag_logger.vl_lollygag_logger import ValenceLogLine as LogLine
+from lollygag_logger.vl_logger import ValenceConsoleOutput as Output
+from lollygag_logger.vl_logger import ValenceLogLine as LogLine
 
 
 CONFIG_PATH = os.getcwd() + "/" + FORMAT_CONFIG_FILE_NAME

@@ -6,6 +6,8 @@ by Nathaniel Hoefer
 Last Updated: 12/18/2017
 """
 
+import copy
+
 # Valid values from ConfigParser that result in True
 VALID_TRUE_INPUT = ("true", "yes", "t", "y", "1")
 
@@ -97,3 +99,32 @@ def color_str(str_input, color):
     """
 
     return color + str_input + '\033[0m'
+
+
+def print_variable_list(lst_input, funct):
+    """Recursively print list from beginning to end executing the given function on each element.
+
+
+    Does not affect original list.
+    Note: funct must be a function that accepts an object for the first argument, and an indent depth as
+        the second. Indent starts at 0. Ex: indent_print(object, 4)
+
+    :param list lst_input: list to be printed
+    :param function funct: Used to print each element in the list
+    """
+
+    lst = copy.deepcopy(lst_input)
+    _print_list_rec(lst, funct, 0)
+
+
+def _print_list_rec(lst_input, funct, depth):
+    """Recursive function to print_variable_list."""
+    if not lst_input:
+        return 0
+
+    el = lst_input.pop(0)
+    if not isinstance(el, list):
+        funct(el, depth)
+    else:
+        _print_list_rec(el, funct, depth + 1)
+    _print_list_rec(lst_input, funct, depth)

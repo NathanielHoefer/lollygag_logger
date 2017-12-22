@@ -7,7 +7,10 @@ Last Updated: 12/19/2017
 """
 
 import unittest
+import subprocess
 from lollygag_logger.vl_logger import ValenceHeader
+import lollygag_logger.vl_logger as vl
+import lollygag_logger.vl_config_file as config
 
 
 class HeaderParse(unittest.TestCase):
@@ -53,6 +56,14 @@ class HeaderParse(unittest.TestCase):
         self.assertEqual(header.test_info, "Starting Step 2 for TcGenericTestCase")
         self.assertEqual(header.test_instruction, "Completed Monitoring")
         self.assertEqual(header.test_number, 2)
+
+    # def test_store_header(self):
+    #
+    #     config_file = config.create_config_file()
+    #     vl_console_output = vl.ValenceConsoleOutput(vl.ValenceLogLine, config_file)
+    #     with open("/home/nathaniel/Downloads/test_headers.log", "r") as logfile:
+    #         logger = vl.LollygagLogger(logfile, vl_console_output)
+    #         logger.run()
 
 
 if __name__ == "__main__":

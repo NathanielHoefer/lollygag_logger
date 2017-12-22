@@ -331,6 +331,7 @@ class ValenceConsoleOutput(LogFormatter):
         self.current_suite_index = -1
         self.current_test_case = ""
         self.current_test_case_index = -1
+        self.prev_header_was_step = False
         self.current_step_index = -1
         self.last_log_time = None
 
@@ -441,20 +442,50 @@ class ValenceConsoleOutput(LogFormatter):
                 setattr(self.log_line, field, current_field_str)
 
     def _store_header(self, header):
+        """Stores all headers into a data structure with the following format
 
-        print "suite: {0}, test case: {1}, step: {2}".format(
-            self.current_suite_index, self.current_test_case_index, self.current_step_index
-        )
+        TODO - Change tree model where each header object contains its own children rather than using
+        indices.
+
+        [
+        Test Preconditions
+        Suite 1
+            [
+            Suite 1 Setup
+                [
+                Test 1 Setup
+                Test 1 Starting
+                    [
+                    Step 1
+                    Step 2
+                    ]
+                Test 1 Teardown
+                Test 2 Setup
+                Test 2 Starting
+                    [
+                    Step 1
+                    ]
+                Test 2 Teardown
+                ]
+            Suite 1 Teardown
+            ]
+        Suite 2
+            [
+            Suite 2 Setup
+            Suite 2 Teardown
+            ]
+        Final Report
+        """
 
         if self.last_log_time:
             header.start_time = self.last_log_time
 
         # Non-suite related titles such as 'Final Report'
         if header.type == "title" and not header.test_name:
+            self.executed_suites.extend([header])
             self.current_suite_index += 1
             self.current_test_case_index = -1
             self.current_step_index = -1
-            self.executed_suites.extend([header])
 
         # Suite titles starting with 'Test Suite' that is first starting
         elif header.type == "title" and header.suite and header.test_name != self.current_suite_name:
@@ -465,58 +496,42 @@ class ValenceConsoleOutput(LogFormatter):
             self.current_step_index = -1
 
             self.executed_suites.append([header])
+            self.current_suite_index += 1
+            self.current_test_case_index += 1
 
         # Suite titles starting with 'Test Suite' that has already started
         elif header.type == "title" and header.suite and header.test_name == self.current_suite_name:
-            self.current_suite_index += 1
             self.executed_suites[self.current_suite_index].extend([header])
+            self.current_test_case_index += 1
 
         # Test case titles starting with 'Test Case' that is first starting
         elif header.type == "title" and not header.suite and header.test_name != self.current_test_case:
-            self.current_suite_index += 1
             self.current_test_case = header.test_name
-            self.current_step_index = -1
-            self.current_test_case_index = 0
+            self.current_step_index = 0
             self.executed_suites[self.current_suite_index].append([header])
+            self.current_test_case_index += 1
 
         # Test case titles starting with 'Test Case' that has already started
         elif header.type == "title" and not header.suite and header.test_name == self.current_test_case:
-            self.current_test_case_index += 1
-            self.current_step_index += 1
-
             self.executed_suites[self.current_suite_index][self.current_test_case_index].extend([header])
+            self.current_step_index += 1
 
         # Step - todo
         elif header.type == "step":
-            # if self.current_step_index < 0:
-                self.current_step_index += 1
+            if not self.prev_header_was_step:
                 self.executed_suites[self.current_suite_index][self.current_test_case_index].append(
                     [header])
-                # self.current_step_index += 1
+                self.current_step_index += 1
+            else:
+                self.executed_suites[self.current_suite_index][self.current_test_case_index][self.current_step_index].extend(
+                    [header])
+            self.prev_header_was_step = True
 
-            # else:
-            #     # self.current_test_case_index += 1
-            #
-            #     # self.current_step_index += 1
-            #     #
-            #     # import pdb;
-            #     # pdb.set_trace()
-            #     # print self.executed_suites[self.current_suite_index][self.current_test_case_index][self.current_step_index]
-            #     self.executed_suites[self.current_suite_index][self.current_test_case_index][self.current_step_index].extend(
-            #         [header])
-
-
-        helpers.print_variable_list(self.executed_suites, self._print_header_report)
-
-        import pprint
-        print pprint.pprint(self.executed_suites, indent=3)
-        print "suite: {0}, test case: {1}, step: {2}".format(
-            self.current_suite_index, self.current_test_case_index, self.current_step_index
-        )
+        if header.type != "step":
+            self.prev_header_was_step = False
 
     def _print_header_report(self, header, depth):
-        print "   " * depth + "- " + header.original_line
-
+        print "   " * depth + "" + header.original_line
 
     def _read_vals_from_config_file(self):
         """Reads all of the values from the format .ini file"""

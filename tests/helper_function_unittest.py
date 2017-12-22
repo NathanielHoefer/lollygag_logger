@@ -7,8 +7,20 @@ Last Updated: 12/2/2017
 """
 
 import unittest
+import sys
+from cStringIO import StringIO
 from lollygag_logger.helpers import *
 
+class Capturing(list):
+    def __enter__(self):
+        self._stdout = sys.stdout
+        sys.stdout = self._stringio = StringIO()
+        return self
+
+    def __exit__(self, *args):
+        self.extend(self._stringio.getvalue().splitlines())
+        del self._stringio    # free up some memory
+        sys.stdout = self._stdout
 
 class StrToBool(unittest.TestCase):
 
@@ -97,6 +109,28 @@ class CondenseFieldsFormatting(unittest.TestCase):
         condensed_str = condense_field(self.test_lines[19].strip(), self.condense_len,
                                        self.collapse_dict, self.collapse_list, self.collapse_len)
         self.assertEqual(condensed_str, self.test_lines[20].strip())
+
+
+class PrintList(unittest.TestCase):
+
+    def test_print_list(self):
+        rec_list = ['0', ['1.0', ['1.0.0', '1.0.1', '1.0.2']], '1', '2']
+        indent_str = " - "
+        expect_output = [
+            indent_str * 0 + '0',
+            indent_str * 1 + '1.0',
+            indent_str * 2 + '1.0.0',
+            indent_str * 2 + '1.0.1',
+            indent_str * 2 + '1.0.2',
+            indent_str * 0 + '1',
+            indent_str * 0 + '2',
+        ]
+        def print_elem(string, depth):
+            print " - "*depth + string
+        output = []
+        with Capturing(output) as output:
+            print_variable_list(rec_list, print_elem)
+        self.assertEqual(output, expect_output)
 
 
 if __name__ == "__main__":

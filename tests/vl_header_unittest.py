@@ -7,7 +7,7 @@ Last Updated: 12/19/2017
 """
 
 import unittest
-from lollygag_logger.vl_lollygag_logger import ValenceHeader
+from lollygag_logger.vl_logger import ValenceHeader
 
 
 class HeaderParse(unittest.TestCase):

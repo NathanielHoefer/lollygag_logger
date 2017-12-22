@@ -442,33 +442,7 @@ class ValenceConsoleOutput(LogFormatter):
         if header.type == "title" and header.suite:
             if header.test_name == self.current_suite_name:
                 self.executed_suites[header.test_name][header.test_info] = OrderedDict()
-            """
-            TODO - Figure out data structure for storing headers
-            
-            {'TsBulkVolume': 
-                {'Starting Setup'
-                    [
-                        Starting Setup header
-                    ]
-                {Test Case 0: 
-                    {
-                    Starting Setup
-                    Start Test
-                    Step 0
-                    Step 1
-                    Starting Teardown
-                    }
-                }
-                {Test Case 1: 
-                    {
-                    Starting Setup
-                    Start Test
-                    Step 0
-                    Step 1
-                    Starting Teardown
-                    }
-            }
-            """
+
 
             self.current_suite_number += 1
         elif header.type == "title":
@@ -523,14 +497,18 @@ if __name__ == '__main__':
             except KeyboardInterrupt:
                 proc.kill()
         elif args.read:
-            arg_path = args.vl_path
-            if arg_path[0] == "/" or arg_path[0] == "~":
-                file_path = arg_path
-            else:
-                file_path = os.getcwd() + "/" + arg_path
-            with open(file_path, "r") as logfile:
-                logger = LollygagLogger(logfile, vl_console_output)
-                logger.run()
+            try:
+                arg_path = args.vl_path
+                if arg_path[0] == "/" or arg_path[0] == "~":
+                    file_path = arg_path
+                else:
+                    file_path = os.getcwd() + "/" + arg_path
+                with open(file_path, "r") as logfile:
+                    logger = LollygagLogger(logfile, vl_console_output)
+                    logger.run()
+            except KeyboardInterrupt:
+                print "Keyboard Interrupt: Exiting"
+                exit(0)
         elif args.at2:
 
             AT2_USER = config[AT2_TASKINSTANCE_CREDENTIALS]["username"]

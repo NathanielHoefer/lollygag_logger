@@ -326,11 +326,12 @@ class ValenceConsoleOutput(LogFormatter):
 
         # Variables needed for titles and steps
         self.waiting_for_header = {"title": False, "step": False}
-        self.executed_suites = OrderedDict()
+        self.executed_suites = []
         self.current_suite_name = ""
-        self.current_suite_number = 0
+        self.current_suite_index = -1
         self.current_test_case = ""
-        self.current_test_case_number = 0
+        self.current_test_case_index = -1
+        self.current_step_index = -1
         self.last_log_time = None
 
     def format(self, unformatted_log_line):
@@ -363,11 +364,16 @@ class ValenceConsoleOutput(LogFormatter):
         log_type = self.log_line.type.strip().lower()
         formatted_line = self._combine_header_logs(log_type)
         if formatted_line:
+            self._store_header(formatted_line)
             log_output = str(formatted_line)
             if log_output:
-                # self._store_header(log_output)
                 print ColorType.color_by_type(formatted_line.type, log_output) if print_in_color else log_output
+
+            if formatted_line.original_line == "Final Report":
+                helpers.print_variable_list(self.executed_suites, self._print_header_report)
             return
+
+        # Don't print header border
         elif log_type == "step" or log_type == "title" or any(self.waiting_for_header.values()):
             return
 
@@ -436,17 +442,80 @@ class ValenceConsoleOutput(LogFormatter):
 
     def _store_header(self, header):
 
+        print "suite: {0}, test case: {1}, step: {2}".format(
+            self.current_suite_index, self.current_test_case_index, self.current_step_index
+        )
+
         if self.last_log_time:
             header.start_time = self.last_log_time
 
-        if header.type == "title" and header.suite:
-            if header.test_name == self.current_suite_name:
-                self.executed_suites[header.test_name][header.test_info] = OrderedDict()
+        # Non-suite related titles such as 'Final Report'
+        if header.type == "title" and not header.test_name:
+            self.current_suite_index += 1
+            self.current_test_case_index = -1
+            self.current_step_index = -1
+            self.executed_suites.extend([header])
+
+        # Suite titles starting with 'Test Suite' that is first starting
+        elif header.type == "title" and header.suite and header.test_name != self.current_suite_name:
+            self.current_suite_name = header.test_name
+
+            # Reset test case and step indices
+            self.current_test_case_index = -1
+            self.current_step_index = -1
+
+            self.executed_suites.append([header])
+
+        # Suite titles starting with 'Test Suite' that has already started
+        elif header.type == "title" and header.suite and header.test_name == self.current_suite_name:
+            self.current_suite_index += 1
+            self.executed_suites[self.current_suite_index].extend([header])
+
+        # Test case titles starting with 'Test Case' that is first starting
+        elif header.type == "title" and not header.suite and header.test_name != self.current_test_case:
+            self.current_suite_index += 1
+            self.current_test_case = header.test_name
+            self.current_step_index = -1
+            self.current_test_case_index = 0
+            self.executed_suites[self.current_suite_index].append([header])
+
+        # Test case titles starting with 'Test Case' that has already started
+        elif header.type == "title" and not header.suite and header.test_name == self.current_test_case:
+            self.current_test_case_index += 1
+            self.current_step_index += 1
+
+            self.executed_suites[self.current_suite_index][self.current_test_case_index].extend([header])
+
+        # Step - todo
+        elif header.type == "step":
+            # if self.current_step_index < 0:
+                self.current_step_index += 1
+                self.executed_suites[self.current_suite_index][self.current_test_case_index].append(
+                    [header])
+                # self.current_step_index += 1
+
+            # else:
+            #     # self.current_test_case_index += 1
+            #
+            #     # self.current_step_index += 1
+            #     #
+            #     # import pdb;
+            #     # pdb.set_trace()
+            #     # print self.executed_suites[self.current_suite_index][self.current_test_case_index][self.current_step_index]
+            #     self.executed_suites[self.current_suite_index][self.current_test_case_index][self.current_step_index].extend(
+            #         [header])
 
 
-            self.current_suite_number += 1
-        elif header.type == "title":
-            self.executed_suites[self.current_suite_number][self.current_suite_name].append({})
+        helpers.print_variable_list(self.executed_suites, self._print_header_report)
+
+        import pprint
+        print pprint.pprint(self.executed_suites, indent=3)
+        print "suite: {0}, test case: {1}, step: {2}".format(
+            self.current_suite_index, self.current_test_case_index, self.current_step_index
+        )
+
+    def _print_header_report(self, header, depth):
+        print "   " * depth + "- " + header.original_line
 
 
     def _read_vals_from_config_file(self):

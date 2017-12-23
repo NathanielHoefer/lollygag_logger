@@ -43,7 +43,6 @@ import sys
 import re
 import argparse
 import datetime
-from collections import OrderedDict
 from vl_config_file import *
 from lollygag_logger import LogLine, LogFormatter, LollygagLogger
 import helpers
@@ -222,8 +221,13 @@ class ValenceLogLine(LogLine):
     def _str_to_time(self):
         if not self.time:
             return
-        time = re.split(":|;|\.|\,", self.time)
-        self.time = datetime.time(int(time[0]), int(time[1]), int(time[2]), int(time[3].ljust(6, "0")))
+        if self.at2_log:
+            self.time = datetime.datetime.strptime(self.time, "%H:%M:%S,%f")
+        else:
+            self.time = datetime.datetime.strptime(self.time, "%H:%M:%S.%f")
+
+        # time = re.split(":|;|\.|\,", self.time)
+        # self.time = datetime.time(int(time[0]), int(time[1]), int(time[2]), int(time[3].ljust(6, "0")))
 
 
 class ValenceHeader(LogLine):
@@ -326,6 +330,8 @@ class ValenceConsoleOutput(LogFormatter):
 
         # Variables needed for titles and steps
         self.waiting_for_header = {"title": False, "step": False}
+        self.previous_header = None
+        self.finish_times = {}
         self.executed_suites = []
         self.current_suite_name = ""
         self.current_suite_index = -1
@@ -368,9 +374,11 @@ class ValenceConsoleOutput(LogFormatter):
             self._store_header(formatted_line)
             log_output = str(formatted_line)
             if log_output:
-                print ColorType.color_by_type(formatted_line.type, log_output) if print_in_color else log_output
+                print ColorType.color_by_type(formatted_line.type, log_output) \
+                    if print_in_color else log_output
 
             if formatted_line.original_line == "Final Report":
+                # TODO - Fix ellapsed time issues 12/23
                 helpers.print_variable_list(self.executed_suites, self._print_header_report)
             return
 
@@ -395,7 +403,7 @@ class ValenceConsoleOutput(LogFormatter):
 
         # Condense entire log line if beyond max length
         log_output = helpers.condense(formatted_line, self._calc_max_len())
-        # TODO - Resolve color condensing issue
+        # TODO - Resolve color condensing issue 12/22
         if log_output.strip("\n\\n"):
             print log_output
         elif not self.duplicate_blank_line:
@@ -477,8 +485,15 @@ class ValenceConsoleOutput(LogFormatter):
         Final Report
         """
 
+        # Record the starting time for the current header and the ending time for the previous header
         if self.last_log_time:
             header.start_time = self.last_log_time
+
+        if self.previous_header:
+            self.finish_times[self.previous_header.original_line] = self.last_log_time
+            self.previous_header = header
+        else:
+            self.previous_header = header
 
         # Non-suite related titles such as 'Final Report'
         if header.type == "title" and not header.test_name:
@@ -516,14 +531,15 @@ class ValenceConsoleOutput(LogFormatter):
             self.executed_suites[self.current_suite_index][self.current_test_case_index].extend([header])
             self.current_step_index += 1
 
-        # Step - todo
+        # Step
         elif header.type == "step":
             if not self.prev_header_was_step:
                 self.executed_suites[self.current_suite_index][self.current_test_case_index].append(
                     [header])
                 self.current_step_index += 1
             else:
-                self.executed_suites[self.current_suite_index][self.current_test_case_index][self.current_step_index].extend(
+                self.executed_suites[self.current_suite_index][self.current_test_case_index] \
+                    [self.current_step_index].extend(
                     [header])
             self.prev_header_was_step = True
 
@@ -531,7 +547,24 @@ class ValenceConsoleOutput(LogFormatter):
             self.prev_header_was_step = False
 
     def _print_header_report(self, header, depth):
-        print "   " * depth + "" + header.original_line
+        """Prints the header report at the end of the test."""
+        if header.suite:
+            output = "{0}: {1}".format(header.test_name, header.test_instruction)
+        elif header.type == "title" and header.test_name:
+            output = header.original_line
+        elif header.type == "step":
+            # TODO - Resolve Step listing issue 12/23
+            output = "Step {0}: {1}".format(header.test_number, header.test_instruction)
+        else:
+            return
+
+        start_time = header.start_time
+        end_time = self.finish_times[header.original_line]
+        timedelta = end_time - start_time
+        # timedelta = timedelta + datetime.Timedelta(days=1) if timedelta < 0 else timedelta
+
+        print "   " * depth + output
+        print "   " * (depth + 1) + "Approximate Time Ellapsed: {0}".format(timedelta)
 
     def _read_vals_from_config_file(self):
         """Reads all of the values from the format .ini file"""

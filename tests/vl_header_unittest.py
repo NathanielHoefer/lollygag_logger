@@ -61,7 +61,7 @@ class HeaderParse(unittest.TestCase):
     #
     #     config_file = config.create_config_file()
     #     vl_console_output = vl.ValenceConsoleOutput(vl.ValenceLogLine, config_file)
-    #     with open("/home/nathaniel/Downloads/test_headers.log", "r") as logfile:
+    #     with open("/home/nathaniel/Downloads/test.log", "r") as logfile:
     #         logger = vl.LollygagLogger(logfile, vl_console_output)
     #         logger.run()
 

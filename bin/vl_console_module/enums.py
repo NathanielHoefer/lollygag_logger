@@ -11,6 +11,8 @@ import helpers
 
 class ColorType:
 
+    # TODO - Update this to only be an enum and move color_by_type function
+
     DEBUG = '\033[35m'
     INFO = '\033[34m'
     WARNING = '\033[33m'

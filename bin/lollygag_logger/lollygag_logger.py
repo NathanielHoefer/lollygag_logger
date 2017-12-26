@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 =========================================================================================================
 Lollygag Logger
@@ -9,34 +7,12 @@ Contact: nathaniel.hoefer@netapp.com
 Version: 0.5
 Last Updated: 11/14/2017
 
-This is the first iteration of a script to present a more legible output from the vl suite execution.
-
-Currently, this is capable of reading from a log file by using the -f argument to specify a log file to
-read from. This method will also generate a format config file during the initial run in the same
-location as the log file. This format config file allows you - the user - to specify how you would like
-the output to be formatted.
-
-Another option is to run this script using the -vl argument, passing in the suite path just as though
-you are running the "vl run suite.path.etc" command. You will still have to execute this from within the
-same directory as if you were executing the command by itself. The big difference is this too generates
-a format config file, that you can change at any point during your test to see future logs in the new
-format. This format config file will be generated in your current working directory.
-
-Script execution examples:
-python lollygag_logger.py -f test.log
-python lollygag_logger.py -vl suite.path.etc
-
-If you experience any issues with this script (which there stands a good possibility) or you would like
-suggest an improvement, you can reach me at my email listed above.
-
-
-Improvements to implement:
- - Split reading from a file handle and formatting into two separate processes in a producer-consumer
- model.
- - Treat reading from file and executing vl process as both file handles to be passed into a single funct
+TODO - Update this description
 
 =========================================================================================================
 """
+
+# TODO - Update file description
 
 from abc import ABCMeta, abstractmethod
 from threading import Thread

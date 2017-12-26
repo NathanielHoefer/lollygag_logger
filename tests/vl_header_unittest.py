@@ -7,10 +7,8 @@ Last Updated: 12/19/2017
 """
 
 import unittest
-import subprocess
-from lollygag_logger.vl_logger import ValenceHeader
-import lollygag_logger.vl_logger as vl
-import lollygag_logger.vl_config_file as config
+
+from bin.vl_console_module import ValenceHeader
 
 
 class HeaderParse(unittest.TestCase):

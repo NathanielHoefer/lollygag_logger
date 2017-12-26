@@ -6,6 +6,8 @@ by Nathaniel Hoefer
 Last Updated: 12/2/2017
 """
 
+# TODO - Update file description
+
 from collections import OrderedDict
 import configparser
 import os
@@ -104,4 +106,3 @@ def create_config_file(file_directory=""):
         format_config.read(config_path)
 
     return format_config
-

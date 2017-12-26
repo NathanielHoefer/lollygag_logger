@@ -6,10 +6,10 @@ by Nathaniel Hoefer
 Last Updated: 11/30/2017
 """
 
-import unittest
 import datetime
+import unittest
 
-from lollygag_logger.vl_logger import ValenceLogLine as LogLine
+from bin.vl_console_module import ValenceLogLine as LogLine
 
 
 class TestDateToken(unittest.TestCase):
@@ -77,7 +77,7 @@ class TestTypeTokenStep(unittest.TestCase):
         line = LogLine("-------------------------------------------------------------------------------")
         self.assertEqual(line.type, "STEP")
 
-    def test_under_minimum(self):
+    def test_at_minimum(self):
         line = LogLine("------------------------------")
         self.assertEqual(line.type, "STEP")
         self.assertEqual(line.original_line, "------------------------------")
@@ -169,6 +169,7 @@ class TestDetailsToken(unittest.TestCase):
 
 class TestStandardFormat(unittest.TestCase):
 
+    # TODO - Fix LogLine date and time issue
     def test_full_standard_format(self):
         log = "2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] reco"
         line = LogLine(log)

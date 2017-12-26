@@ -6,12 +6,13 @@ by Nathaniel Hoefer
 Last Updated: 12/14/2017
 """
 
-from lollygag_logger import LollygagLogger, LogFormatter
-import unittest
-import os
-import sys
-from cStringIO import StringIO
 import subprocess
+import sys
+import unittest
+from cStringIO import StringIO
+
+from bin.lollygag_logger import LollygagLogger, LogFormatter
+
 
 class Capturing(list):
     def __enter__(self):
@@ -35,15 +36,14 @@ class Streaming(unittest.TestCase):
 
     def test_file_stream(self):
         logger_output = []
-        expected_output = []
 
         # Run Lollygag Logger and capture output
         with Capturing(logger_output) as logger_output:
-            with open("stream_test.log", "r") as logfile:
+            with open("test_logs/stream_test.log", "r") as logfile:
                 logger = LollygagLogger(logfile, TestFormatter())
                 logger.run()
 
-        with open("stream_test.log", "r") as logfile:
+        with open("test_logs/stream_test.log", "r") as logfile:
             expected_output = logfile.read().splitlines()
 
         self.assertEqual(logger_output, expected_output)

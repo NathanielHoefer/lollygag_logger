@@ -19,6 +19,9 @@ from vl_objects import ValenceHeader as Header
 from enums import LogType
 from vl_config_file import *
 
+WRITE_UPDATE_INCREMENT = 50
+
+
 class ValenceConsoleFormatter(LogFormatter):
     """Class containing log line format functions.
 
@@ -27,13 +30,13 @@ class ValenceConsoleFormatter(LogFormatter):
     :ivar find_str: String to highlight if contained in line.
     :ivar list_step: The step or test case to be printed. For test case, match 'Test Case #'. If
         specifying step, list full name out as seen in logs. If empty, all logs will be printed.
-    :ivar save_file: File to save the formatted logs to. If empty, logs won't be saved.
+    :ivar write_path: File to save the formatted logs to. If empty, logs won't be saved.
     """
 
     log_queue = []
 
     def __init__(self, log_line_cls, format_config, format_config_filepath="",
-                 find_str="", list_step="", save_file=""):
+                 find_str="", list_step="", write_path=""):
         self.log_line_cls = log_line_cls
         self.format_config = format_config
         self.format_config_filepath = format_config_filepath if format_config_filepath \
@@ -41,8 +44,9 @@ class ValenceConsoleFormatter(LogFormatter):
         self.log_line = None
         self.find_str = find_str
         self.list_step = list_step
-        self.save_file = save_file
+        self.write_path = write_path
         self.duplicate_blank_line = False
+        self.log_lines_read = 0
 
         # Format config sections stored individually as dicts
         self._read_vals_from_config_file()
@@ -73,6 +77,12 @@ class ValenceConsoleFormatter(LogFormatter):
         7. Add color to type field
         8. Condense entire line if beyond max and print
         """
+
+        # Increase lines read count and print update if writing to a file
+        self.log_lines_read += 1
+        if self.write_path and self.log_lines_read % WRITE_UPDATE_INCREMENT == 0:
+            print "Lines Read: {0}\r".format(self.log_lines_read),
+            sys.stdout.flush()
 
         # Check to see if line is empty, and create log line object to parse the line
         if not self._handle_unformatted_line(unformatted_log_line):
@@ -109,7 +119,7 @@ class ValenceConsoleFormatter(LogFormatter):
         log_output = helpers.condense(formatted_line, self._calc_max_len())
 
         self.duplicate_blank_line = False
-        print log_output
+        self._print_line(log_output)
 
     def _handle_unformatted_line(self, unformatted_log_line):
         """Stores the unformatted logline as a LogLine object or print if only a new line character.
@@ -122,7 +132,7 @@ class ValenceConsoleFormatter(LogFormatter):
         if unformatted_log_line == "\n":
             if not self.duplicate_blank_line:
                 self.duplicate_blank_line = True
-                print ""
+                self._print_line("")
             return False
         line = unformatted_log_line.strip("\n\\n")
         if not line:
@@ -145,8 +155,8 @@ class ValenceConsoleFormatter(LogFormatter):
             self._store_header(header_line)
             log_output = str(header_line)
             if log_output:
-                print helpers.color_by_type(header_line.type, log_output) \
-                    if print_in_color else log_output
+                self._print_line(helpers.color_by_type(header_line.type, log_output) if print_in_color
+                                 else log_output)
 
             # if header_line.original_line == "Final Report":
             #     # TODO - Fix ellapsed time issues 12/23
@@ -317,8 +327,8 @@ class ValenceConsoleFormatter(LogFormatter):
         timedelta = end_time - start_time
         # timedelta = timedelta + datetime.Timedelta(days=1) if timedelta < 0 else timedelta
 
-        print "   " * depth + output
-        print "   " * (depth + 1) + "Approximate Time Ellapsed: {0}".format(timedelta)
+        self._print_line("   " * depth + output)
+        self._print_line("   " * (depth + 1) + "Approximate Time Ellapsed: {0}".format(timedelta))
 
     def _update_format_config(self):
         """Updates the format config member dicts if the format config has been updated."""
@@ -343,3 +353,12 @@ class ValenceConsoleFormatter(LogFormatter):
             return int(console_width)
         else:
             return int(self.sect_lengths["max_line_len"])
+
+    def _print_line(self, print_str):
+        """Prints str if no write_path specified, otherwise save line to file specifiec by write_path."""
+
+        if self.write_path:
+            with open(self.write_path, "a") as write_file:
+                write_file.write(print_str + "\n")
+        else:
+            print print_str

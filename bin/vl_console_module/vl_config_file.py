@@ -13,7 +13,7 @@ import configparser
 import os
 
 DEFAULT_CONFIG_DIR = os.path.expanduser("~")
-FORMAT_CONFIG_FILE_NAME = ".logger_format.config"
+FORMAT_CONFIG_FILE_NAME = ".vl_logger.ini"
 DEFAULT_CONFIG_PATH = DEFAULT_CONFIG_DIR + "/" + FORMAT_CONFIG_FILE_NAME
 
 # Section names

@@ -42,7 +42,7 @@ class ValenceLogLine(LogLine):
             return self.original_line
 
     def color_type(self):
-        """Returns the log line with the log type surrounded by an ANSI escape color sequence."""
+        """Returns the log line string with the log type surrounded by an ANSI escape color sequence."""
         if self.standard_format:
             fields = self._list_fields_as_str()
             fields[2] = ColorType.color_by_type(fields[2].lower(), fields[2])

@@ -84,51 +84,35 @@ class ValenceConsoleFormatter(LogFormatter):
         self.last_log_time = None
 
     def format(self, unformatted_log_line):
-        """Prints the formatted log line to the console based on the format config file options."""
+        """Prints the formatted log line to the console based on the format config file options.
+
+        1. Create LogLine object
+        2. Store last log time
+        3. Update format_config if it has been updated
+        4. Construct and print header
+        5. Skip line if not marked for print
+        6. Remove and condense fields in standard format
+        7. Add color to type field
+        8. Condense entire line if beyond max and print
+        """
 
         # Check to see if line is empty, and create log line object to parse the line
-        if unformatted_log_line == "\n":
-            if not self.duplicate_blank_line:
-                self.duplicate_blank_line = True
-                print ""
+        if not self._handle_unformatted_line(unformatted_log_line):
             return
-        line = unformatted_log_line.strip("\n\\n")
-        if not line:
-            return
-        self.log_line = self.log_line_cls(line)
 
         # Store last log time
         if self.log_line.standard_format and self.log_line.time:
             self.last_log_time = self.log_line.time
 
         # Update format config values if file has been updated
-        current_config_mod_time = os.path.getmtime(self.format_config_filepath)
-        if current_config_mod_time > self.format_config_mod_time:
-            self._read_vals_from_config_file()
-            self.format_config_mod_time = current_config_mod_time
-
-        print_in_color = helpers.str_to_bool(self.format_config[COLORS]["use_colors"])
+        self._update_format_config()
 
         # Construct header object and print
-        log_type = self.log_line.type.strip().lower()
-        formatted_line = self._combine_header_logs(log_type)
-        if formatted_line:
-            self._store_header(formatted_line)
-            log_output = str(formatted_line)
-            if log_output:
-                print ColorType.color_by_type(formatted_line.type, log_output) \
-                    if print_in_color else log_output
-
-            if formatted_line.original_line == "Final Report":
-                # TODO - Fix ellapsed time issues 12/23
-                helpers.print_variable_list(self.executed_suites, self._print_header_report)
-            return
-
-        # Don't print header border
-        elif log_type == "step" or log_type == "title" or any(self.waiting_for_header.values()):
+        if self._handle_header():
             return
 
         # Skip line if type is marked to not display
+        log_type = self.log_line.type.strip().lower()
         if not helpers.str_to_bool(self.sect_display_log_types[log_type]):
             return
 
@@ -137,7 +121,7 @@ class ValenceConsoleFormatter(LogFormatter):
             self._remove_fields()
             self._condense_fields()
 
-        # Add color to the type field
+        # Add color to the type field and convert log line to string
         if helpers.str_to_bool(self.format_config[COLORS]["use_colors"]):
             formatted_line = self.log_line.color_type()
         else:
@@ -145,15 +129,64 @@ class ValenceConsoleFormatter(LogFormatter):
 
         # Condense entire log line if beyond max length
         log_output = helpers.condense(formatted_line, self._calc_max_len())
-        # TODO - Resolve color condensing issue 12/22
-        if log_output.strip("\n\\n"):
-            print log_output
-        elif not self.duplicate_blank_line:
-            self.duplicate_blank_line = True
-            print log_output
+
         self.duplicate_blank_line = False
+        print log_output
+
+    def _handle_unformatted_line(self, unformatted_log_line):
+        """Stores the unformatted logline as a LogLine object or print if only a new line character.
+
+        If the input is only contains a new line, prints a new line if duplicate blank line flag is
+        false.
+
+        :return: True if a non-blank line, False otherwise
+        """
+        if unformatted_log_line == "\n":
+            if not self.duplicate_blank_line:
+                self.duplicate_blank_line = True
+                print ""
+            return False
+        line = unformatted_log_line.strip("\n\\n")
+        if not line:
+            return False
+        self.log_line = self.log_line_cls(line)
+        return True
+
+    def _handle_header(self):
+        """Determines if LogLine is part of header and handles the printing if so.
+
+        Initially attempts to create header object, store it, then print it. If the header is the
+        'Final Report', then the headers and their ellapsed time will be reported.
+
+        :return: True if LogLine was part of a header, False if not
+        """
+        log_type = self.log_line.type.strip().lower()
+        header_line = self._combine_header_logs(log_type)
+        print_in_color = helpers.str_to_bool(self.format_config[COLORS]["use_colors"])
+        if header_line:
+            self._store_header(header_line)
+            log_output = str(header_line)
+            if log_output:
+                print ColorType.color_by_type(header_line.type, log_output) \
+                    if print_in_color else log_output
+
+            # if header_line.original_line == "Final Report":
+            #     # TODO - Fix ellapsed time issues 12/23
+            #     helpers.print_variable_list(self.executed_suites, self._print_header_report)
+            return True
+
+        # Don't print header border
+        elif log_type == "step" or log_type == "title" or any(self.waiting_for_header.values()):
+            return True
+        else:
+            return False
 
     def _combine_header_logs(self, log_type):
+        """Combines header LogLines into single header objects.
+
+        Since LogLines are not typically stored and are simply printed, a flag must be set to absorb
+        header loglines use as the borders and the header details.
+        """
         formatted_header = None
         for header_type, is_waiting in self.waiting_for_header.items():
             if log_type == header_type and not is_waiting:
@@ -308,8 +341,15 @@ class ValenceConsoleFormatter(LogFormatter):
         print "   " * depth + output
         print "   " * (depth + 1) + "Approximate Time Ellapsed: {0}".format(timedelta)
 
+    def _update_format_config(self):
+        """Updates the format config member dicts if the format config has been updated."""
+        current_config_mod_time = os.path.getmtime(self.format_config_filepath)
+        if current_config_mod_time > self.format_config_mod_time:
+            self._read_vals_from_config_file()
+            self.format_config_mod_time = current_config_mod_time
+
     def _read_vals_from_config_file(self):
-        """Reads all of the values from the format .ini file"""
+        """Reads all of the values from the format .ini file and stores them to the member dicts"""
         self.format_config.read(self.format_config_filepath)
         self.sect_display_log_types = self.format_config[DISPLAY_LOG_TYPES_SECT]
         self.sect_display_fields = self.format_config[DISPLAY_FIELDS_SECT]

@@ -16,30 +16,8 @@ import sys
 import helpers
 from bin.lollygag_logger import LogFormatter
 from vl_objects import ValenceHeader as Header
-from enums import ColorType
+from enums import LogType
 from vl_config_file import *
-
-# Descriptions for arg parse
-PROGRAM = "Lollygag Logger"
-DESCRIPTION = "This script will print out formatted logs from a log file or format the output of the " \
-              "vl run command."
-ARG_VL_DESC = "By default, the path to suite as in the vl_run command. Also used by -read and -at2 flags"
-ARG_FILE_DESC = "Read from log file in vl_path."
-ARG_AT2_DESC = "Fetch AT2 Task Instance logs from taskID in vl_path"
-ARG_FIND_DESC = "Highlight specified string found in the logs."
-ARG_LIST_DESC = "List specified test case or step. For test case, match 'Test Case #'. If" \
-                "specifying step, list full name out as seen in logs."
-ARG_SAVE_DESC = "Save log output to specified file."
-
-# Types of logs found during vl execution
-TYPE_DEBUG = "DEBUG"
-TYPE_INFO = "INFO"
-TYPE_WARNING = "WARNING"
-TYPE_ERROR = "ERROR"
-TYPE_STEP = "STEP"
-TYPE_TITLE = "TITLE"
-TYPE_OTHER = "OTHER"
-
 
 class ValenceConsoleFormatter(LogFormatter):
     """Class containing log line format functions.
@@ -71,7 +49,7 @@ class ValenceConsoleFormatter(LogFormatter):
         self.format_config_mod_time = os.path.getmtime(self.format_config_filepath)
 
         # Variables needed for titles and steps
-        self.waiting_for_header = {"title": False, "step": False}
+        self.waiting_for_header = {LogType.TITLE.value: False, LogType.STEP.value: False}
         self.previous_header = None
         self.finish_times = {}
         self.executed_suites = []
@@ -167,7 +145,7 @@ class ValenceConsoleFormatter(LogFormatter):
             self._store_header(header_line)
             log_output = str(header_line)
             if log_output:
-                print ColorType.color_by_type(header_line.type, log_output) \
+                print helpers.color_by_type(header_line.type, log_output) \
                     if print_in_color else log_output
 
             # if header_line.original_line == "Final Report":
@@ -176,7 +154,8 @@ class ValenceConsoleFormatter(LogFormatter):
             return True
 
         # Don't print header border
-        elif log_type == "step" or log_type == "title" or any(self.waiting_for_header.values()):
+        elif log_type == LogType.STEP.value or log_type == LogType.TITLE.value or any(
+                self.waiting_for_header.values()):
             return True
         else:
             return False
@@ -191,7 +170,7 @@ class ValenceConsoleFormatter(LogFormatter):
         for header_type, is_waiting in self.waiting_for_header.items():
             if log_type == header_type and not is_waiting:
                 self.waiting_for_header[header_type] = True
-            elif log_type == "other" and is_waiting:
+            elif log_type == LogType.OTHER.value and is_waiting:
                 formatted_header = Header(self.log_line.original_line, header_type,
                                           self._calc_max_len())
                 break

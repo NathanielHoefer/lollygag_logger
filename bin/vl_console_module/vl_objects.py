@@ -7,8 +7,9 @@ Last Updated: 12/2/2017
 """
 import datetime
 import re
-from bin.lollygag_logger.lollygag_logger import LogLine
-from enums import ColorType
+from bin.lollygag_logger import LogLine
+from enums import LogType
+import helpers
 
 
 class ValenceLogLine(LogLine):
@@ -25,7 +26,7 @@ class ValenceLogLine(LogLine):
     :cvar int TOKEN_COUNT: The number of fields
     """
 
-    LOG_LEVELS = ["DEBUG", "INFO", "WARNING", "ERROR"]
+    LOG_LEVELS = ["debug", "info", "warning", "error"]  # Temp until enum working
     FIELDS = ["date", "time", "type", "source", "thread", "details"]
     VALENCE_TOKEN_COUNT = len(FIELDS)
     AT2_TOKEN_COUNT = VALENCE_TOKEN_COUNT - 1
@@ -45,17 +46,17 @@ class ValenceLogLine(LogLine):
         """Returns the log line string with the log type surrounded by an ANSI escape color sequence."""
         if self.standard_format:
             fields = self._list_fields_as_str()
-            fields[2] = ColorType.color_by_type(fields[2].lower(), fields[2])
+            fields[2] = helpers.color_by_type(fields[2].lower(), fields[2])
             fields = [x for x in fields if x != ""]
         else:
-            fields = [ColorType.color_by_type(self.type.lower(), self.original_line)]
+            fields = [helpers.color_by_type(self.type.lower(), self.original_line)]
         return " ".join(fields)
 
     def _default_vals(self):
         """Set all field to default values."""
         self.date = ""
         self.time = ""
-        self.type = "OTHER"
+        self.type = "other"
         self.source = ""
         self.thread = ""
         self.details = ""
@@ -73,10 +74,10 @@ class ValenceLogLine(LogLine):
         # each with a minimum of 30 chars
         input_str = input_str.strip()
         if re.match("^={30,}$", input_str):
-            self.type = "TITLE"
+            self.type = "title"
             return
         if re.match("^-{30,}$", input_str):
-            self.type = "STEP"
+            self.type = "step"
             return
 
         # Identifies if the log is int AT2 standard format based on the format of the time stamp. AT2
@@ -104,9 +105,13 @@ class ValenceLogLine(LogLine):
             self._str_to_time()
         else:
             self.time = ""
-        if split[2] in self.LOG_LEVELS:
-            self.type = split[2]
+
+        # TODO - Update to use enums after enum43 is installed
+        str_type = split[2].lower()
+        if str_type in self.LOG_LEVELS:
+            self.type = str_type
         self.source = split[3] if re.match("^\[.*:.*\]$", split[3]) else ""
+
         if self.at2_log:  # Special case to check if logs are being read from AT2 based on time stamp
             self.details = split[4] if len(split) == self.AT2_TOKEN_COUNT else ""
         else:
@@ -131,6 +136,7 @@ class ValenceLogLine(LogLine):
         str_fields_list = [getattr(self, field) for field in self.FIELDS]
         str_fields_list[0] = self._date_to_str()
         str_fields_list[1] = self._time_to_str()
+        str_fields_list[2] = str_fields_list[2].upper()
         return str_fields_list
 
     def _date_to_str(self):

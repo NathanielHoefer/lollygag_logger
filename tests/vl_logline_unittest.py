@@ -38,91 +38,91 @@ class TestTypeTokenTitle(unittest.TestCase):
 
     def test_under_minimum(self):
         line = LogLine("=============================")
-        self.assertEqual(line.type, "OTHER")
+        self.assertEqual(line.type, "other")
         self.assertEqual(line.original_line, "=============================")
 
     def test_long_equal(self):
         line = LogLine("===============================================================================")
-        self.assertEqual(line.type, "TITLE")
+        self.assertEqual(line.type, "title")
 
     def test_at_minimum(self):
         line = LogLine("==============================")
-        self.assertEqual(line.type, "TITLE")
+        self.assertEqual(line.type, "title")
 
     def test_four_equal(self):
         line = LogLine("====")
-        self.assertEqual(line.type, "OTHER")
+        self.assertEqual(line.type, "other")
 
     def test_bad_begin(self):
         line = LogLine("bad=====")
-        self.assertEqual(line.type, "OTHER")
+        self.assertEqual(line.type, "other")
 
     def test_bad_middle(self):
         line = LogLine("=====bad==")
-        self.assertEqual(line.type, "OTHER")
+        self.assertEqual(line.type, "other")
 
     def test_bad_end(self):
         line = LogLine("=====bad")
-        self.assertEqual(line.type, "OTHER")
+        self.assertEqual(line.type, "other")
 
 
 class TestTypeTokenStep(unittest.TestCase):
 
     def test_under_minimum(self):
         line = LogLine("-----------------------------")
-        self.assertEqual(line.type, "STEP")
+        self.assertEqual(line.type, "step")
         self.assertEqual(line.original_line, "-----------------------------")
 
     def test_long_equal(self):
         line = LogLine("-------------------------------------------------------------------------------")
-        self.assertEqual(line.type, "STEP")
+        self.assertEqual(line.type, "step")
 
     def test_at_minimum(self):
         line = LogLine("------------------------------")
-        self.assertEqual(line.type, "STEP")
+        self.assertEqual(line.type, "step")
         self.assertEqual(line.original_line, "------------------------------")
 
     def test_four_equal(self):
         line = LogLine("----")
-        self.assertEqual(line.type, "OTHER")
+        self.assertEqual(line.type, "other")
 
     def test_bad_begin(self):
         line = LogLine("bad-----")
-        self.assertEqual(line.type, "OTHER")
+        self.assertEqual(line.type, "other")
 
     def test_bad_middle(self):
         line = LogLine("-----bad--")
-        self.assertEqual(line.type, "OTHER")
+        self.assertEqual(line.type, "other")
 
     def test_bad_end(self):
         line = LogLine("-----bad")
-        self.assertEqual(line.type, "OTHER")
+        self.assertEqual(line.type, "other")
 
 
 class TestTypeTokenDebug(unittest.TestCase):
 
     def test_correct_format(self):
         line = LogLine("2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] reco")
-        self.assertEqual(line.type, "DEBUG")
+        self.assertEqual(line.type, "debug")
 
     def test_bad_format(self):
         line = LogLine("201-10-30 19:13:32.209878 DEBG [valence:42] [MainProcess:MainThread] re")
-        self.assertEqual(line.type, "OTHER")
+        self.assertEqual(line.type, "other")
 
 
 class TestTypeTokenOther(unittest.TestCase):
 
     def test_empty_line(self):
         line = LogLine("")
-        self.assertEqual(line.type, "OTHER")
+        self.assertEqual(line.type, "other")
 
     def test_missing_token(self):
         line = LogLine("201-10-30 19:13:32.209878 DEBG [valence:42] re")
-        self.assertEqual(line.type, "OTHER")
+        self.assertEqual(line.type, "other")
 
     def test_incorrect_format_tokens(self):
         line = LogLine("x x x x x x")
-        self.assertEqual(line.type, "OTHER")
+        self.assertEqual(line.type, "other")
 
 
 class TestSourceToken(unittest.TestCase):
@@ -163,20 +163,20 @@ class TestDetailsToken(unittest.TestCase):
 
     def test_no_details_with_type(self):
         line = LogLine("2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] ")
-        self.assertEqual(line.type, "DEBUG")
+        self.assertEqual(line.type, "debug")
         self.assertEqual(line.details, "")
 
 
 class TestStandardFormat(unittest.TestCase):
 
-    # TODO - Fix LogLine date and time issue
+# TODO - Fix LogLine date and time issue
     def test_full_standard_format(self):
         log = "2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] reco"
         line = LogLine(log)
         self.assertTrue(line.standard_format)
         self.assertEqual(line.date, datetime.date(2017, 10, 30))
         self.assertEqual(line.time, datetime.time(19, 13, 32, 209878))
-        self.assertEqual(line.type, "DEBUG")
+        self.assertEqual(line.type, "debug")
         self.assertEqual(line.source, "[valence:42]")
         self.assertEqual(line.thread, "[MainProcess:MainThread]")
         self.assertEqual(line.details, "reco")
@@ -187,7 +187,7 @@ class TestStandardFormat(unittest.TestCase):
         self.assertTrue(line.standard_format)
         self.assertEqual(line.date, datetime.date(2017, 10, 30))
         self.assertEqual(line.time, datetime.time(19, 13, 32, 209878))
-        self.assertEqual(line.type, "DEBUG")
+        self.assertEqual(line.type, "debug")
         self.assertEqual(line.source, "[valence:42]")
         self.assertEqual(line.thread, "[MainProcess:MainThread]")
         self.assertEqual(line.details, "")
@@ -197,7 +197,7 @@ class TestStandardFormat(unittest.TestCase):
         self.assertFalse(line.standard_format)
         self.assertEqual(line.date, "")
         self.assertEqual(line.time, "")
-        self.assertEqual(line.type, "TITLE")
+        self.assertEqual(line.type, "title")
         self.assertEqual(line.source, "")
         self.assertEqual(line.thread, "")
         self.assertEqual(line.details, "")
@@ -208,7 +208,7 @@ class TestStandardFormat(unittest.TestCase):
         self.assertFalse(line.standard_format)
         self.assertEqual(line.date, "")
         self.assertEqual(line.time, "")
-        self.assertEqual(line.type, "OTHER")
+        self.assertEqual(line.type, "other")
         self.assertEqual(line.source, "")
         self.assertEqual(line.thread, "")
         self.assertEqual(line.details, "")

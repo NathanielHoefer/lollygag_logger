@@ -7,6 +7,7 @@ Last Updated: 12/18/2017
 """
 
 import copy
+import re
 
 # Valid values from ConfigParser that result in True
 VALID_TRUE_INPUT = ("true", "yes", "t", "y", "1")
@@ -81,9 +82,20 @@ def condense_field(field_str, condense_len=50,
 def condense(str_line, max_len):
     """Condenses the string if it is greater than the max length, appending ellipses.
 
+    Does not count \033 escape sequences towards line length.
+
     :param str str_line: Line to be condensed
     :param int max_len: The maximum length of the line
     """
+
+    # Determine the number of extra characters found in the escape sequences and add them to the
+    # max_len since they won't add additional characters when printed to the console.
+    esc_seq_list = re.findall('\\033\[\d+m', str_line[:max_len + 1])
+    esc_seq_num = 0
+    for esc_seq in esc_seq_list:
+        esc_seq_num += len(esc_seq)
+    max_len += esc_seq_num
+
     if len(str_line) > max_len:
         return "".join([str_line[:max_len - 3], "..."])
     else:

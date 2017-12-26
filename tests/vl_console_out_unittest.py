@@ -10,12 +10,12 @@ import sys
 import unittest
 from cStringIO import StringIO
 
-from lollygag_logger.vl_config_file import *
-from lollygag_logger.vl_logger import ValenceConsoleOutput as Output
-from lollygag_logger.vl_logger import ValenceLogLine as LogLine
-
+from bin.vl_console_module.vl_formatter import ValenceConsoleFormatter as Output
+from bin.vl_console_module.vl_objects import ValenceLogLine as LogLine
+from bin.vl_console_module.vl_config_file import *
 
 CONFIG_PATH = os.getcwd() + "/" + FORMAT_CONFIG_FILE_NAME
+
 
 class Capturing(list):
     def __enter__(self):

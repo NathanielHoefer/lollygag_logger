@@ -6,10 +6,11 @@ by Nathaniel Hoefer
 Last Updated: 12/2/2017
 """
 
-import unittest
 import sys
+import unittest
 from cStringIO import StringIO
-from lollygag_logger.helpers import *
+from bin.vl_console_module.helpers import *
+
 
 class Capturing(list):
     def __enter__(self):
@@ -21,6 +22,7 @@ class Capturing(list):
         self.extend(self._stringio.getvalue().splitlines())
         del self._stringio    # free up some memory
         sys.stdout = self._stdout
+
 
 class StrToBool(unittest.TestCase):
 
@@ -125,6 +127,7 @@ class PrintList(unittest.TestCase):
             indent_str * 0 + '1',
             indent_str * 0 + '2',
         ]
+
         def print_elem(string, depth):
             print " - "*depth + string
         output = []

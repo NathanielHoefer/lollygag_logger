@@ -3,15 +3,14 @@
 Enum Classes
 =========================================================================================================
 by Nathaniel Hoefer
-Last Updated: 12/20/2017
+Last Updated: 12/226/2017
 """
 
-import helpers
+from enum import Enum
 
 
-class ColorType:
-
-    # TODO - Update this to only be an enum and move color_by_type function
+class ColorType(Enum):
+    """Enums representing colors for each log line type."""
 
     DEBUG = '\033[35m'
     INFO = '\033[34m'
@@ -22,23 +21,16 @@ class ColorType:
     OTHER = '\033[0m'
     END = '\033[0m'
 
-    @classmethod
-    def color_by_type(cls, type, type_field):
-        """Returns the type field with ANSI coloring format"""
 
-        if type == "debug":
-            return helpers.color_str(type_field, cls.DEBUG)
-        elif type == "info":
-            return helpers.color_str(type_field, cls.INFO)
-        elif type == "warning":
-            return helpers.color_str(type_field, cls.WARNING)
-        elif type == "error":
-            return helpers.color_str(type_field, cls.ERROR)
-        elif type == "step":
-            return helpers.color_str(type_field, cls.STEP)
-        elif type == "title":
-            return helpers.color_str(type_field, cls.TITLE)
-        elif type == "other":
-            return helpers.color_str(type_field, cls.OTHER)
-        else:
-            return type_field
+class LogType(Enum):
+    """Enums representing the types of log lines."""
+    # TODO - pip install enum34
+
+    DEBUG = 'debug'
+    INFO = 'info'
+    WARNING = 'warning'
+    ERROR = 'error'
+    STEP = 'step'
+    TITLE = 'title'
+    OTHER = 'other'
+

@@ -8,6 +8,7 @@ Last Updated: 12/18/2017
 
 import copy
 import re
+from enums import ColorType
 
 # Valid values from ConfigParser that result in True
 VALID_TRUE_INPUT = ("true", "yes", "t", "y", "1")
@@ -102,15 +103,38 @@ def condense(str_line, max_len):
         return str_line
 
 
+def color_by_type(type, type_field):
+    """Returns the type field with ANSI coloring format.
+
+
+    """
+
+    if type == "debug":
+        return color_str(type_field, ColorType.DEBUG)
+    elif type == "info":
+        return color_str(type_field, ColorType.INFO)
+    elif type == "warning":
+        return color_str(type_field, ColorType.WARNING)
+    elif type == "error":
+        return color_str(type_field, ColorType.ERROR)
+    elif type == "step":
+        return color_str(type_field, ColorType.STEP)
+    elif type == "title":
+        return color_str(type_field, ColorType.TITLE)
+    elif type == "other":
+        return color_str(type_field, ColorType.OTHER)
+    else:
+        return type_field
+
+
 def color_str(str_input, color):
     """Colors the string using escape sequence for ANSI/VT100 terminals
 
         :param str str_input: String to be colored
-        :param str color: Escape sequence using the following format: 033[<code>m
+        :param ColorType color: Escape sequence using the following format: 033[<code>m
         :return: str surrounded by escape sequence
     """
-
-    return color + str_input + '\033[0m'
+    return color.value + str_input + '\033[0m'
 
 
 def print_variable_list(lst_input, funct):

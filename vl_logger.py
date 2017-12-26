@@ -89,7 +89,15 @@ if __name__ == '__main__':
     # Validate that args exist and execute printing the logs
     if args.vl_source:
         config = create_config_file()
-        vl_console_output = Formatter(LogLine, config, args.find_str, args.list_step, args.write_path)
+        if args.write_path:
+            with open(args.write_path, "w") as write_file:
+                write_file.write("")
+        vl_console_output = Formatter(log_line_cls=LogLine,
+                                      format_config=config,
+                                      find_str=args.find_str,
+                                      list_step=args.list_step,
+                                      write_path=args.write_path)
+
         if not args.read and not args.at2:
             # Begin vl run subprocess
             proc = subprocess.Popen(["vl", "run", args.vl_source], stdout=subprocess.PIPE,
@@ -101,6 +109,8 @@ if __name__ == '__main__':
                 proc.wait()
             except KeyboardInterrupt:
                 proc.kill()
+                print "Keyboard Interrupt: Exiting"
+                exit(0)
         elif args.read:
             try:
                 arg_path = args.vl_source
@@ -143,3 +153,7 @@ if __name__ == '__main__':
             print "AT2 option selected. TaskID: {0}.".format(args.vl_source)
         else:
             print "Please pass valid arguments"
+            exit(0)
+
+        if args.write_path:
+            print "Write to {0} Complete".format(args.write_path)

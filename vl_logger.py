@@ -67,8 +67,10 @@ def args():
     at2_desc = "Flag indicating to fetch AT2 Task Instance logs from the specified AT2 Task Step " \
                "Instance ID specified in the vl_source parameter."
     find_desc = "Highlight specified string found in the logs."
-    list_desc = "List specified test case or step. For test case, match 'Test Case #'. If specifying " \
-                "step, list full name out as seen in logs."
+    list_desc = "List specified test case or step. Be sure to copy the entire test case or step " \
+                "description --excluding the borders and 'Expect: Pass'. Also remember to use " \
+                "quotation " \
+                "marks."
     write_desc = "Write log output to specified file."
 
     # Argument setup and parsing
@@ -85,6 +87,8 @@ def args():
 
 if __name__ == '__main__':
     args = args()
+
+    # TODO - Allow for current dir reference in write_path - Downloads/test.log, test.log
 
     # Validate that args exist and execute printing the logs
     if args.vl_source:

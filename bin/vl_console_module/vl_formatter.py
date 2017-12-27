@@ -65,6 +65,10 @@ class ValenceConsoleFormatter(LogFormatter):
         self.current_step_index = -1
         self.last_log_time = None
 
+        # List step variables
+        self.selected_step_to_print = False
+        self.selected_step_type = ""
+
     def format(self, unformatted_log_line):
         """Prints the formatted log line to the console based on the format config file options.
 
@@ -97,6 +101,10 @@ class ValenceConsoleFormatter(LogFormatter):
 
         # Construct header object and print
         if self._handle_header():
+            return
+
+        # Don't print if not in the current step
+        if self.list_step and not self.selected_step_to_print:
             return
 
         # Skip line if type is marked to not display
@@ -150,9 +158,32 @@ class ValenceConsoleFormatter(LogFormatter):
         """
         log_type = self.log_line.type.strip().lower()
         header_line = self._combine_header_logs(log_type)
+
         print_in_color = helpers.str_to_bool(self.format_config[COLORS]["use_colors"])
         if header_line:
-            self._store_header(header_line)
+
+            # Check if header matches step to list
+            if header_line.original_line == self.list_step:
+                self.selected_step_to_print = True
+                self.selected_step_type = header_line.type
+
+            # Return without printing if a specified step to print and this isn't part of it
+            if self.list_step and not self.selected_step_to_print:
+                return True
+
+            # TODO - send signal to completely stop printing if completed with selected step
+            # Uncheck 'selected step' flag once the next step is hit if a step is selected or the next
+            # test case step is hit if test case is selected.
+            if self.selected_step_type == "step" and header_line.original_line != self.list_step and \
+                    header_line.original_line != "Expect: Pass":
+                self.selected_step_to_print = False
+                return True
+            elif self.selected_step_type == "title" and header_line.original_line != \
+                    self.list_step and header_line.type == "title":
+                self.selected_step_to_print = False
+                return True
+
+            # self._store_header(header_line)
             log_output = str(header_line)
             if log_output:
                 self._print_line(helpers.color_by_type(header_line.type, log_output) if print_in_color

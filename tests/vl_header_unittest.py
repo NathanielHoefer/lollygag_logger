@@ -7,9 +7,9 @@ Last Updated: 12/19/2017
 """
 
 import unittest
-
-from bin.vl_console_module import ValenceHeader
-
+from bin.vl_console_module import ValenceHeader, ValenceLogLine, ValenceConsoleFormatter
+from bin.vl_console_module.vl_config_file import *
+from bin.lollygag_logger import LollygagLogger
 
 class HeaderParse(unittest.TestCase):
 
@@ -55,13 +55,14 @@ class HeaderParse(unittest.TestCase):
         self.assertEqual(header.test_instruction, "Completed Monitoring")
         self.assertEqual(header.test_number, 2)
 
-    # def test_store_header(self):
-    #
-    #     config_file = config.create_config_file()
-    #     vl_console_output = vl.ValenceConsoleOutput(vl.ValenceLogLine, config_file)
-    #     with open("/home/nathaniel/Downloads/test.log", "r") as logfile:
-    #         logger = vl.LollygagLogger(logfile, vl_console_output)
-    #         logger.run()
+    def test_store_header(self):
+
+        config_file = create_config_file()
+        vl_console_output = ValenceConsoleFormatter(ValenceLogLine, config_file,
+                                                    list_step="Starting Step 2 for TcBulkVolSFtoSFS3Swift: Completed Monitoring")
+        with open("/home/nathaniel/Downloads/test.log", "r") as logfile:
+            logger = LollygagLogger(logfile, vl_console_output)
+            logger.run()
 
 
 if __name__ == "__main__":

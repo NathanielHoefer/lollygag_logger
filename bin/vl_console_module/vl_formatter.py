@@ -19,7 +19,7 @@ from vl_objects import ValenceHeader as Header
 from enums import LogType
 from vl_config_file import *
 
-WRITE_UPDATE_INCREMENT = 50
+WRITE_UPDATE_INCREMENT = 3
 
 
 class ValenceConsoleFormatter(LogFormatter):
@@ -128,6 +128,9 @@ class ValenceConsoleFormatter(LogFormatter):
 
         self.duplicate_blank_line = False
         self._print_line(log_output)
+
+    def send(self, formatted_log_line):
+        pass
 
     def _handle_unformatted_line(self, unformatted_log_line):
         """Stores the unformatted logline as a LogLine object or print if only a new line character.
@@ -384,10 +387,12 @@ class ValenceConsoleFormatter(LogFormatter):
     def _calc_max_len(self):
         """Returns max length of the logline to be printed based on the format config file."""
         if helpers.str_to_bool(self.sect_lengths["use_console_len"]) and sys.stdin.isatty():
-            _, console_width = os.popen('stty size', 'r').read().split()
-            return int(console_width)
-        else:
-            return int(self.sect_lengths["max_line_len"])
+            widths_tuple = os.popen('stty size', 'r').read().split()
+            if widths_tuple:
+                _, console_width = widths_tuple
+                return int(console_width)
+
+        return int(self.sect_lengths["max_line_len"])
 
     def _print_line(self, print_str):
         """Prints str if no write_path specified, otherwise save line to file specifiec by write_path."""

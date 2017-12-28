@@ -88,24 +88,28 @@ def args():
 if __name__ == '__main__':
     args = args()
 
-    # TODO - Allow for current dir reference in write_path - Downloads/test.log, test.log
-
     # Validate that args exist and execute printing the logs
     if args.vl_source:
         config = create_config_file()
         if args.write_path:
             with open(args.write_path, "w") as write_file:
                 write_file.write("")
+
+        list_step = args.list_step
+        if list_step and not (list_step[0] == "/" or list_step[0] == "~"):
+            list_step = os.getcwd() + "/" + list_step
+
         vl_console_output = Formatter(log_line_cls=LogLine,
                                       format_config=config,
                                       find_str=args.find_str,
-                                      list_step=args.list_step,
+                                      list_step=list_step,
                                       write_path=args.write_path)
 
         if not args.read and not args.at2:
             # Begin vl run subprocess
-            proc = subprocess.Popen(["vl", "run", args.vl_source], stdout=subprocess.PIPE,
+            proc = subprocess.Popen(["python", "vl", "run", args.vl_source], stdout=subprocess.PIPE,
                                     bufsize=1, universal_newlines=False)
+
             try:
                 logger = LollygagLogger(iter(proc.stdout.readline, b''), vl_console_output)
                 logger.run()
@@ -113,8 +117,10 @@ if __name__ == '__main__':
                 proc.wait()
             except KeyboardInterrupt:
                 proc.kill()
-                print "Keyboard Interrupt: Exiting"
+                logger.kill()
+                print "Keyboard Interrupt: Exiting Logger"
                 exit(0)
+
         elif args.read:
             try:
                 arg_path = args.vl_source
@@ -126,8 +132,10 @@ if __name__ == '__main__':
                     logger = LollygagLogger(logfile, vl_console_output)
                     logger.run()
             except KeyboardInterrupt:
-                print "Keyboard Interrupt: Exiting"
+                logger.kill()
+                print "Keyboard Interrupt: Exiting Logger"
                 exit(0)
+
         elif args.at2:
 
             AT2_USER = config[AT2_TASKINSTANCE_CREDENTIALS]["username"]

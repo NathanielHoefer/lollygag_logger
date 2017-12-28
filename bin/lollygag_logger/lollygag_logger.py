@@ -25,6 +25,7 @@ class LollygagLogger:
     """
 
     COMPLETED_SIGNAL = "Log Read Complete. Stop Formatting"
+    KILL_SIGNAL = "Stop command issued. Reading and Formatting Logs Interrupted and Stopped."
 
     def __init__(self, stream_handle, log_formatter):
         """Stores the components necessary for the run function
@@ -40,6 +41,7 @@ class LollygagLogger:
         self.log_formatter = log_formatter
         self.queue = Queue.Queue()
         self.read_complete = False
+        self.kill_logging = False
 
     def run(self):
         """Executes the read and format threads concurrently."""
@@ -54,6 +56,8 @@ class LollygagLogger:
         to the queue."""
         for unformatted_log_line in self.stream_handle:
             self.queue.put(unformatted_log_line, block=True)
+            if self.kill_logging:
+                exit(0)
         else:
             # Send signal through the queue indicating stream completion
             self.queue.put(self.COMPLETED_SIGNAL)
@@ -63,13 +67,19 @@ class LollygagLogger:
         log_formatter class
         """
         while True:
-            unformatted_log_line = self.queue.get(block=True)
-
             # Check to see if stream is complete
-            if unformatted_log_line == self.COMPLETED_SIGNAL:
-                break
-            self.log_formatter.format(unformatted_log_line)
+            unformatted_log_line = self.queue.get(block=True)
+            if unformatted_log_line == self.COMPLETED_SIGNAL or self.kill_logging:
+                exit(0)
+
+            formatted_log_line = self.log_formatter.format(unformatted_log_line)
+            self.log_formatter.send(formatted_log_line)
+
             self.queue.task_done()
+
+    def kill(self):
+        """Send signal to stop reading and formatting."""
+        self.kill_logging = True
 
 
 class LogFormatter:
@@ -78,7 +88,12 @@ class LogFormatter:
 
     @abstractmethod
     def format(self, log_line):
-        """Subclasses must handle a LogLine object."""
+        """Subclasses must handle an unformatted log line string."""
+        pass
+
+    @abstractmethod
+    def send(self, log_line):
+        """Subclasses must handle a formatted log line object."""
         pass
 
 

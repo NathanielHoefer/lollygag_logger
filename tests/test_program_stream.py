@@ -11,8 +11,12 @@ Used solely for tests LollygagLogger by printing values a second apart.
 """
 
 from time import sleep
+import sys
+
 
 if __name__ == "__main__":
-    for i in range(3):
-        print i
+
+    for line in range(100):
+        print line
+        sys.stdout.flush()
         sleep(1)

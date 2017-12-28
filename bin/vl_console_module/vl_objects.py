@@ -8,7 +8,7 @@ Last Updated: 12/2/2017
 import datetime
 import re
 from bin.lollygag_logger import LogLine
-from enums import LogType
+from enums import *
 import helpers
 
 
@@ -46,17 +46,17 @@ class ValenceLogLine(LogLine):
         """Returns the log line string with the log type surrounded by an ANSI escape color sequence."""
         if self.standard_format:
             fields = self._list_fields_as_str()
-            fields[2] = helpers.color_by_type(fields[2].lower(), fields[2])
+            fields[2] = helpers.color_by_type(self.type, fields[2])
             fields = [x for x in fields if x != ""]
         else:
-            fields = [helpers.color_by_type(self.type.lower(), self.original_line)]
+            fields = [helpers.color_by_type(self.type, self.original_line)]
         return " ".join(fields)
 
     def _default_vals(self):
         """Set all field to default values."""
         self.date = ""
         self.time = ""
-        self.type = "other"
+        self.type = LogType.OTHER
         self.source = ""
         self.thread = ""
         self.details = ""
@@ -74,10 +74,10 @@ class ValenceLogLine(LogLine):
         # each with a minimum of 30 chars
         input_str = input_str.strip()
         if re.match("^={30,}$", input_str):
-            self.type = "title"
+            self.type = LogType.TITLE
             return
         if re.match("^-{30,}$", input_str):
-            self.type = "step"
+            self.type = LogType.STEP
             return
 
         # Identifies if the log is int AT2 standard format based on the format of the time stamp. AT2
@@ -106,10 +106,10 @@ class ValenceLogLine(LogLine):
         else:
             self.time = ""
 
-        # TODO - Update to use enums after enum43 is installed
-        str_type = split[2].lower()
-        if str_type in self.LOG_LEVELS:
-            self.type = str_type
+        str_type = split[2]
+        if str_type in [x.name for x in LogType]:
+            self.type = LogType[str_type]
+
         self.source = split[3] if re.match("^\[.*:.*\]$", split[3]) else ""
 
         if self.at2_log:  # Special case to check if logs are being read from AT2 based on time stamp
@@ -120,23 +120,23 @@ class ValenceLogLine(LogLine):
 
         # If any of the fields are empty with the exception of details, change type to OTHER and move all
         # line data to the details field.
-        for field in self.FIELDS:
+        for field in ValenceFields:
             if self.at2_log:
-                if (field is not "details" and field is not "thread")\
-                        and getattr(self, field) is "":
+                if (field is not ValenceFields.DETAILS and field is not ValenceFields.THREAD)\
+                        and getattr(self, field.value) is "":
                     self._default_vals()
                     return
             else:
-                if field is not "details" and getattr(self, field) is "":
+                if field is not ValenceFields.DETAILS and getattr(self, field.value) is "":
                     self._default_vals()
                     return
         self.standard_format = True
 
     def _list_fields_as_str(self):
-        str_fields_list = [getattr(self, field) for field in self.FIELDS]
+        str_fields_list = [getattr(self, field.value) for field in ValenceFields]
         str_fields_list[0] = self._date_to_str()
         str_fields_list[1] = self._time_to_str()
-        str_fields_list[2] = str_fields_list[2].upper()
+        str_fields_list[2] = str(str_fields_list[2])
         return str_fields_list
 
     def _date_to_str(self):
@@ -174,24 +174,21 @@ class ValenceLogLine(LogLine):
 
 
 class ValenceHeader(LogLine):
-    """Stores the Valence header and its individual tokens.
+    """Stores the Valence header and its individual tokens and identifies its type.
 
-    A header is either a title, identified by '=', or a step, identified by '-'. Looks for a
-    colon-separated header for parsing the line, otherwise the empty values will be used for all but the
-    original line member variable.
+    A header is either identified by '=', or '-'. Looks for a colon-separated header for parsing the
+    line, otherwise the empty values will be used for all but the original line member variable.
 
     :ivar str original_line: The line as it was entered
-    :ivar str header_type: Either 'title' or 'step'
-    :ivar bool suite: True if header is a title and describes a suite specifically, otherwise False
+    :ivar HeaderType type: Type of header
     :ivar str test_name: Name of the test case or suite following the 'Ts' or 'Tc' format.
     :ivar str test_info: Information prior to the colon
     :ivar str test_instruction: Information after the colon
     :ivar int test_number: Step or test case number if there is one.
     """
 
-    def __init__(self, original_line="", header_type="", max_len=105):
+    def __init__(self, original_line="", max_len=105):
         super(ValenceHeader, self).__init__(original_line)
-        self.type = header_type
         self.max_len = max_len
         self._default_vals()
         self._tokenize_line(original_line)
@@ -205,7 +202,7 @@ class ValenceHeader(LogLine):
 
     def _default_vals(self):
         """Set all field to default values."""
-        self.suite = False
+        self.type = HeaderType.VALENCE
         self.test_name = ""
         self.test_info = ""
         self.test_instruction = ""
@@ -227,14 +224,15 @@ class ValenceHeader(LogLine):
         self.test_info = split[0].strip() if len(split) == 2 else ""
         self.test_instruction = split[1].strip() if len(split) == 2 else ""
 
-        if self.type == "title":
-            self.suite = True if self.test_info == "Test Suite" else False
-            if self.suite:
-                self.test_name = re.search("Ts\w*", self.original_line).group()
-            else:
-                self.test_name = re.search("Tc\w*", self.original_line).group()
-                self.test_number = int(re.search("\d+", self.test_info).group())
-        elif self.type == "step":
+        if self.test_info == "Test Suite":
+            self.type = HeaderType.SUITE
+            self.test_name = re.search("Ts\w*", self.original_line).group()
+        elif re.match("^Test Case \d+$", self.test_info):
+            self.type = HeaderType.TEST_CASE
+            self.test_name = re.search("Tc\w*", self.original_line).group()
+            self.test_number = int(re.search("\d+", self.test_info).group())
+        elif re.search("Step \d+", self.test_info):
+            self.type = HeaderType.STEP
             self.test_name = re.search("Tc\w*", self.original_line).group()
             self.test_number = int(re.search("\d+", self.test_info).group())
         else:

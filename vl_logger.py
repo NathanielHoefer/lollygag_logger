@@ -95,14 +95,11 @@ if __name__ == '__main__':
             with open(args.write_path, "w") as write_file:
                 write_file.write("")
 
-        list_step = args.list_step
-        if list_step and not (list_step[0] == "/" or list_step[0] == "~"):
-            list_step = os.getcwd() + "/" + list_step
-
+        logger = None
         vl_console_output = Formatter(log_line_cls=LogLine,
                                       format_config=config,
                                       find_str=args.find_str,
-                                      list_step=list_step,
+                                      list_step=args.list_step,
                                       write_path=args.write_path)
 
         if not args.read and not args.at2:
@@ -124,11 +121,7 @@ if __name__ == '__main__':
         elif args.read:
             try:
                 arg_path = args.vl_source
-                if arg_path[0] == "/" or arg_path[0] == "~":
-                    file_path = arg_path
-                else:
-                    file_path = os.getcwd() + "/" + arg_path
-                with open(file_path, "r") as logfile:
+                with open(arg_path, "r") as logfile:
                     logger = LollygagLogger(logfile, vl_console_output)
                     logger.run()
             except KeyboardInterrupt:
@@ -163,6 +156,7 @@ if __name__ == '__main__':
             finally:
                 resp.close()
             print "AT2 option selected. TaskID: {0}.".format(args.vl_source)
+
         else:
             print "Please pass valid arguments"
             exit(0)

@@ -80,7 +80,7 @@ def create_config_file(file_directory=""):
     config_fields[LENGTHS_SECT] = [
         ("use_console_len",     "True"),    # Use console width for max log line length
         ("max_line_len",        "200"),     # Max length of log line to be printed
-        ("condensed_field_len", "100"),     # This value includes the "..."
+        ("condensed_field_len", "300"),     # This value includes the "..."
         ("collapsed_struct_len", "30")]     # This value includes the "[" and "...]"
 
     config_fields[COLORS] = [

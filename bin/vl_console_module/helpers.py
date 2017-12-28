@@ -103,13 +103,10 @@ def condense(str_line, max_len):
         return str_line
 
 
-def color_by_type(log_type, type_field):
+def color_by_type(log_type, log_str):
     """Returns the type field with ANSI coloring format."""
 
-    if log_type in [x.name for x in ColorType]:
-        return ColorType[type].value + type_field + ColorType.END.value
-    else:
-        return type_field
+    return ColorType[log_type.name].value + log_str + ColorType.END.value
 
 
 def print_variable_list(lst_input, funct):

@@ -53,7 +53,7 @@ class ValenceConsoleFormatter(LogFormatter):
         self.format_config_mod_time = os.path.getmtime(self.format_config_filepath)
 
         # Variables needed for titles and steps
-        self.waiting_for_header = {LogType.title.value: False, LogType.step.value: False}
+        self.waiting_for_header = {LogType.TITLE: False, LogType.STEP: False}
         self.previous_header = None
         self.finish_times = {}
         self.executed_suites = []
@@ -156,7 +156,7 @@ class ValenceConsoleFormatter(LogFormatter):
 
         :return: True if LogLine was part of a header, False if not
         """
-        log_type = self.log_line.type.strip().lower()
+        log_type = self.log_line.type
         header_line = self._combine_header_logs(log_type)
 
         print_in_color = helpers.str_to_bool(self.format_config[COLORS]["use_colors"])
@@ -209,12 +209,18 @@ class ValenceConsoleFormatter(LogFormatter):
         """
         formatted_header = None
         for header_type, is_waiting in self.waiting_for_header.items():
+
+            # First border of the header
             if log_type == header_type and not is_waiting:
                 self.waiting_for_header[header_type] = True
-            elif log_type == LogType.other.value and is_waiting:
+
+            # Details of border
+            elif log_type == LogType.OTHER and is_waiting:
                 formatted_header = Header(self.log_line.original_line, header_type,
                                           self._calc_max_len())
                 break
+
+            # Last border of header
             elif log_type == header_type and is_waiting:
                 self.waiting_for_header[header_type] = False
             else:

@@ -198,7 +198,7 @@ class ValenceHeader(LogLine):
         if self.original_line == "Expect: Pass":
             return ""
         else:
-            return "\n".join([border, self.original_line, border, ""])
+            return "\n".join([border, self.original_line, border])
 
     def _default_vals(self):
         """Set all field to default values."""

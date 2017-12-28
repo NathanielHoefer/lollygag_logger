@@ -19,7 +19,7 @@ from vl_objects import ValenceHeader as Header
 from enums import LogType
 from vl_config_file import *
 
-WRITE_UPDATE_INCREMENT = 3
+WRITE_UPDATE_INCREMENT = 10
 
 
 class ValenceConsoleFormatter(LogFormatter):
@@ -80,17 +80,15 @@ class ValenceConsoleFormatter(LogFormatter):
         6. Remove and condense fields in standard format
         7. Add color to type field
         8. Condense entire line if beyond max and print
+
+        :return: Formatted logline as string | empty string | None if not to print
         """
 
-        # Increase lines read count and print update if writing to a file
-        self.log_lines_read += 1
-        if self.write_path and self.log_lines_read % WRITE_UPDATE_INCREMENT == 0:
-            print "Lines Read: {0}\r".format(self.log_lines_read),
-            sys.stdout.flush()
-
         # Check to see if line is empty, and create log line object to parse the line
-        if not self._handle_unformatted_line(unformatted_log_line):
-            return
+        line = unformatted_log_line.strip("\n\\n")
+        if not line:
+            return ""
+        self.log_line = self.log_line_cls(line)
 
         # Store last log time
         if self.log_line.standard_format and self.log_line.time:
@@ -99,18 +97,22 @@ class ValenceConsoleFormatter(LogFormatter):
         # Update format config values if file has been updated
         self._update_format_config()
 
-        # Construct header object and print
-        if self._handle_header():
-            return
+        # Handle header if applicable
+        formatted_header = self._handle_header()
+        if formatted_header:
+            if formatted_header is True:
+                return None
+            else:
+                return formatted_header
 
         # Don't print if not in the current step
         if self.list_step and not self.selected_step_to_print:
-            return
+            return None
 
         # Skip line if type is marked to not display
         log_type = self.log_line.type.name.lower()
         if not helpers.str_to_bool(self.sect_display_log_types[log_type]):
-            return
+            return None
 
         # Remove and condense fields in standard logs per format config file
         if self.log_line.standard_format:
@@ -124,13 +126,37 @@ class ValenceConsoleFormatter(LogFormatter):
             formatted_line = str(self.log_line)
 
         # Condense entire log line if beyond max length
-        log_output = helpers.condense(formatted_line, self._calc_max_len())
+        formatted_line = helpers.condense(formatted_line, self._calc_max_len())
 
-        self.duplicate_blank_line = False
-        self._print_line(log_output)
+        return formatted_line
 
     def send(self, formatted_log_line):
-        pass
+        """Either prints formatted line to console or write it to file based on write flag.
+
+        If writing to a file, will print to screen number of lines written. Also, prevents multiple
+        blank lines from being printed in a row.
+
+        :param str formatted_log_line: Formatted log line str | "" | None - indicating to not print line.
+        """
+
+        # Increase lines read count and print update if writing to a file
+        self.log_lines_read += 1
+        if self.write_path and self.log_lines_read % WRITE_UPDATE_INCREMENT == 0:
+            print "Lines Read: {0}\r".format(self.log_lines_read),
+            sys.stdout.flush()
+
+        # Check to see if multiple blank lines are being printed
+        if formatted_log_line == "" and not self.duplicate_blank_line:
+            self.duplicate_blank_line = True
+        elif formatted_log_line == "" and self.duplicate_blank_line:
+            return
+        elif formatted_log_line is not None:
+            self.duplicate_blank_line = False
+
+        if formatted_log_line is None:
+            return
+        else:
+            self._print_line(formatted_log_line)
 
     def _handle_unformatted_line(self, unformatted_log_line):
         """Stores the unformatted logline as a LogLine object or print if only a new line character.
@@ -143,7 +169,7 @@ class ValenceConsoleFormatter(LogFormatter):
         if unformatted_log_line == "\n":
             if not self.duplicate_blank_line:
                 self.duplicate_blank_line = True
-                self._print_line("")
+                return ""
             return False
         line = unformatted_log_line.strip("\n\\n")
         if not line:
@@ -157,12 +183,12 @@ class ValenceConsoleFormatter(LogFormatter):
         Initially attempts to create header object, store it, then print it. If the header is the
         'Final Report', then the headers and their ellapsed time will be reported.
 
-        :return: True if LogLine was part of a header, False if not
+        :return: True if LogLine was part of a header, but not to be printed, False if LogLine is not
+        part of header, and a formatted string representing header if header is to be printed.
         """
         log_type = self.log_line.type
         header_line = self._combine_header_logs(log_type)
 
-        print_in_color = helpers.str_to_bool(self.format_config[COLORS]["use_colors"])
         if header_line:
 
             # Check if header matches step to list
@@ -188,8 +214,8 @@ class ValenceConsoleFormatter(LogFormatter):
             log_output = str(header_line)
             color_type = LogType.TITLE if header_line.type.value <= 3 else LogType.STEP
             if log_output:
-                self._print_line(helpers.color_by_type(color_type, log_output) if print_in_color
-                                 else log_output)
+                print_in_color = helpers.str_to_bool(self.format_config[COLORS]["use_colors"])
+                return helpers.color_by_type(color_type, log_output) if print_in_color else log_output
 
             # if header_line.original_line == "Final Report":
             #     # TODO - Fix ellapsed time issues 12/23
@@ -210,6 +236,7 @@ class ValenceConsoleFormatter(LogFormatter):
         header loglines use as the borders and the header details.
         """
         formatted_header = None
+        curr_type = None
         for header_type, is_waiting in self.waiting_for_header.items():
 
             # First border of the header
@@ -219,6 +246,7 @@ class ValenceConsoleFormatter(LogFormatter):
             # Details of border
             elif log_type == LogType.OTHER and is_waiting:
                 formatted_header = Header(self.log_line.original_line, self._calc_max_len())
+                curr_type = header_type
                 break
 
             # Last border of header
@@ -226,7 +254,7 @@ class ValenceConsoleFormatter(LogFormatter):
                 self.waiting_for_header[header_type] = False
             else:
                 self.waiting_for_header[header_type] = False
-        if formatted_header and helpers.str_to_bool(self.sect_display_log_types[log_type.name.lower()]):
+        if formatted_header and helpers.str_to_bool(self.sect_display_log_types[curr_type.name.lower()]):
             return formatted_header
         else:
             return None

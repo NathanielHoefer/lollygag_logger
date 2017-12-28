@@ -72,6 +72,7 @@ def args():
                 "quotation " \
                 "marks."
     write_desc = "Write log output to specified file."
+    ini_desc = "Directory to look for format .ini file."
 
     # Argument setup and parsing
     parser = argparse.ArgumentParser(prog=program, description=description)
@@ -79,9 +80,10 @@ def args():
     parser.add_argument("vl_source", help=vl_desc)
     group.add_argument("-r", "--read", action="store_true", help=file_desc)
     group.add_argument("-at2", action="store_true", help=at2_desc)
+    parser.add_argument("-w", "--write", action="store", dest="write_path", help=write_desc)
     parser.add_argument("-f", "--find", action="store", dest="find_str", help=find_desc)
     parser.add_argument("-l", "--list", action="store", dest="list_step", help=list_desc)
-    parser.add_argument("-w", "--write", action="store", dest="write_path", help=write_desc)
+    parser.add_argument("-ini", action="store", dest="ini_path", help=ini_desc)
     return parser.parse_args()
 
 
@@ -90,7 +92,7 @@ if __name__ == '__main__':
 
     # Validate that args exist and execute printing the logs
     if args.vl_source:
-        config = create_config_file()
+        config = create_config_file(args.ini_path)
         if args.write_path:
             with open(args.write_path, "w") as write_file:
                 write_file.write("")
@@ -98,6 +100,7 @@ if __name__ == '__main__':
         logger = None
         vl_console_output = Formatter(log_line_cls=LogLine,
                                       format_config=config,
+                                      ini_filepath=args.ini_path,
                                       find_str=args.find_str,
                                       list_step=args.list_step,
                                       write_path=args.write_path)

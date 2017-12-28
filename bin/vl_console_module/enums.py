@@ -21,6 +21,8 @@ class ColorType(Enum):
     OTHER = '\033[0m'       # None
     END = '\033[0m'
 
+    __order__ = "DEBUG INFO WARNING ERROR STEP TITLE OTHER END"
+
 
 class LogType(Enum):
     """Enums representing the types of log lines."""
@@ -47,6 +49,8 @@ class HeaderType(Enum):
     TEST_CASE = 3
     STEP = 4
     OTHER = 5
+
+    __order__ = "VALENCE SUITE TEST_CASE STEP OTHER"
 
 
 class ValenceFields(Enum):

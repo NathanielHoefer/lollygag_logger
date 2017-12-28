@@ -3,7 +3,7 @@
 Enum Classes
 =========================================================================================================
 by Nathaniel Hoefer
-Last Updated: 12/226/2017
+Last Updated: 12/26/2017
 """
 
 from enum import Enum
@@ -13,7 +13,7 @@ class ColorType(Enum):
     """Enums representing colors for each log line type."""
 
     DEBUG = '\033[35m'
-    INFO = '\033[34m'
+    IFNO = '\033[34m'
     WARNING = '\033[33m'
     ERROR = '\033[31m'
     STEP = '\033[92m'
@@ -24,7 +24,6 @@ class ColorType(Enum):
 
 class LogType(Enum):
     """Enums representing the types of log lines."""
-    # TODO - pip install enum34
 
     DEBUG = 'debug'
     INFO = 'info'
@@ -33,4 +32,3 @@ class LogType(Enum):
     STEP = 'step'
     TITLE = 'title'
     OTHER = 'other'
-

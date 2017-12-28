@@ -53,7 +53,7 @@ class ValenceConsoleFormatter(LogFormatter):
         self.format_config_mod_time = os.path.getmtime(self.format_config_filepath)
 
         # Variables needed for titles and steps
-        self.waiting_for_header = {LogType.TITLE.value: False, LogType.STEP.value: False}
+        self.waiting_for_header = {LogType.title.value: False, LogType.step.value: False}
         self.previous_header = None
         self.finish_times = {}
         self.executed_suites = []
@@ -195,7 +195,7 @@ class ValenceConsoleFormatter(LogFormatter):
             return True
 
         # Don't print header border
-        elif log_type == LogType.STEP.value or log_type == LogType.TITLE.value or any(
+        elif log_type == LogType.step.value or log_type == LogType.title.value or any(
                 self.waiting_for_header.values()):
             return True
         else:
@@ -211,7 +211,7 @@ class ValenceConsoleFormatter(LogFormatter):
         for header_type, is_waiting in self.waiting_for_header.items():
             if log_type == header_type and not is_waiting:
                 self.waiting_for_header[header_type] = True
-            elif log_type == LogType.OTHER.value and is_waiting:
+            elif log_type == LogType.other.value and is_waiting:
                 formatted_header = Header(self.log_line.original_line, header_type,
                                           self._calc_max_len())
                 break

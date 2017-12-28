@@ -35,11 +35,11 @@ class ValenceConsoleFormatter(LogFormatter):
 
     log_queue = []
 
-    def __init__(self, log_line_cls, format_config, format_config_filepath="",
+    def __init__(self, log_line_cls, format_config, ini_filepath="",
                  find_str="", list_step="", write_path=""):
         self.log_line_cls = log_line_cls
         self.format_config = format_config
-        self.format_config_filepath = format_config_filepath if format_config_filepath \
+        self.format_config_filepath = ini_filepath if ini_filepath \
             else DEFAULT_CONFIG_PATH
         self.log_line = None
         self.find_str = find_str

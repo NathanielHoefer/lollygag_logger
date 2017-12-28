@@ -67,7 +67,7 @@ class ValenceConsoleFormatter(LogFormatter):
 
         # List step variables
         self.selected_step_to_print = False
-        self.selected_step_type = ""
+        self.selected_step_type = None
 
     def format(self, unformatted_log_line):
         """Prints the formatted log line to the console based on the format config file options.
@@ -108,7 +108,7 @@ class ValenceConsoleFormatter(LogFormatter):
             return
 
         # Skip line if type is marked to not display
-        log_type = self.log_line.type.strip().lower()
+        log_type = self.log_line.type.name.lower()
         if not helpers.str_to_bool(self.sect_display_log_types[log_type]):
             return
 
@@ -174,19 +174,18 @@ class ValenceConsoleFormatter(LogFormatter):
             # TODO - send signal to completely stop printing if completed with selected step
             # Uncheck 'selected step' flag once the next step is hit if a step is selected or the next
             # test case step is hit if test case is selected.
-            if self.selected_step_type == "step" and header_line.original_line != self.list_step and \
-                    header_line.original_line != "Expect: Pass":
-                self.selected_step_to_print = False
-                return True
-            elif self.selected_step_type == "title" and header_line.original_line != \
-                    self.list_step and header_line.type == "title":
-                self.selected_step_to_print = False
-                return True
+            if self.selected_step_type:
+                if self.selected_step_type.value >= header_line.type.value \
+                        and header_line.original_line != self.list_step \
+                        and header_line.original_line != "Expect: Pass":
+                    self.selected_step_to_print = False
+                    return True
 
             # self._store_header(header_line)
             log_output = str(header_line)
+            color_type = LogType.TITLE if header_line.type.value <= 3 else LogType.STEP
             if log_output:
-                self._print_line(helpers.color_by_type(header_line.type, log_output) if print_in_color
+                self._print_line(helpers.color_by_type(color_type, log_output) if print_in_color
                                  else log_output)
 
             # if header_line.original_line == "Final Report":
@@ -195,7 +194,7 @@ class ValenceConsoleFormatter(LogFormatter):
             return True
 
         # Don't print header border
-        elif log_type == LogType.step.value or log_type == LogType.title.value or any(
+        elif log_type == LogType.STEP or log_type == LogType.TITLE or any(
                 self.waiting_for_header.values()):
             return True
         else:
@@ -216,8 +215,7 @@ class ValenceConsoleFormatter(LogFormatter):
 
             # Details of border
             elif log_type == LogType.OTHER and is_waiting:
-                formatted_header = Header(self.log_line.original_line, header_type,
-                                          self._calc_max_len())
+                formatted_header = Header(self.log_line.original_line, self._calc_max_len())
                 break
 
             # Last border of header
@@ -225,7 +223,7 @@ class ValenceConsoleFormatter(LogFormatter):
                 self.waiting_for_header[header_type] = False
             else:
                 self.waiting_for_header[header_type] = False
-        if formatted_header and helpers.str_to_bool(self.sect_display_log_types[formatted_header.type]):
+        if formatted_header and helpers.str_to_bool(self.sect_display_log_types[log_type.name.lower()]):
             return formatted_header
         else:
             return None

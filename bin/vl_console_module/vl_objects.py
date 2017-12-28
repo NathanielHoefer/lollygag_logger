@@ -194,7 +194,7 @@ class ValenceHeader(LogLine):
         self._tokenize_line(original_line)
 
     def __str__(self):
-        border = "="*self.max_len if self.type == "title" else "-"*self.max_len
+        border = "="*self.max_len if self.type.value <= 3 else "-"*self.max_len
         if self.original_line == "Expect: Pass":
             return ""
         else:

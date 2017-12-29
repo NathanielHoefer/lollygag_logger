@@ -14,6 +14,7 @@ TODO - Update this description
 
 import sys
 import helpers
+import re
 from bin.lollygag_logger import LogFormatter
 from bin.lollygag_logger.lollygag_logger import KILL_SIGNAL
 from vl_objects import ValenceHeader as Header
@@ -77,6 +78,8 @@ class ValenceConsoleFormatter(LogFormatter):
         :return: Formatted logline as string | empty string | None if not to print
         """
 
+        # TODO - Fix find bug
+
         # Strip log line string and use it to create the log_line object
         line = unformatted_log_line.strip("\n\\n")
         log_line = self.log_line_cls(line, self._calc_max_len())
@@ -98,6 +101,10 @@ class ValenceConsoleFormatter(LogFormatter):
 
         # Don't print if not in the current step
         if self.list_step and not self.listed_step_to_print:
+            return None
+
+        # Don't print if searching for string and log doesn't contain it
+        if self.find_str and not re.search(self.find_str, log_line.original_line):
             return None
 
         # Skip line if type is marked to not display
@@ -135,8 +142,15 @@ class ValenceConsoleFormatter(LogFormatter):
 
         # Print searching message until step has been found
         if self.listed_steps_status == "Searching":
+
+            search_text = ""
+            if self.find_str:
+                search_text = "Searching for string: \"{0}\"\n".format(self.find_str)
+            elif self.list_step:
+                search_text = "Searching for Test Case/Step: {0}\n".format(self.list_step)
+
             if not self.searching_text_printed:
-                print "Searching for Test Case/Step: {0}\n".format(self.list_step)
+                print search_text
                 self.searching_text_printed = True
             else:
                 print "---   \r" if self.log_lines_read % 100 < 50 else "   ---\r",
@@ -193,7 +207,7 @@ class ValenceConsoleFormatter(LogFormatter):
                         and header_line.original_line != self.list_step \
                         and header_line.original_line != "":
                     self.listed_step_to_print = False
-                    self.listed_steps_complete = True
+                    self.listed_steps_status = "Completed"
                     return True
             return header_line
 
@@ -231,6 +245,10 @@ class ValenceConsoleFormatter(LogFormatter):
             else:
                 self.waiting_for_header[header_type] = False
         if formatted_header and helpers.str_to_bool(self.sect_display_log_types[curr_type.name.lower()]):
+
+            # Check if finding string
+            if self.find_str and not re.search(self.find_str, formatted_header.original_line):
+                return None
             return formatted_header
         else:
             return None

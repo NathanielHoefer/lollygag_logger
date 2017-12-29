@@ -184,11 +184,6 @@ class ValenceConsoleFormatter(LogFormatter):
                         and header_line.original_line != "":
                     self.selected_step_to_print = False
                     return True
-
-            # TODO - Get time listing operational
-            # self._store_header(header_line)
-            # if header_line.original_line == "Final Report":
-            #     helpers.print_variable_list(self.executed_suites, self._print_header_report)
             return header_line
 
         # Don't print header border
@@ -255,123 +250,6 @@ class ValenceConsoleFormatter(LogFormatter):
                 field = ValenceField[field.upper()]
                 log_line.condense_field(field, condense_len, collapse_dict, collapse_list, collapse_len)
         return log_line
-
-    def _store_header(self, header):
-        """Stores all headers into a data structure with the following format
-
-        TODO - Change tree model where each header object contains its own children rather than using
-        indices.
-
-        [
-        Test Preconditions
-        Suite 1
-            [
-            Suite 1 Setup
-                [
-                Test 1 Setup
-                Test 1 Starting
-                    [
-                    Step 1
-                    Step 2
-                    ]
-                Test 1 Teardown
-                Test 2 Setup
-                Test 2 Starting
-                    [
-                    Step 1
-                    ]
-                Test 2 Teardown
-                ]
-            Suite 1 Teardown
-            ]
-        Suite 2
-            [
-            Suite 2 Setup
-            Suite 2 Teardown
-            ]
-        Final Report
-        """
-
-        # Record the starting time for the current header and the ending time for the previous header
-        if self.last_log_time:
-            header.start_time = self.last_log_time
-
-        if self.previous_header:
-            self.finish_times[self.previous_header.original_line] = self.last_log_time
-            self.previous_header = header
-        else:
-            self.previous_header = header
-
-        # Non-suite related titles such as 'Final Report'
-        if header.type == "title" and not header.test_name:
-            self.executed_suites.extend([header])
-            self.current_suite_index += 1
-            self.current_test_case_index = -1
-            self.current_step_index = -1
-
-        # Suite titles starting with 'Test Suite' that is first starting
-        elif header.type == "title" and header.suite and header.test_name != self.current_suite_name:
-            self.current_suite_name = header.test_name
-
-            # Reset test case and step indices
-            self.current_test_case_index = -1
-            self.current_step_index = -1
-
-            self.executed_suites.append([header])
-            self.current_suite_index += 1
-            self.current_test_case_index += 1
-
-        # Suite titles starting with 'Test Suite' that has already started
-        elif header.type == "title" and header.suite and header.test_name == self.current_suite_name:
-            self.executed_suites[self.current_suite_index].extend([header])
-            self.current_test_case_index += 1
-
-        # Test case titles starting with 'Test Case' that is first starting
-        elif header.type == "title" and not header.suite and header.test_name != self.current_test_case:
-            self.current_test_case = header.test_name
-            self.current_step_index = 0
-            self.executed_suites[self.current_suite_index].append([header])
-            self.current_test_case_index += 1
-
-        # Test case titles starting with 'Test Case' that has already started
-        elif header.type == "title" and not header.suite and header.test_name == self.current_test_case:
-            self.executed_suites[self.current_suite_index][self.current_test_case_index].extend([header])
-            self.current_step_index += 1
-
-        # Step
-        elif header.type == "step":
-            if not self.prev_header_was_step:
-                self.executed_suites[self.current_suite_index][self.current_test_case_index].append(
-                    [header])
-                self.current_step_index += 1
-            else:
-                self.executed_suites[self.current_suite_index][self.current_test_case_index]\
-                    [self.current_step_index].extend(
-                    [header])
-            self.prev_header_was_step = True
-
-        if header.type != "step":
-            self.prev_header_was_step = False
-
-    def _print_header_report(self, header, depth):
-        """Prints the header report at the end of the test."""
-        if header.suite:
-            output = "{0}: {1}".format(header.test_name, header.test_instruction)
-        elif header.type == "title" and header.test_name:
-            output = header.original_line
-        elif header.type == "step":
-            # TODO - Resolve Step listing issue 12/23
-            output = "Step {0}: {1}".format(header.test_number, header.test_instruction)
-        else:
-            return
-
-        start_time = header.start_time
-        end_time = self.finish_times[header.original_line]
-        timedelta = end_time - start_time
-        # timedelta = timedelta + datetime.Timedelta(days=1) if timedelta < 0 else timedelta
-
-        self._print_line("   " * depth + output)
-        self._print_line("   " * (depth + 1) + "Approximate Time Ellapsed: {0}".format(timedelta))
 
     def _update_format_config(self):
         """Updates the format config member dicts if the format config has been updated."""

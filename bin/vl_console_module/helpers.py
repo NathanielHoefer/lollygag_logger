@@ -33,6 +33,9 @@ def collapse_struct(field_str, data_struct, collapse_len=30):
     :param int collapse_len: The max length of the structures
     :return: String of the element with the specified collapsed structure.
     """
+
+    # TODO - Fix collapse
+
     # Determine struct entered
     if data_struct == "dict":
         start_char = "{"

@@ -16,7 +16,7 @@ import sys
 import helpers
 from bin.lollygag_logger import LogFormatter
 from vl_objects import ValenceHeader as Header
-from enums import LogType, ValenceField
+from enums import LogType, ValenceField, ColorType
 from vl_config_file import *
 
 WRITE_UPDATE_INCREMENT = 10
@@ -41,7 +41,6 @@ class ValenceConsoleFormatter(LogFormatter):
         self.format_config = format_config
         self.format_config_filepath = ini_filepath if ini_filepath \
             else DEFAULT_CONFIG_PATH
-        self.log_line = None
         self.find_str = find_str
         self.list_step = list_step
         self.write_path = write_path
@@ -84,21 +83,19 @@ class ValenceConsoleFormatter(LogFormatter):
         :return: Formatted logline as string | empty string | None if not to print
         """
 
-        # Check to see if line is empty, and create log line object to parse the line
+        # Strip log line string and use it to create the log_line object
         line = unformatted_log_line.strip("\n\\n")
-        if not line:
-            return ""
-        self.log_line = self.log_line_cls(line)
+        log_line = self.log_line_cls(line)
 
         # Store last log time
-        if self.log_line.standard_format and self.log_line.time:
-            self.last_log_time = self.log_line.time
+        if log_line.standard_format and log_line.time:
+            self.last_log_time = log_line.time[0]
 
         # Update format config values if file has been updated
         self._update_format_config()
 
         # Handle header if applicable
-        formatted_header = self._handle_header()
+        formatted_header = self._handle_header(log_line)
         if formatted_header:
             if formatted_header is True:
                 return None
@@ -110,25 +107,21 @@ class ValenceConsoleFormatter(LogFormatter):
             return None
 
         # Skip line if type is marked to not display
-        log_type = self.log_line.type.name.lower()
+        log_type = log_line.get_log_type().value.lower()
         if not helpers.str_to_bool(self.sect_display_log_types[log_type]):
             return None
 
         # Remove and condense fields in standard logs per format config file
-        if self.log_line.standard_format:
-            self._remove_fields()
-            self._condense_fields()
+        if log_line.standard_format:
+            log_line = self._remove_fields(log_line)
+            log_line = self._condense_fields(log_line)
 
         # Add color to the type field and convert log line to string
         if helpers.str_to_bool(self.format_config[COLORS]["use_colors"]):
-            formatted_line = self.log_line.color_type()
-        else:
-            formatted_line = str(self.log_line)
+            color = ColorType[log_line.get_log_type().name]
+            log_line.color_field(ValenceField.TYPE, color)
 
-        # Condense entire log line if beyond max length
-        formatted_line = helpers.condense(formatted_line, self._calc_max_len())
-
-        return formatted_line
+        return log_line
 
     def send(self, formatted_log_line):
         """Either prints formatted line to console or write it to file based on write flag.
@@ -136,7 +129,8 @@ class ValenceConsoleFormatter(LogFormatter):
         If writing to a file, will print to screen number of lines written. Also, prevents multiple
         blank lines from being printed in a row.
 
-        :param str formatted_log_line: Formatted log line str | "" | None - indicating to not print line.
+        :param ValenceLogLine formatted_log_line: Formatted log line | None - indicating to not print
+        line.
         """
 
         # Increase lines read count and print update if writing to a file
@@ -145,39 +139,20 @@ class ValenceConsoleFormatter(LogFormatter):
             print "Lines Read: {0}\r".format(self.log_lines_read),
             sys.stdout.flush()
 
+        if formatted_log_line is None:
+            return
+
         # Check to see if multiple blank lines are being printed
-        if formatted_log_line == "" and not self.duplicate_blank_line:
+        if formatted_log_line.original_line == "" and not self.duplicate_blank_line:
             self.duplicate_blank_line = True
-        elif formatted_log_line == "" and self.duplicate_blank_line:
+        elif formatted_log_line.original_line == "" and self.duplicate_blank_line:
             return
         elif formatted_log_line is not None:
             self.duplicate_blank_line = False
 
-        if formatted_log_line is None:
-            return
-        else:
-            self._print_line(formatted_log_line)
+        self._print_line(formatted_log_line)
 
-    def _handle_unformatted_line(self, unformatted_log_line):
-        """Stores the unformatted logline as a LogLine object or print if only a new line character.
-
-        If the input is only contains a new line, prints a new line if duplicate blank line flag is
-        false.
-
-        :return: True if a non-blank line, False otherwise
-        """
-        if unformatted_log_line == "\n":
-            if not self.duplicate_blank_line:
-                self.duplicate_blank_line = True
-                return ""
-            return False
-        line = unformatted_log_line.strip("\n\\n")
-        if not line:
-            return False
-        self.log_line = self.log_line_cls(line)
-        return True
-
-    def _handle_header(self):
+    def _handle_header(self, log_line):
         """Determines if LogLine is part of header and handles the printing if so.
 
         Initially attempts to create header object, store it, then print it. If the header is the
@@ -186,7 +161,7 @@ class ValenceConsoleFormatter(LogFormatter):
         :return: True if LogLine was part of a header, but not to be printed, False if LogLine is not
         part of header, and a formatted string representing header if header is to be printed.
         """
-        log_type = self.log_line.type
+        log_type = log_line.get_log_type()
         header_line = self._combine_header_logs(log_type)
 
         if header_line:
@@ -259,15 +234,22 @@ class ValenceConsoleFormatter(LogFormatter):
         else:
             return None
 
-    def _remove_fields(self):
-        """Remove field from line if marked not to display."""
+    def _remove_fields(self, log_line):
+        """Remove field from line if marked not to display.
+
+        :param ValenceLogLine log_line: Log line with fields to be removed
+        """
         for field, val in self.sect_display_fields.items():
             if not helpers.str_to_bool(val):
                 field = ValenceField[field.upper()]
-                self.log_line.remove_field(field)
+                log_line.remove_field(field)
+        return log_line
 
-    def _condense_fields(self):
-        """Condense and collapse individual line fields to the specified length in format config."""
+    def _condense_fields(self, log_line):
+        """Condense and collapse individual line fields to the specified length in format config.
+
+        :param ValenceLogLine log_line: Log line with fields to be removed
+        """
         collapse_dict = helpers.str_to_bool(self.sect_collapse_structs["dict"])
         collapse_list = helpers.str_to_bool(self.sect_collapse_structs["list"])
         collapse_len = int(self.format_config[LENGTHS_SECT]["collapsed_struct_len"])
@@ -276,8 +258,8 @@ class ValenceConsoleFormatter(LogFormatter):
         for field, val in self.sect_condense_fields.items():
             if helpers.str_to_bool(val):
                 field = ValenceField[field.upper()]
-                self.log_line.condense_field(field, condense_len, collapse_dict, collapse_list,
-                                             collapse_len)
+                log_line.condense_field(field, condense_len, collapse_dict, collapse_list, collapse_len)
+        return log_line
 
     def _store_header(self, header):
         """Stores all headers into a data structure with the following format
@@ -422,11 +404,13 @@ class ValenceConsoleFormatter(LogFormatter):
 
         return int(self.sect_lengths["max_line_len"])
 
-    def _print_line(self, print_str):
+    def _print_line(self, log_line):
         """Prints str if no write_path specified, otherwise save line to file specifiec by write_path."""
+
+        log_str = helpers.condense(str(log_line), self._calc_max_len())
 
         if self.write_path:
             with open(self.write_path, "a") as write_file:
-                write_file.write(print_str + "\n")
+                write_file.write(log_str + "\n")
         else:
-            print print_str
+            print log_str

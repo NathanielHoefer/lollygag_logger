@@ -16,7 +16,7 @@ import sys
 import helpers
 from bin.lollygag_logger import LogFormatter
 from vl_objects import ValenceHeader as Header
-from enums import LogType
+from enums import LogType, ValenceField
 from vl_config_file import *
 
 WRITE_UPDATE_INCREMENT = 10
@@ -263,7 +263,8 @@ class ValenceConsoleFormatter(LogFormatter):
         """Remove field from line if marked not to display."""
         for field, val in self.sect_display_fields.items():
             if not helpers.str_to_bool(val):
-                setattr(self.log_line, field, "")
+                field = ValenceField[field.upper()]
+                self.log_line.remove_field(field)
 
     def _condense_fields(self):
         """Condense and collapse individual line fields to the specified length in format config."""
@@ -274,10 +275,9 @@ class ValenceConsoleFormatter(LogFormatter):
 
         for field, val in self.sect_condense_fields.items():
             if helpers.str_to_bool(val):
-                current_field_str = getattr(self.log_line, field)
-                current_field_str = helpers.condense_field(current_field_str, condense_len,
-                                                           collapse_dict, collapse_list, collapse_len)
-                setattr(self.log_line, field, current_field_str)
+                field = ValenceField[field.upper()]
+                self.log_line.condense_field(field, condense_len, collapse_dict, collapse_list,
+                                             collapse_len)
 
     def _store_header(self, header):
         """Stores all headers into a data structure with the following format

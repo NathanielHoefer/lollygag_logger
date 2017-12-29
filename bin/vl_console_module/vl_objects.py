@@ -31,8 +31,9 @@ class ValenceLogLine(LogLine):
     VALENCE_TOKEN_COUNT = len(ValenceField)
     AT2_TOKEN_COUNT = VALENCE_TOKEN_COUNT - 1
 
-    def __init__(self, original_line=""):
+    def __init__(self, original_line="", max_len=300):
         super(ValenceLogLine, self).__init__(original_line)
+        self.max_len = max_len
         self._default_vals()
         self._tokenize_line(original_line)
 
@@ -41,9 +42,10 @@ class ValenceLogLine(LogLine):
         format, otherwise the original line is returned."""
         if self.standard_format:
             field_strings = self._list_all_field_strings()
-            return " ".join([field for field in field_strings if field is not None])
+            str_output = " ".join([field for field in field_strings if field is not None])
         else:
-            return self.original_line
+            str_output = self.original_line
+        return helpers.condense(str_output, self.max_len)
 
     def set_field_str(self, field, value):
         """Sets the string value of a field
@@ -256,25 +258,30 @@ class ValenceHeader(LogLine):
     :ivar int test_number: Step or test case number if there is one.
     """
 
-    def __init__(self, original_line="", max_len=105):
+    def __init__(self, original_line="", max_len=105, color=None):
         super(ValenceHeader, self).__init__(original_line)
         self.max_len = max_len
+        self.color = color
         self._default_vals()
         self._tokenize_line(original_line)
 
     def __str__(self):
         border = "="*self.max_len if self.type.value <= 3 else "-"*self.max_len
-        if self.original_line == "Expect: Pass":
-            return ""
+        if not self.original_line:
+            str_output = ""
         else:
-            return "\n".join([border, self.original_line, border])
+            str_output = "\n".join([border, self.original_line, border])
+
+        if self.color:
+            str_output = self.color.value + str_output + ColorType.END.value
+        return str_output
 
     def _default_vals(self):
         """Set all field to default values."""
         self.type = HeaderType.VALENCE
-        self.test_name = ""
-        self.test_info = ""
-        self.test_instruction = ""
+        self.test_name = None
+        self.test_info = None
+        self.test_instruction = None
         self.test_number = 0
         self.start_time = None
         self.end_time = None
@@ -288,10 +295,11 @@ class ValenceHeader(LogLine):
         # Don't try to parse if header not in test case or suite
         split = input_str.split(":", 1)
         if len(split) <= 1 or input_str == "Expect: Pass":
+            self.original_line = ""
             return
 
-        self.test_info = split[0].strip() if len(split) == 2 else ""
-        self.test_instruction = split[1].strip() if len(split) == 2 else ""
+        self.test_info = split[0].strip() if len(split) == 2 else None
+        self.test_instruction = split[1].strip() if len(split) == 2 else None
 
         if self.test_info == "Test Suite":
             self.type = HeaderType.SUITE

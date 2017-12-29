@@ -85,7 +85,7 @@ class ValenceConsoleFormatter(LogFormatter):
 
         # Strip log line string and use it to create the log_line object
         line = unformatted_log_line.strip("\n\\n")
-        log_line = self.log_line_cls(line)
+        log_line = self.log_line_cls(line, self._calc_max_len())
 
         # Store last log time
         if log_line.standard_format and log_line.time:
@@ -107,7 +107,7 @@ class ValenceConsoleFormatter(LogFormatter):
             return None
 
         # Skip line if type is marked to not display
-        log_type = log_line.get_log_type().value.lower()
+        log_type = log_line.get_log_type().name.lower()
         if not helpers.str_to_bool(self.sect_display_log_types[log_type]):
             return None
 
@@ -162,7 +162,7 @@ class ValenceConsoleFormatter(LogFormatter):
         part of header, and a formatted string representing header if header is to be printed.
         """
         log_type = log_line.get_log_type()
-        header_line = self._combine_header_logs(log_type)
+        header_line = self._combine_header_logs(log_type, log_line)
 
         if header_line:
 
@@ -181,21 +181,15 @@ class ValenceConsoleFormatter(LogFormatter):
             if self.selected_step_type:
                 if self.selected_step_type.value >= header_line.type.value \
                         and header_line.original_line != self.list_step \
-                        and header_line.original_line != "Expect: Pass":
+                        and header_line.original_line != "":
                     self.selected_step_to_print = False
                     return True
 
+            # TODO - Get time listing operational
             # self._store_header(header_line)
-            log_output = str(header_line)
-            color_type = LogType.TITLE if header_line.type.value <= 3 else LogType.STEP
-            if log_output:
-                print_in_color = helpers.str_to_bool(self.format_config[COLORS]["use_colors"])
-                return helpers.color_by_type(color_type, log_output) if print_in_color else log_output
-
             # if header_line.original_line == "Final Report":
-            #     # TODO - Fix ellapsed time issues 12/23
             #     helpers.print_variable_list(self.executed_suites, self._print_header_report)
-            return True
+            return header_line
 
         # Don't print header border
         elif log_type == LogType.STEP or log_type == LogType.TITLE or any(
@@ -204,7 +198,7 @@ class ValenceConsoleFormatter(LogFormatter):
         else:
             return False
 
-    def _combine_header_logs(self, log_type):
+    def _combine_header_logs(self, log_type, log_line):
         """Combines header LogLines into single header objects.
 
         Since LogLines are not typically stored and are simply printed, a flag must be set to absorb
@@ -220,7 +214,8 @@ class ValenceConsoleFormatter(LogFormatter):
 
             # Details of border
             elif log_type == LogType.OTHER and is_waiting:
-                formatted_header = Header(self.log_line.original_line, self._calc_max_len())
+                color = ColorType[header_type.name]
+                formatted_header = Header(log_line.original_line, self._calc_max_len(), color)
                 curr_type = header_type
                 break
 
@@ -405,9 +400,9 @@ class ValenceConsoleFormatter(LogFormatter):
         return int(self.sect_lengths["max_line_len"])
 
     def _print_line(self, log_line):
-        """Prints str if no write_path specified, otherwise save line to file specifiec by write_path."""
+        """Prints str if no write_path specified, otherwise save line to file specific by write_path."""
 
-        log_str = helpers.condense(str(log_line), self._calc_max_len())
+        log_str = str(log_line)
 
         if self.write_path:
             with open(self.write_path, "a") as write_file:

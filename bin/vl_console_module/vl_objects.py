@@ -37,13 +37,19 @@ class ValenceLogLine(LogLine):
         self._tokenize_line(original_line)
 
     def __str__(self):
+        """Returns fields as strings if they have not been removed and the log line is in standard
+        format, otherwise the original line is returned."""
         if self.standard_format:
-            return " ".join([field for field in self._list_fields_as_str() if field != ""])
+            field_strings = self._list_all_field_strings()
+            return " ".join([field for field in field_strings if field is not None])
         else:
             return self.original_line
 
     def set_field_str(self, field, value):
         """Sets the string value of a field
+
+        Note: Currently does not change the datetime objects or ValenceField enum. They need to be set
+        individually using self.time[0] = ...
 
         :param ValenceField field: The field to be set
         :param str value: The string that the field will be set to. Can also be None.
@@ -78,14 +84,12 @@ class ValenceLogLine(LogLine):
         return self.type[0] if self.type else None
 
     def color_field(self, field, color):
-        """Returns the log line string with the log type surrounded by an ANSI escape color sequence."""
-        if self.standard_format:
-            fields = self._list_fields_as_str()
-            fields[2] = helpers.color_by_type(self.type, fields[2])
-            fields = [x for x in fields if x != ""]
-        else:
-            fields = [helpers.color_by_type(self.type, self.original_line)]
-        return " ".join(fields)
+        """Colors the field str using the specified ANSI escape color sequence."""
+
+        field_value = self.get_field_str(field)
+        if field_value is not None:
+            field_value = color.value + field_value + ColorType.END.value
+            self.set_field_str(field, field_value)
 
     def remove_field(self, field):
         """Set the specified field to None.
@@ -185,7 +189,7 @@ class ValenceLogLine(LogLine):
         # Assign LogType enum to first index and the str representation to the 2nd index.
         if split[2] in [x.name for x in LogType]:
             self.type[0] = LogType[split[2]]
-            self.type[1] = self.type[0].value
+            self.type[1] = str(self.type[0])
 
         # Parse Source
         self.source = split[3] if re.match("^\[.*:.*\]$", split[3]) else None
@@ -211,28 +215,9 @@ class ValenceLogLine(LogLine):
                     return
         self.standard_format = True
 
-    def _list_fields_as_str(self):
-        str_fields_list = [getattr(self, field.value) for field in ValenceField]
-        str_fields_list[0] = self._date_to_str()
-        str_fields_list[1] = self._time_to_str()
-        str_fields_list[2] = str(str_fields_list[2])
-        return str_fields_list
-
-    def _date_to_str(self):
-        if self.date:
-            return self.date.strftime("%Y-%m-%d")
-        else:
-            return ""
-
-    def _time_to_str(self):
-        if not self.time:
-            return ""
-
-        if self.at2_log:
-            time = self.time.strftime("%H:%M:%S,%f")[:-3]
-        else:
-            time = self.time.strftime("%H:%M:%S.%f")
-        return time
+    def _list_all_field_strings(self):
+        """Returns list of all field values as strings. If a value is None, then it has been removed."""
+        return [self.get_field_str(field) for field in ValenceField]
 
     def _str_to_date(self, date_str):
         """Converts date str to a datetime object if in the following format: YYYY-MM-DD

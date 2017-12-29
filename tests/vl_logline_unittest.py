@@ -10,7 +10,7 @@ import datetime
 import unittest
 
 from bin.vl_console_module import ValenceLogLine as LogLine
-from bin.vl_console_module.enums import LogType, ValenceField
+from bin.vl_console_module.enums import LogType, ValenceField, ColorType
 
 
 class TestDateToken(unittest.TestCase):
@@ -214,6 +214,102 @@ class TestStandardFormat(unittest.TestCase):
         self.assertEqual(line.get_field_str(ValenceField.THREAD), None)
         self.assertEqual(line.get_field_str(ValenceField.DETAILS), None)
         self.assertEqual(line.original_line, "Test Suite: Starting Teardown of TsBulkVolOperations")
+
+
+class RemoveGetSetFields(unittest.TestCase):
+
+    def test_to_string(self):
+        log = "2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] reco"
+        line = LogLine(log)
+        self.assertTrue(line.standard_format)
+        self.assertEqual(str(line), log)
+
+    def test_remove_fields(self):
+        log = "2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] reco"
+        result = "19:13:32.209878 DEBUG [valence:42] reco"
+        line = LogLine(log)
+        line.remove_field(ValenceField.DATE)
+        line.remove_field(ValenceField.THREAD)
+        self.assertTrue(line.standard_format)
+        self.assertEqual(str(line), result)
+
+    def test_get_detail(self):
+        log = "2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] reco"
+        line = LogLine(log)
+        self.assertTrue(line.standard_format)
+        self.assertEqual(line.get_field_str(ValenceField.DETAILS), "reco")
+
+    def test_get_type(self):
+        log = "2017-10-30 19:13:32.209878 WARNING [valence:42] [MainProcess:MainThread] reco"
+        line = LogLine(log)
+        self.assertTrue(line.standard_format)
+        self.assertEqual(line.get_field_str(ValenceField.TYPE), "WARN")
+        self.assertEqual(line.get_log_type(), LogType.WARNING)
+
+    def test_set_source(self):
+        log = "2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] reco"
+        line = LogLine(log)
+        line.set_field_str(ValenceField.SOURCE, "[main:64]")
+        self.assertTrue(line.standard_format)
+        self.assertEqual(line.get_field_str(ValenceField.SOURCE), "[main:64]")
+
+    def test_set_type(self):
+        log = "2017-10-30 19:13:32.209878 WARNING [valence:42] [MainProcess:MainThread] reco"
+        line = LogLine(log)
+        line.set_field_str(ValenceField.TYPE, "INFO")
+        self.assertTrue(line.standard_format)
+        self.assertEqual(line.get_field_str(ValenceField.TYPE), "INFO")
+        self.assertEqual(line.get_log_type(), LogType.WARNING)
+
+
+class CondenseColor(unittest.TestCase):
+
+    def test_condense_at_len(self):
+        log = '2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] Sending HT'
+        line = LogLine(log)
+        line.condense_field(ValenceField.DETAILS, condense_len=10, collapse_dict=False,
+                            collapse_list=False, collapse_len=5)
+        self.assertTrue(line.standard_format)
+        self.assertEqual(line.get_field_str(ValenceField.DETAILS), "Sending...")
+
+    def test_condense_under_len(self):
+        log = '2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] Sending H'
+        line = LogLine(log)
+        line.condense_field(ValenceField.DETAILS, condense_len=10, collapse_dict=False,
+                            collapse_list=False, collapse_len=5)
+        self.assertTrue(line.standard_format)
+        self.assertEqual(line.get_field_str(ValenceField.DETAILS), "Sending H")
+
+    def test_collapse_above_len(self):
+        log = '2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] S{nding }T'
+        line = LogLine(log)
+        line.condense_field(ValenceField.DETAILS, condense_len=12, collapse_dict=True,
+                            collapse_list=False, collapse_len=7)
+        self.assertTrue(line.standard_format)
+        self.assertEqual(line.get_field_str(ValenceField.DETAILS), "S{nd...}T")
+
+    def test_collapse_at_len(self):
+        log = '2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] Se{ding }T'
+        line = LogLine(log)
+        line.condense_field(ValenceField.DETAILS, condense_len=12, collapse_dict=True,
+                            collapse_list=False, collapse_len=7)
+        self.assertTrue(line.standard_format)
+        self.assertEqual(line.get_field_str(ValenceField.DETAILS), "Se{ding }T")
+
+    def test_collapse_and_condense(self):
+        log = '2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] HTTP S{nding }T'
+        line = LogLine(log)
+        line.condense_field(ValenceField.DETAILS, condense_len=10, collapse_dict=True,
+                            collapse_list=False, collapse_len=7)
+        self.assertTrue(line.standard_format)
+        self.assertEqual(line.get_field_str(ValenceField.DETAILS), "HTTP S{...")
+
+    def test_color_type(self):
+        log = '2017-10-30 19:13:32.209878 WARNING [valence:42] [MainProcess:MainThread] HTTP'
+        line = LogLine(log)
+        line.color_field(ValenceField.TYPE, ColorType.WARNING)
+        self.assertEqual(line.get_field_str(ValenceField.TYPE), ColorType.WARNING.value + "WARN" +
+                         ColorType.END.value)
 
 
 if __name__ == "__main__":

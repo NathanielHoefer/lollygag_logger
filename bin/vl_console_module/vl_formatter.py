@@ -15,6 +15,7 @@ TODO - Update this description
 import sys
 import helpers
 from bin.lollygag_logger import LogFormatter
+from bin.lollygag_logger.lollygag_logger import KILL_SIGNAL
 from vl_objects import ValenceHeader as Header
 from enums import LogType, ValenceField, ColorType
 from vl_config_file import *
@@ -53,20 +54,13 @@ class ValenceConsoleFormatter(LogFormatter):
 
         # Variables needed for titles and steps
         self.waiting_for_header = {LogType.TITLE: False, LogType.STEP: False}
-        self.previous_header = None
-        self.finish_times = {}
-        self.executed_suites = []
-        self.current_suite_name = ""
-        self.current_suite_index = -1
-        self.current_test_case = ""
-        self.current_test_case_index = -1
-        self.prev_header_was_step = False
-        self.current_step_index = -1
         self.last_log_time = None
 
         # List step variables
-        self.selected_step_to_print = False
-        self.selected_step_type = None
+        self.listed_step_to_print = False
+        self.listed_step_type = None
+        self.listed_steps_status = "Searching"  # "Searching" | "Processing" | "Completed"
+        self.searching_text_printed = False
 
     def format(self, unformatted_log_line):
         """Prints the formatted log line to the console based on the format config file options.
@@ -103,7 +97,7 @@ class ValenceConsoleFormatter(LogFormatter):
                 return formatted_header
 
         # Don't print if not in the current step
-        if self.list_step and not self.selected_step_to_print:
+        if self.list_step and not self.listed_step_to_print:
             return None
 
         # Skip line if type is marked to not display
@@ -139,18 +133,35 @@ class ValenceConsoleFormatter(LogFormatter):
             print "Lines Read: {0}\r".format(self.log_lines_read),
             sys.stdout.flush()
 
+        # Print searching message until step has been found
+        if self.listed_steps_status == "Searching":
+            if not self.searching_text_printed:
+                print "Searching for Test Case/Step: {0}\n".format(self.list_step)
+                self.searching_text_printed = True
+            else:
+                print "---   \r" if self.log_lines_read % 100 < 50 else "   ---\r",
+
+        # Update status when log line is sent through
         if formatted_log_line is None:
-            return
+            return None
+        else:
+            self.listed_steps_status = "Processing"
 
         # Check to see if multiple blank lines are being printed
         if formatted_log_line.original_line == "" and not self.duplicate_blank_line:
             self.duplicate_blank_line = True
         elif formatted_log_line.original_line == "" and self.duplicate_blank_line:
-            return
+            return None
         elif formatted_log_line is not None:
             self.duplicate_blank_line = False
 
         self._print_line(formatted_log_line)
+
+        # Kill program when listed steps have been processed.
+        if self.listed_steps_status == "Completed":
+            return KILL_SIGNAL
+        else:
+            return None
 
     def _handle_header(self, log_line):
         """Determines if LogLine is part of header and handles the printing if so.
@@ -168,21 +179,21 @@ class ValenceConsoleFormatter(LogFormatter):
 
             # Check if header matches step to list
             if header_line.original_line == self.list_step:
-                self.selected_step_to_print = True
-                self.selected_step_type = header_line.type
+                self.listed_step_to_print = True
+                self.listed_step_type = header_line.type
 
             # Return without printing if a specified step to print and this isn't part of it
-            if self.list_step and not self.selected_step_to_print:
+            if self.list_step and not self.listed_step_to_print:
                 return True
 
-            # TODO - send signal to completely stop printing if completed with selected step
             # Uncheck 'selected step' flag once the next step is hit if a step is selected or the next
             # test case step is hit if test case is selected.
-            if self.selected_step_type:
-                if self.selected_step_type.value >= header_line.type.value \
+            if self.listed_step_type:
+                if self.listed_step_type.value >= header_line.type.value \
                         and header_line.original_line != self.list_step \
                         and header_line.original_line != "":
-                    self.selected_step_to_print = False
+                    self.listed_step_to_print = False
+                    self.listed_steps_complete = True
                     return True
             return header_line
 

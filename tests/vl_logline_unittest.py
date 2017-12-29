@@ -10,162 +10,164 @@ import datetime
 import unittest
 
 from bin.vl_console_module import ValenceLogLine as LogLine
-from bin.vl_console_module.enums import LogType
+from bin.vl_console_module.enums import LogType, ValenceField
 
 
 class TestDateToken(unittest.TestCase):
 
     def test_correct_format(self):
         line = LogLine("2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] reco")
-        self.assertEqual(line.date, datetime.date(2017, 10, 30))
+        self.assertEqual(line.date[0], datetime.datetime(2017, 10, 30))
+        self.assertEqual(line.get_field_str(ValenceField.DATE), "2017-10-30")
 
     def test_bad_format(self):
         line = LogLine("201-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] re")
-        self.assertEqual(line.date, "")
+        self.assertEqual(line.date, None)
 
 
 class TestTimeToken(unittest.TestCase):
 
     def test_correct_format(self):
         line = LogLine("2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] reco")
-        self.assertEqual(line.time, datetime.datetime.strptime("19:13:32.209878", "%H:%M:%S.%f"))
+        self.assertEqual(line.time[0], datetime.datetime(1900, 1, 1, 19, 13, 32, 209878))
+        self.assertEqual(line.get_field_str(ValenceField.TIME), "19:13:32.209878")
 
     def test_bad_format(self):
         line = LogLine("2017-10-30 19:13:32.20987 DEBUG [valence:42] [MainProcess:MainThread] reco")
-        self.assertEqual(line.time, "")
+        self.assertEqual(line.time, None)
 
 
 class TestTypeTokenTitle(unittest.TestCase):
 
     def test_under_minimum(self):
         line = LogLine("=============================")
-        self.assertEqual(line.type, LogType.OTHER)
+        self.assertEqual(line.get_log_type(), LogType.OTHER)
         self.assertEqual(line.original_line, "=============================")
 
     def test_long_equal(self):
         line = LogLine("===============================================================================")
-        self.assertEqual(line.type, LogType.TITLE)
+        self.assertEqual(line.get_log_type(), LogType.TITLE)
 
     def test_at_minimum(self):
         line = LogLine("==============================")
-        self.assertEqual(line.type, LogType.TITLE)
+        self.assertEqual(line.get_log_type(), LogType.TITLE)
 
     def test_four_equal(self):
         line = LogLine("====")
-        self.assertEqual(line.type, LogType.OTHER)
+        self.assertEqual(line.get_log_type(), LogType.OTHER)
 
     def test_bad_begin(self):
         line = LogLine("bad=====")
-        self.assertEqual(line.type, LogType.OTHER)
+        self.assertEqual(line.get_log_type(), LogType.OTHER)
 
     def test_bad_middle(self):
         line = LogLine("=====bad==")
-        self.assertEqual(line.type, LogType.OTHER)
+        self.assertEqual(line.get_log_type(), LogType.OTHER)
 
     def test_bad_end(self):
         line = LogLine("=====bad")
-        self.assertEqual(line.type, LogType.OTHER)
+        self.assertEqual(line.get_log_type(), LogType.OTHER)
 
 
 class TestTypeTokenStep(unittest.TestCase):
 
     def test_under_minimum(self):
         line = LogLine("-----------------------------")
-        self.assertEqual(line.type, LogType.OTHER)
+        self.assertEqual(line.get_log_type(), LogType.OTHER)
         self.assertEqual(line.original_line, "-----------------------------")
 
     def test_long_equal(self):
         line = LogLine("-------------------------------------------------------------------------------")
-        self.assertEqual(line.type, LogType.STEP)
+        self.assertEqual(line.get_log_type(), LogType.STEP)
 
     def test_at_minimum(self):
         line = LogLine("------------------------------")
-        self.assertEqual(line.type, LogType.STEP)
+        self.assertEqual(line.get_log_type(), LogType.STEP)
         self.assertEqual(line.original_line, "------------------------------")
 
     def test_four_equal(self):
         line = LogLine("----")
-        self.assertEqual(line.type, LogType.OTHER)
+        self.assertEqual(line.get_log_type(), LogType.OTHER)
 
     def test_bad_begin(self):
         line = LogLine("bad-----")
-        self.assertEqual(line.type, LogType.OTHER)
+        self.assertEqual(line.get_log_type(), LogType.OTHER)
 
     def test_bad_middle(self):
         line = LogLine("-----bad--")
-        self.assertEqual(line.type, LogType.OTHER)
+        self.assertEqual(line.get_log_type(), LogType.OTHER)
 
     def test_bad_end(self):
         line = LogLine("-----bad")
-        self.assertEqual(line.type, LogType.OTHER)
+        self.assertEqual(line.get_log_type(), LogType.OTHER)
 
 
 class TestTypeTokenDebug(unittest.TestCase):
 
     def test_correct_format(self):
         line = LogLine("2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] reco")
-        self.assertEqual(line.type, LogType.DEBUG)
+        self.assertEqual(line.get_log_type(), LogType.DEBUG)
 
     def test_bad_format(self):
         line = LogLine("201-10-30 19:13:32.209878 DEBG [valence:42] [MainProcess:MainThread] re")
-        self.assertEqual(line.type, LogType.OTHER)
+        self.assertEqual(line.get_log_type(), LogType.OTHER)
 
 
 class TestTypeTokenOther(unittest.TestCase):
 
     def test_empty_line(self):
         line = LogLine("")
-        self.assertEqual(line.type, LogType.OTHER)
+        self.assertEqual(line.get_log_type(), LogType.OTHER)
 
     def test_missing_token(self):
         line = LogLine("201-10-30 19:13:32.209878 DEBG [valence:42] re")
-        self.assertEqual(line.type, LogType.OTHER)
+        self.assertEqual(line.get_log_type(), LogType.OTHER)
 
     def test_incorrect_format_tokens(self):
         line = LogLine("x x x x x x")
-        self.assertEqual(line.type, LogType.OTHER)
+        self.assertEqual(line.get_log_type(), LogType.OTHER)
 
 
 class TestSourceToken(unittest.TestCase):
 
     def test_correct_format(self):
         line = LogLine("2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] reco")
-        self.assertEqual(line.source, "[valence:42]")
+        self.assertEqual(line.get_field_str(ValenceField.SOURCE), "[valence:42]")
 
     def test_no_colon_format(self):
         line = LogLine("2017-10-30 19:13:32.209878 DEBUG [valence42] [MainProcess:MainThread] reco")
-        self.assertEqual(line.source, "")
+        self.assertEqual(line.get_field_str(ValenceField.SOURCE), None)
 
     def test_no_brackets_format(self):
         line = LogLine("2017-10-30 19:13:32.209878 DEBUG valence:42 [MainProcess:MainThread] reco")
-        self.assertEqual(line.source, "")
+        self.assertEqual(line.get_field_str(ValenceField.SOURCE), None)
 
 
 class TestThreadToken(unittest.TestCase):
 
     def test_correct_format(self):
         line = LogLine("2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] reco")
-        self.assertEqual(line.thread, "[MainProcess:MainThread]")
+        self.assertEqual(line.get_field_str(ValenceField.THREAD), "[MainProcess:MainThread]")
 
     def test_no_colon_format(self):
         line = LogLine("2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcessMainThread] reco")
-        self.assertEqual(line.thread, "")
+        self.assertEqual(line.get_field_str(ValenceField.THREAD), None)
 
     def test_no_brackets_format(self):
         line = LogLine("2017-10-30 19:13:32.209878 DEBUG [valence:42] MainProcess:MainThread reco")
-        self.assertEqual(line.thread, "")
+        self.assertEqual(line.get_field_str(ValenceField.THREAD), None)
 
 
 class TestDetailsToken(unittest.TestCase):
 
     def test_correct_format(self):
         line = LogLine("2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] reco")
-        self.assertEqual(line.details, "reco")
+        self.assertEqual(line.get_field_str(ValenceField.DETAILS), "reco")
 
     def test_no_details_with_type(self):
         line = LogLine("2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] ")
-        self.assertEqual(line.type, LogType.DEBUG)
-        self.assertEqual(line.details, "")
+        self.assertEqual(line.get_log_type(), LogType.DEBUG)
+        self.assertEqual(line.get_field_str(ValenceField.DETAILS), None)
 
 
 class TestStandardFormat(unittest.TestCase):
@@ -174,44 +176,43 @@ class TestStandardFormat(unittest.TestCase):
         log = "2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] reco"
         line = LogLine(log)
         self.assertTrue(line.standard_format)
-        self.assertEqual(line.date, datetime.date(2017, 10, 30))
-        self.assertEqual(line.time, datetime.datetime.strptime("19:13:32.209878", "%H:%M:%S.%f"))
-        self.assertEqual(line.type, LogType.DEBUG)
-        self.assertEqual(line.source, "[valence:42]")
-        self.assertEqual(line.thread, "[MainProcess:MainThread]")
-        self.assertEqual(line.details, "reco")
-        self.assertEqual(str(line), log)
+        self.assertEqual(line.get_field_str(ValenceField.DATE), "2017-10-30")
+        self.assertEqual(line.get_field_str(ValenceField.TIME), "19:13:32.209878")
+        self.assertEqual(line.get_log_type(), LogType.DEBUG)
+        self.assertEqual(line.get_field_str(ValenceField.SOURCE), "[valence:42]")
+        self.assertEqual(line.get_field_str(ValenceField.THREAD), "[MainProcess:MainThread]")
+        self.assertEqual(line.get_field_str(ValenceField.DETAILS), "reco")
 
     def test_full_standard_format_no_details(self):
         line = LogLine("2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] ")
         self.assertTrue(line.standard_format)
-        self.assertEqual(line.date, datetime.date(2017, 10, 30))
-        self.assertEqual(line.time, datetime.datetime.strptime("19:13:32.209878", "%H:%M:%S.%f"))
-        self.assertEqual(line.type, LogType.DEBUG)
+        self.assertEqual(line.get_field_str(ValenceField.DATE), "2017-10-30")
+        self.assertEqual(line.get_field_str(ValenceField.TIME), "19:13:32.209878")
+        self.assertEqual(line.get_log_type(), LogType.DEBUG)
         self.assertEqual(line.source, "[valence:42]")
         self.assertEqual(line.thread, "[MainProcess:MainThread]")
-        self.assertEqual(line.details, "")
+        self.assertEqual(line.details, None)
 
     def test_full_title(self):
         line = LogLine("=========================================================")
         self.assertFalse(line.standard_format)
-        self.assertEqual(line.date, "")
-        self.assertEqual(line.time, "")
-        self.assertEqual(line.type, LogType.TITLE)
-        self.assertEqual(line.source, "")
-        self.assertEqual(line.thread, "")
-        self.assertEqual(line.details, "")
+        self.assertEqual(line.get_field_str(ValenceField.DATE), None)
+        self.assertEqual(line.get_field_str(ValenceField.TIME), None)
+        self.assertEqual(line.get_log_type(), LogType.TITLE)
+        self.assertEqual(line.get_field_str(ValenceField.SOURCE), None)
+        self.assertEqual(line.get_field_str(ValenceField.THREAD), None)
+        self.assertEqual(line.get_field_str(ValenceField.DETAILS), None)
         self.assertEqual(line.original_line, "=========================================================")
 
     def test_not_sf(self):
         line = LogLine("Test Suite: Starting Teardown of TsBulkVolOperations")
         self.assertFalse(line.standard_format)
-        self.assertEqual(line.date, "")
-        self.assertEqual(line.time, "")
-        self.assertEqual(line.type, LogType.OTHER)
-        self.assertEqual(line.source, "")
-        self.assertEqual(line.thread, "")
-        self.assertEqual(line.details, "")
+        self.assertEqual(line.get_field_str(ValenceField.DATE), None)
+        self.assertEqual(line.get_field_str(ValenceField.TIME), None)
+        self.assertEqual(line.get_log_type(), LogType.OTHER)
+        self.assertEqual(line.get_field_str(ValenceField.SOURCE), None)
+        self.assertEqual(line.get_field_str(ValenceField.THREAD), None)
+        self.assertEqual(line.get_field_str(ValenceField.DETAILS), None)
         self.assertEqual(line.original_line, "Test Suite: Starting Teardown of TsBulkVolOperations")
 
 

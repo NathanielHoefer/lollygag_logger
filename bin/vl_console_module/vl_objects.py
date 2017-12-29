@@ -19,6 +19,8 @@ class ValenceLogLine(LogLine):
     considered in standard format. If any other field doesn't match, all of the fields are returned
     to normal, and the type is considered OTHER with the original line being retained.
 
+    # Since date, time, and type are represented objects, the field contains a list where
+
     STEP and TITLE types are unique in that the line is stored in the details
 
     :cvar list LOG_LEVELS: The unique log levels specified by Valence
@@ -26,9 +28,7 @@ class ValenceLogLine(LogLine):
     :cvar int TOKEN_COUNT: The number of fields
     """
 
-    LOG_LEVELS = ["debug", "info", "warning", "error"]  # Temp until enum working
-    FIELDS = ["date", "time", "type", "source", "thread", "details"]
-    VALENCE_TOKEN_COUNT = len(FIELDS)
+    VALENCE_TOKEN_COUNT = len(ValenceField)
     AT2_TOKEN_COUNT = VALENCE_TOKEN_COUNT - 1
 
     def __init__(self, original_line=""):
@@ -42,7 +42,42 @@ class ValenceLogLine(LogLine):
         else:
             return self.original_line
 
-    def color_type(self):
+    def set_field_str(self, field, value):
+        """Sets the string value of a field
+
+        :param ValenceField field: The field to be set
+        :param str value: The string that the field will be set to. Can also be None.
+        """
+
+        # Change str value in field list
+        if field == ValenceField.DATE or field == ValenceField.TIME or field == ValenceField.TYPE:
+            field_list = getattr(self, field.value)
+            field_list[1] = value
+            setattr(self, field.value, field_list)
+        else:
+            setattr(self, field.value, value)
+
+    def get_field_str(self, field):
+        """Returns the string of any of the Valence fields.
+
+        :param ValenceField field: The field to retrieve string
+        :return: The string value in that field or None if that is the current value assigned.
+        """
+        field_value = getattr(self, field.value)
+        if field_value is None:
+            return None
+
+        if field == ValenceField.DATE or field == ValenceField.TIME or field == ValenceField.TYPE:
+            field_list = field_value
+            return field_list[1]
+        else:
+            return field_value
+
+    def get_log_type(self):
+        """Returns the LogType."""
+        return self.type[0] if self.type else None
+
+    def color_field(self, field, color):
         """Returns the log line string with the log type surrounded by an ANSI escape color sequence."""
         if self.standard_format:
             fields = self._list_fields_as_str()
@@ -52,14 +87,45 @@ class ValenceLogLine(LogLine):
             fields = [helpers.color_by_type(self.type, self.original_line)]
         return " ".join(fields)
 
+    def remove_field(self, field):
+        """Set the specified field to None.
+
+        :param ValenceField field: Field to be set to None
+        """
+        setattr(self, field.value, None)
+
+    def condense_field(self, field, condense_len=50, collapse_dict=False, collapse_list=False,
+                       collapse_len=30):
+        """Condenses the field to the condense length, and collapses lists and dictionaries that
+        exceed a given length.
+
+        :param ValenceField field: The LogLine field str to be condensed.
+        :param int condense_len: The max length of the field
+        :param bool collapse_dict: If true, collapse dict to the specified collapse_len
+        :param bool collapse_list: If true, collapse list to the specified collapse_len
+        :param int collapse_len: The max length of the structures
+        """
+        current_field_str = getattr(self, field.value)
+        if current_field_str is None:
+            return
+
+        # Collapse dicts or lists if specified
+        if collapse_dict:
+            current_field_str = helpers.collapse_struct(current_field_str, "dict", collapse_len)
+        if collapse_list:
+            current_field_str = helpers.collapse_struct(current_field_str, "list", collapse_len)
+
+        # Condense length of element if it exceeds specified length
+        setattr(self, field.value, helpers.condense(current_field_str, condense_len))
+
     def _default_vals(self):
         """Set all field to default values."""
-        self.date = ""
-        self.time = ""
-        self.type = LogType.OTHER
-        self.source = ""
-        self.thread = ""
-        self.details = ""
+        self.date = None
+        self.time = None
+        self.type = [LogType.OTHER, LogType.OTHER.value]
+        self.source = None
+        self.thread = None
+        self.details = None
         self.standard_format = False
         self.at2_log = False
 
@@ -74,10 +140,12 @@ class ValenceLogLine(LogLine):
         # each with a minimum of 30 chars
         input_str = input_str.strip()
         if re.match("^={30,}$", input_str):
-            self.type = LogType.TITLE
+            self.type[0] = LogType.TITLE
+            self.type[1] = LogType.TITLE.value
             return
         if re.match("^-{30,}$", input_str):
-            self.type = LogType.STEP
+            self.type[0] = LogType.STEP
+            self.type[1] = LogType.STEP.value
             return
 
         # Identifies if the log is int AT2 standard format based on the format of the time stamp. AT2
@@ -94,46 +162,57 @@ class ValenceLogLine(LogLine):
         if not (current_token_count - 1 <= len(split) <= current_token_count):
             return
 
-        # Assign token to proper field if format matches correctly
-        self.date = split[0] if re.match("^\d{4}-\d{2}-\d{2}$", split[0]) else ""
-        self._str_to_date()
+        # Parse Date
+        # Create datetime object for date and assign str to 2nd index
+        date = self._str_to_date(split[0]) if re.match("^\d{4}-\d{2}-\d{2}$", split[0]) else None
+        if date is None:
+            self.date = None
+        else:
+            date_values = [date, split[0]]
+            self.date = date_values
 
-        # Check to see if logs are in valence format or AT2 format based on time
+        # Parse Time
+        # Check to see if logs are in valence format or AT2 format based on time then create datetime
+        # object for time and assign str to 2nd index
         if re.match("^\d{2}:\d{2}:\d{2}\.\d{6}$", split[1]) \
                 or re.match("^\d{2}:\d{2}:\d{2},\d{3}$", split[1]):
-            self.time = split[1]
-            self._str_to_time()
+            time_values = [self._str_to_time(split[1]), split[1]]
+            self.time = time_values
         else:
-            self.time = ""
+            self.time = None
 
-        str_type = split[2]
-        if str_type in [x.name for x in LogType]:
-            self.type = LogType[str_type]
+        # Parse Type
+        # Assign LogType enum to first index and the str representation to the 2nd index.
+        if split[2] in [x.name for x in LogType]:
+            self.type[0] = LogType[split[2]]
+            self.type[1] = self.type[0].value
 
-        self.source = split[3] if re.match("^\[.*:.*\]$", split[3]) else ""
+        # Parse Source
+        self.source = split[3] if re.match("^\[.*:.*\]$", split[3]) else None
 
+        # Parse Thread and Detail
         if self.at2_log:  # Special case to check if logs are being read from AT2 based on time stamp
-            self.details = split[4] if len(split) == self.AT2_TOKEN_COUNT else ""
+            self.details = split[4] if len(split) == self.AT2_TOKEN_COUNT else None
         else:
-            self.thread = split[4] if re.match("^\[.*:.*\]$", split[4]) else ""
-            self.details = split[5] if len(split) == self.VALENCE_TOKEN_COUNT else ""
+            self.thread = split[4] if re.match("^\[.*:.*\]$", split[4]) else None
+            self.details = split[5] if len(split) == self.VALENCE_TOKEN_COUNT else None
 
         # If any of the fields are empty with the exception of details, change type to OTHER and move all
         # line data to the details field.
-        for field in ValenceFields:
+        for field in ValenceField:
             if self.at2_log:
-                if (field is not ValenceFields.DETAILS and field is not ValenceFields.THREAD)\
-                        and getattr(self, field.value) is "":
+                if (field is not ValenceField.DETAILS and field is not ValenceField.THREAD)\
+                        and getattr(self, field.value) is None:
                     self._default_vals()
                     return
             else:
-                if field is not ValenceFields.DETAILS and getattr(self, field.value) is "":
+                if field is not ValenceField.DETAILS and getattr(self, field.value) is None:
                     self._default_vals()
                     return
         self.standard_format = True
 
     def _list_fields_as_str(self):
-        str_fields_list = [getattr(self, field.value) for field in ValenceFields]
+        str_fields_list = [getattr(self, field.value) for field in ValenceField]
         str_fields_list[0] = self._date_to_str()
         str_fields_list[1] = self._time_to_str()
         str_fields_list[2] = str(str_fields_list[2])
@@ -155,22 +234,27 @@ class ValenceLogLine(LogLine):
             time = self.time.strftime("%H:%M:%S.%f")
         return time
 
-    def _str_to_date(self):
-        if not self.date:
-            return
-        date = re.split("-", self.date)
-        self.date = datetime.date(int(date[0]), int(date[1]), int(date[2]))
+    def _str_to_date(self, date_str):
+        """Converts date str to a datetime object if in the following format: YYYY-MM-DD
 
-    def _str_to_time(self):
-        if not self.time:
-            return
+        :param str date_str: String representind the date
+        :return: datetime object if str formatted correctly, else None
+        """
+        date = datetime.datetime.strptime(date_str, "%Y-%m-%d")
+        return date if date else None
+
+    def _str_to_time(self, time_str):
+        """Converts time str to a datetime object if in the following format:
+            HH:MM:SS.FFFFFF or HH:MM:SS,FFF if reading from AT2 log
+
+        :param str time_str: String representing the time
+        :return: datetime object if str formatted correctly, else None
+        """
         if self.at2_log:
-            self.time = datetime.datetime.strptime(self.time, "%H:%M:%S,%f")
+            time = datetime.datetime.strptime(time_str, "%H:%M:%S,%f")
         else:
-            self.time = datetime.datetime.strptime(self.time, "%H:%M:%S.%f")
-
-        # time = re.split(":|;|\.|\,", self.time)
-        # self.time = datetime.time(int(time[0]), int(time[1]), int(time[2]), int(time[3].ljust(6, "0")))
+            time = datetime.datetime.strptime(time_str, "%H:%M:%S.%f")
+        return time if time else None
 
 
 class ValenceHeader(LogLine):

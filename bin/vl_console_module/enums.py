@@ -53,7 +53,7 @@ class HeaderType(Enum):
     __order__ = "VALENCE SUITE TEST_CASE STEP OTHER"
 
 
-class ValenceFields(Enum):
+class ValenceField(Enum):
     """Enums representing the different fields in Valence logs."""
 
     DATE = 'date'

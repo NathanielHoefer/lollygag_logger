@@ -78,11 +78,18 @@ class ValenceConsoleFormatter(LogFormatter):
         :return: Formatted logline as string | empty string | None if not to print
         """
 
-        # TODO - Fix find bug
-
         # Strip log line string and use it to create the log_line object
         line = unformatted_log_line.strip("\n\\n")
         log_line = self.log_line_cls(line, self._calc_max_len())
+
+        # Only print the logs with the desired substrings and highlight the substring.
+        # Note: If substring is within condensed portion or removed field, the log will still print,
+        # but without the highlighting.
+        if self.find_str:
+            if re.search(re.escape(self.find_str), log_line.original_line):
+                self._highlight_line(log_line)
+            else:
+                return None
 
         # Store last log time
         if log_line.standard_format and log_line.time:
@@ -106,10 +113,6 @@ class ValenceConsoleFormatter(LogFormatter):
 
         # Don't print if not in the current step
         if self.list_step and not self.listed_step_to_print:
-            return None
-
-        # Don't print if searching for string and log doesn't contain it
-        if self.find_str and not re.search(self.find_str, log_line.original_line):
             return None
 
         # Remove and condense fields in standard logs per format config file
@@ -179,6 +182,21 @@ class ValenceConsoleFormatter(LogFormatter):
             return KILL_SIGNAL
         else:
             return None
+
+    def _highlight_line(self, log_line):
+        """Highlights the find_str within the log_line."""
+
+        replace_str = ColorType.HIGHLIGHT.value + self.find_str + ColorType.END.value
+
+        if log_line.standard_format:
+            for field in ValenceField:
+                field_str = log_line.get_field_str(field)
+                if field_str is not None:
+                    field_str = field_str.replace(self.find_str, replace_str)
+                    log_line.set_field_str(field, field_str)
+        else:
+            log_line.original_line = log_line.original_line.replace(self.find_str, replace_str)
+        return log_line
 
     def _handle_header(self, log_line):
         """Determines if LogLine is part of header and handles the printing if so.

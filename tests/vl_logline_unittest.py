@@ -243,7 +243,7 @@ class RemoveGetSetFields(unittest.TestCase):
         log = "2017-10-30 19:13:32.209878 WARNING [valence:42] [MainProcess:MainThread] reco"
         line = LogLine(log)
         self.assertTrue(line.standard_format)
-        self.assertEqual(line.get_field_str(ValenceField.TYPE), "WARN")
+        self.assertEqual(line.get_field_str(ValenceField.TYPE), "WARN ")
         self.assertEqual(line.get_log_type(), LogType.WARNING)
 
     def test_set_source(self):
@@ -270,15 +270,15 @@ class CondenseColor(unittest.TestCase):
         line.condense_field(ValenceField.DETAILS, condense_len=10, collapse_dict=False,
                             collapse_list=False, collapse_len=5)
         self.assertTrue(line.standard_format)
-        self.assertEqual(line.get_field_str(ValenceField.DETAILS), "Sending...")
+        self.assertEqual(line.get_field_str(ValenceField.DETAILS), "Sending HT")
 
-    def test_condense_under_len(self):
-        log = '2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] Sending H'
+    def test_condense_above_len(self):
+        log = '2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] Sending HTT'
         line = LogLine(log)
         line.condense_field(ValenceField.DETAILS, condense_len=10, collapse_dict=False,
                             collapse_list=False, collapse_len=5)
         self.assertTrue(line.standard_format)
-        self.assertEqual(line.get_field_str(ValenceField.DETAILS), "Sending H")
+        self.assertEqual(line.get_field_str(ValenceField.DETAILS), "Sending...")
 
     def test_collapse_above_len(self):
         log = '2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] S{nding }T'
@@ -308,7 +308,7 @@ class CondenseColor(unittest.TestCase):
         log = '2017-10-30 19:13:32.209878 WARNING [valence:42] [MainProcess:MainThread] HTTP'
         line = LogLine(log)
         line.color_field(ValenceField.TYPE, ColorType.WARNING)
-        self.assertEqual(line.get_field_str(ValenceField.TYPE), ColorType.WARNING.value + "WARN" +
+        self.assertEqual(line.get_field_str(ValenceField.TYPE), ColorType.WARNING.value + "WARN " +
                          ColorType.END.value)
 
 

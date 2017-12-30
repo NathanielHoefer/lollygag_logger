@@ -275,7 +275,7 @@ class ValenceHeader(LogLine):
 
         if self.color:
             str_output = self.color.value + str_output + ColorType.END.value
-        return str_output
+        return str_output + ColorType.END.value
 
     def color_header(self, color):
         """Colors the header str using the specified ANSI escape color sequence.

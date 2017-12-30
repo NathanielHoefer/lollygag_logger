@@ -57,15 +57,13 @@ class HeaderParse(unittest.TestCase):
         self.assertEqual(header.test_instruction, "Completed Monitoring")
         self.assertEqual(header.test_number, 2)
 
-    # def test_store_header(self):
-    #
-    #     config_file = create_config_file()
-    #     vl_console_output = ValenceConsoleFormatter(ValenceLogLine, config_file,
-    #                                                 list_step="Test Case 0: Starting Test of "
-    #                                                           "TcBulkVolSFtoSFS3Swift")
-    #     with open("/home/nathaniel/Downloads/test.log", "r") as logfile:
-    #         logger = LollygagLogger(logfile, vl_console_output)
-    #         logger.run()
+    def test_store_header(self):
+
+        config_file = create_config_file()
+        vl_console_output = ValenceConsoleFormatter(ValenceLogLine, config_file)
+        with open("/home/nathaniel/Downloads/test.log", "r") as logfile:
+            logger = LollygagLogger(logfile, vl_console_output)
+            logger.run()
 
 
 if __name__ == "__main__":

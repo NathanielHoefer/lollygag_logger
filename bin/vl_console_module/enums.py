@@ -19,9 +19,10 @@ class ColorType(Enum):
     STEP = '\033[92m'       # Green
     TITLE = '\033[93m'      # Bright Yellow
     OTHER = '\033[0m'       # None
+    HIGHLIGHT = '\033[101m' # Bright Red Background
     END = '\033[0m'
 
-    __order__ = "DEBUG INFO WARNING ERROR STEP TITLE OTHER END"
+    __order__ = "DEBUG INFO WARNING ERROR STEP TITLE OTHER HIGHLIGHT END"
 
 
 class LogType(Enum):

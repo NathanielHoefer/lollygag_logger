@@ -42,6 +42,7 @@ Improvements to implement:
 
 import argparse
 import subprocess
+import re
 
 import requests
 from requests import auth

@@ -100,8 +100,10 @@ def condense(str_line, max_len):
         esc_seq_num += len(esc_seq)
     max_len += esc_seq_num
 
+    cont_str = "..."
+
     if len(str_line) > max_len:
-        return "".join([str_line[:max_len - 3], "..."])
+        return "".join([str_line[:max_len - 3], cont_str])
     else:
         return str_line
 

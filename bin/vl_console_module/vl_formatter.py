@@ -97,7 +97,12 @@ class ValenceConsoleFormatter(LogFormatter):
             if formatted_header is True:
                 return None
             else:
-                return formatted_header
+                log_line = formatted_header
+
+        # Skip line if type is marked to not display
+        log_type = log_line.get_log_type().name.lower()
+        if not helpers.str_to_bool(self.sect_display_log_types[log_type]):
+            return None
 
         # Don't print if not in the current step
         if self.list_step and not self.listed_step_to_print:
@@ -107,20 +112,18 @@ class ValenceConsoleFormatter(LogFormatter):
         if self.find_str and not re.search(self.find_str, log_line.original_line):
             return None
 
-        # Skip line if type is marked to not display
-        log_type = log_line.get_log_type().name.lower()
-        if not helpers.str_to_bool(self.sect_display_log_types[log_type]):
-            return None
-
         # Remove and condense fields in standard logs per format config file
-        if log_line.standard_format:
+        if type(log_line) == self.log_line_cls and log_line.standard_format:
             log_line = self._remove_fields(log_line)
             log_line = self._condense_fields(log_line)
 
         # Add color to the type field and convert log line to string
         if helpers.str_to_bool(self.format_config[COLORS]["use_colors"]):
             color = ColorType[log_line.get_log_type().name]
-            log_line.color_field(ValenceField.TYPE, color)
+            if type(log_line) == self.log_line_cls:
+                log_line.color_field(ValenceField.TYPE, color)
+            elif type(log_line) == Header:
+                log_line.color_header(color)
 
         return log_line
 
@@ -194,7 +197,7 @@ class ValenceConsoleFormatter(LogFormatter):
             # Check if header matches step to list
             if header_line.original_line == self.list_step:
                 self.listed_step_to_print = True
-                self.listed_step_type = header_line.type
+                self.listed_step_type = header_line.header_type
 
             # Return without printing if a specified step to print and this isn't part of it
             if self.list_step and not self.listed_step_to_print:
@@ -203,7 +206,7 @@ class ValenceConsoleFormatter(LogFormatter):
             # Uncheck 'selected step' flag once the next step is hit if a step is selected or the next
             # test case step is hit if test case is selected.
             if self.listed_step_type:
-                if self.listed_step_type.value >= header_line.type.value \
+                if self.listed_step_type.value >= header_line.header_type.value \
                         and header_line.original_line != self.list_step \
                         and header_line.original_line != "":
                     self.listed_step_to_print = False
@@ -225,7 +228,6 @@ class ValenceConsoleFormatter(LogFormatter):
         header loglines use as the borders and the header details.
         """
         formatted_header = None
-        curr_type = None
         for header_type, is_waiting in self.waiting_for_header.items():
 
             # First border of the header
@@ -234,9 +236,7 @@ class ValenceConsoleFormatter(LogFormatter):
 
             # Details of border
             elif log_type == LogType.OTHER and is_waiting:
-                color = ColorType[header_type.name]
-                formatted_header = Header(log_line.original_line, self._calc_max_len(), color)
-                curr_type = header_type
+                formatted_header = Header(log_line.original_line, self._calc_max_len())
                 break
 
             # Last border of header
@@ -244,14 +244,8 @@ class ValenceConsoleFormatter(LogFormatter):
                 self.waiting_for_header[header_type] = False
             else:
                 self.waiting_for_header[header_type] = False
-        if formatted_header and helpers.str_to_bool(self.sect_display_log_types[curr_type.name.lower()]):
 
-            # Check if finding string
-            if self.find_str and not re.search(self.find_str, formatted_header.original_line):
-                return None
-            return formatted_header
-        else:
-            return None
+        return formatted_header if formatted_header else None
 
     def _remove_fields(self, log_line):
         """Remove field from line if marked not to display.

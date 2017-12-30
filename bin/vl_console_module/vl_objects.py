@@ -258,15 +258,16 @@ class ValenceHeader(LogLine):
     :ivar int test_number: Step or test case number if there is one.
     """
 
-    def __init__(self, original_line="", max_len=105, color=None):
+    def __init__(self, original_line="", max_len=105):
         super(ValenceHeader, self).__init__(original_line)
         self.max_len = max_len
-        self.color = color
+        self.color = None
+        self.is_colored = False
         self._default_vals()
         self._tokenize_line(original_line)
 
     def __str__(self):
-        border = "="*self.max_len if self.type.value <= 3 else "-"*self.max_len
+        border = "="*self.max_len if self.log_type == LogType.TITLE else "-" * self.max_len
         if not self.original_line:
             str_output = ""
         else:
@@ -276,9 +277,21 @@ class ValenceHeader(LogLine):
             str_output = self.color.value + str_output + ColorType.END.value
         return str_output
 
+    def color_header(self, color):
+        """Colors the header str using the specified ANSI escape color sequence.
+
+        :param ColorType color: Color to be used.
+        """
+        self.color = color
+
+    def get_log_type(self):
+        """Returns the LogType."""
+        return self.log_type
+
     def _default_vals(self):
         """Set all field to default values."""
-        self.type = HeaderType.VALENCE
+        self.header_type = HeaderType.VALENCE
+        self.log_type = LogType.TITLE
         self.test_name = None
         self.test_info = None
         self.test_instruction = None
@@ -302,14 +315,17 @@ class ValenceHeader(LogLine):
         self.test_instruction = split[1].strip() if len(split) == 2 else None
 
         if self.test_info == "Test Suite":
-            self.type = HeaderType.SUITE
+            self.header_type = HeaderType.SUITE
+            self.log_type = LogType.TITLE
             self.test_name = re.search("Ts\w*", self.original_line).group()
         elif re.match("^Test Case \d+$", self.test_info):
-            self.type = HeaderType.TEST_CASE
+            self.header_type = HeaderType.TEST_CASE
+            self.log_type = LogType.TITLE
             self.test_name = re.search("Tc\w*", self.original_line).group()
             self.test_number = int(re.search("\d+", self.test_info).group())
         elif re.search("Step \d+", self.test_info):
-            self.type = HeaderType.STEP
+            self.header_type = HeaderType.STEP
+            self.log_type = LogType.STEP
             self.test_name = re.search("Tc\w*", self.original_line).group()
             self.test_number = int(re.search("\d+", self.test_info).group())
         else:

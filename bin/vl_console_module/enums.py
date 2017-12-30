@@ -3,7 +3,7 @@
 Enum Classes
 =========================================================================================================
 by Nathaniel Hoefer
-Last Updated: 12/26/2017
+Last Updated: 12/30/2017
 """
 
 from enum import Enum

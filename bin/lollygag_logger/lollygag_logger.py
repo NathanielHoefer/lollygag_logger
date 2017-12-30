@@ -3,17 +3,15 @@
 Lollygag Logger
 =========================================================================================================
 by Nathaniel Hoefer
-Contact: nathaniel.hoefer@netapp.com
-Version: 0.5
-Last Updated: 11/14/2017
+Version: 1.0
+Last Updated: 12/30/2017
 
-TODO - Update this description
+The core logging tool to format various logs. This is accomplished by acting as a framework using
+custom modules that are extended from the LogLine and LogFormatter classes. The logs then only need a
+line-by-line stream that is fed in, then all of the formatting is handled by the log_formatter.
 
 =========================================================================================================
 """
-
-# TODO - Update file description
-
 from abc import ABCMeta, abstractmethod
 from threading import Thread
 import Queue
@@ -23,7 +21,7 @@ KILL_SIGNAL = "Stop command issued. Reading and Formatting Logs Interrupted and 
 
 
 class LollygagLogger:
-    """Primary class that reads log lines individually from a file handle and handles formatting those
+    """Primary class that reads log lines individually from a stream handle and handles formatting those
     lines based on the LogLine class and LogFormatter used.
     """
 
@@ -35,6 +33,7 @@ class LollygagLogger:
             passed LogLine.
         :ivar Queue queue: The queue that allows for communication between the read and format threads
         :ivar bool read_complete: Identifies whether the read thread is completed reading.
+        :ivar bool kill_logging: Identifies whether a kill signal needs to be sent.
         """
 
         self.stream_handle = stream_handle
@@ -90,7 +89,7 @@ class LogFormatter:
 
     @abstractmethod
     def format(self, log_line):
-        """Subclasses must handle an unformatted log line string."""
+        """Subclasses must handle an unformatted log line string and return a LogLine object."""
         pass
 
     @abstractmethod

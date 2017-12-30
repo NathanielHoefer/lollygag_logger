@@ -3,7 +3,7 @@
 Helper Functions
 =========================================================================================================
 by Nathaniel Hoefer
-Last Updated: 12/18/2017
+Last Updated: 12/30/2017
 """
 
 import copy
@@ -15,7 +15,7 @@ VALID_TRUE_INPUT = ("true", "yes", "t", "y", "1")
 
 
 def str_to_bool(str_bool_val):
-    """Evaluates bool value of string input based on LogFormatter.VALID_TRUE_INPUT"""
+    """Evaluates bool value of string input based on VALID_TRUE_INPUT"""
     return str_bool_val.lower() in VALID_TRUE_INPUT
 
 
@@ -26,15 +26,12 @@ def collapse_struct(field_str, data_struct, collapse_len=30):
     and indicated by an ellipse. Ex: [abcdefghijklmnopqrstuvwxyzab] -> [abcdefghijklmnopqrstuvwxy...]
 
     Currently only minimizes the out-most structure while ignoring the inner structures. Will look
-    to fix this in the future if time allows.
-
+    to fix this in the future if time allows. Note: There may be a bug with collapsing the wrong dicts.
     :param str field_str: The log line element str containing the data structure
     :param str data_struct: "list" or "dict" indicating what data structure to collapse
     :param int collapse_len: The max length of the structures
     :return: String of the element with the specified collapsed structure.
     """
-
-    # TODO - Fix collapse
 
     # Determine struct entered
     if data_struct == "dict":
@@ -87,7 +84,6 @@ def condense(str_line, max_len):
     """Condenses the string if it is greater than the max length, appending ellipses.
 
     Does not count \033 escape sequences towards line length.
-
     :param str str_line: Line to be condensed
     :param int max_len: The maximum length of the line
     """
@@ -109,14 +105,18 @@ def condense(str_line, max_len):
 
 
 def color_by_type(log_type, log_str):
-    """Returns the type field with ANSI coloring format."""
+    """Returns the type field with ANSI coloring format.
+
+    :param LogType log_type: Enum of the log type which identifies the color
+    :param str log_str: The string to be colored.
+    :return: String colored using color value based on type.
+    """
 
     return ColorType[log_type.name].value + log_str + ColorType.END.value
 
 
 def print_variable_list(lst_input, funct):
     """Recursively print list from beginning to end executing the given function on each element.
-
 
     Does not affect original list.
     Note: funct must be a function that accepts an object for the first argument, and an indent depth as

@@ -3,10 +3,8 @@
 Valence Config File Methods and Constants
 =========================================================================================================
 by Nathaniel Hoefer
-Last Updated: 12/2/2017
+Last Updated: 12/30/2017
 """
-
-# TODO - Update file description
 
 from collections import OrderedDict
 import configparser
@@ -79,13 +77,13 @@ def create_config_file(file_directory=""):
     # Various length options
     config_fields[LENGTHS_SECT] = [
         ("use_console_len",     "True"),    # Use console width for max log line length
-        ("max_line_len",        "200"),     # Max length of log line to be printed
+        ("max_line_len",        "200"),     # Max length to be printed if console width is not selected
         ("condensed_field_len", "300"),     # This value includes the "..."
         ("collapsed_struct_len", "30")]     # This value includes the "[" and "...]"
 
+    # Color options
     config_fields[COLORS] = [
-        ("use_colors", "True")
-    ]
+        ("use_colors", "True")]
 
     # Create and add sections and options to configparser object
     format_config = configparser.ConfigParser()

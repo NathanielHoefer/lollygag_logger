@@ -18,7 +18,7 @@ import re
 from bin.lollygag_logger import LogFormatter
 from bin.lollygag_logger.lollygag_logger import KILL_SIGNAL
 from vl_objects import ValenceHeader as Header
-from enums import LogType, ValenceField, ColorType
+from enums import LogType, ValenceField, ColorType, ListingStatus
 from vl_config_file import *
 
 WRITE_UPDATE_INCREMENT = 10
@@ -60,7 +60,7 @@ class ValenceConsoleFormatter(LogFormatter):
         # List step variables
         self.listed_step_to_print = False
         self.listed_step_type = None
-        self.listed_steps_status = "Searching"  # "Searching" | "Processing" | "Completed"
+        self.listed_steps_status = ListingStatus.SEARCHING  # "Searching" | "Processing" | "Completed"
         self.searching_text_printed = False
 
     def format(self, unformatted_log_line):
@@ -144,7 +144,7 @@ class ValenceConsoleFormatter(LogFormatter):
             sys.stdout.flush()
 
         # Print searching message until step has been found
-        if self.listed_steps_status == "Searching":
+        if self.listed_steps_status == ListingStatus.SEARCHING:
 
             search_text = ""
             if self.find_str:
@@ -162,7 +162,7 @@ class ValenceConsoleFormatter(LogFormatter):
         if formatted_log_line is None:
             return None
         else:
-            self.listed_steps_status = "Processing"
+            self.listed_steps_status = ListingStatus.PROCESSING
 
         # Check to see if multiple blank lines are being printed
         if formatted_log_line.original_line == "" and not self.duplicate_blank_line:
@@ -175,7 +175,7 @@ class ValenceConsoleFormatter(LogFormatter):
         self._print_line(formatted_log_line)
 
         # Kill program when listed steps have been processed.
-        if self.listed_steps_status == "Completed":
+        if self.listed_steps_status == ListingStatus.COMPLETED:
             return KILL_SIGNAL
         else:
             return None
@@ -210,7 +210,7 @@ class ValenceConsoleFormatter(LogFormatter):
                         and header_line.original_line != self.list_step \
                         and header_line.original_line != "":
                     self.listed_step_to_print = False
-                    self.listed_steps_status = "Completed"
+                    self.listed_steps_status = ListingStatus.COMPLETED
                     return True
             return header_line
 

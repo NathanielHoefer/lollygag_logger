@@ -64,3 +64,11 @@ class ValenceField(Enum):
     DETAILS = 'details'
 
     __order__ = 'DATE TIME TYPE SOURCE THREAD DETAILS'
+
+
+class ListingStatus(Enum):
+    """Enums representing the various listing statuses."""
+
+    SEARCHING = 1
+    PROCESSING = 2
+    COMPLETED = 3

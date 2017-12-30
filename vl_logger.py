@@ -2,48 +2,85 @@
 
 """
 =========================================================================================================
-Lollygag Logger
+Valence Lollygag Logger
 =========================================================================================================
 by Nathaniel Hoefer
-Contact: nathaniel.hoefer@netapp.com
-Version: 0.5
-Last Updated: 11/14/2017
+Version: 1.0
+Last Updated: 12/30/2017
 
-This is the first iteration of a script to present a more legible output from the vl suite execution.
+This is a tool specifically designed for formatting Valence logs in a way that makes them more legible
+and allows for customized viewing. It is completely unobtrusive in the sense that it doesn't directly
+affect any of the artifacts or testing that is being produced. This is accomplished by capturing each
+log line as it is being printed to the console or read, and runs it through the formatter. Because of
+this line-by-line formatting, a number of sources can be read from as explained below. When reading
+from a file or an AT2 Task Step Instance, you may also write the output to a file, list a specific
+test case step, as well as print and highlight logs with a specified string.
 
-Currently, this is capable of reading from a log file by using the -f argument to specify a log file to
-read from. This method will also generate a format config file during the initial run in the same
-location as the log file. This format config file allows you - the user - to specify how you would like
-the output to be formatted.
+Read from the 'vl run' command
+    This can be accomplished by running this tool in place of the 'vl run' command - listing the suite
+    path to begin executing the suite. To stop the test, simply use the keyboard interrupt Ctrl-C as you
+    would normally.
 
-Another option is to run this script using the -vl argument, passing in the suite path just as though
-you are running the "vl run suite.path.etc" command. You will still have to execute this from within the
-same directory as if you were executing the command by itself. The big difference is this too generates
-a format config file, that you can change at any point during your test to see future logs in the new
-format. This format config file will be generated in your current working directory.
+    Ex: python vl_logger path.to.suite
 
-Script execution examples:
-python lollygag_logger.py -f test.log
-python lollygag_logger.py -vl suite.path.etc
+    Note: the write, find, and list features are not currently available when running a test.
 
-If you experience any issues with this script (which there stands a good possibility) or you would like
-suggest an improvement, you can reach me at my email listed above.
+Read from a log file
+    If you would like to format any artifact log files, simply enter the log path and mark the '-r'
+    flag to print the file to the screen.
 
+    Ex: python vl_logger ~/test.log -r
 
-Improvements to implement:
- - Split reading from a file handle and formatting into two separate processes in a producer-consumer
- model.
- - Treat reading from file and executing vl process as both file handles to be passed into a single funct
+Pull from an AT2 Task Step Instance
+    You may also format an AT2 Task Step Instance by its ID then mark the '-at2' flag. The username
+    and password will need to be manually entered into the .ini file. While not yet able to continuously
+    update the logs if the test is currently running, it can still format the current state of the test.
+
+    Ex: python vl_logger 652271542 -at2
+
+The settings are accessed through the .vl_logger.ini file which is created on your first run of the
+logger. By default, it is stored in your home directory, but you may specify another directory by
+using the '-ini' argument. Currently, the customization is as follows found within the .ini file:
+ - hide/view specific log types
+ - hide/view
+ - specific log fields
+ - condense fields
+ - condense logs to a specified length or the console width
+ - collapse dictionaries and lists
+ - color the log type if displayed
+
+Other Features
+ - Write:
+    Instead of printing the formatted logs to the console, they will be written to the specified
+    file including ACSII color additions.
+
+    Ex: python vl_logger ~/test.log -r -w ~/test_formatted.log
+
+ - List:
+    Only prints the logs found within a specific test header. This includes anything that is found within
+    that header. For example, if you wanted to print the logs found within 'Test Case 0: Starting Test
+    ...' then all of the associated steps will also be printed. Just keep in mind that the header
+    description (the part in between all of the '-' or '=') needs to be copied exactly.
+
+    Ex: python vl_logger ~/test.log -r -l 'Test Case 0: Starting Test of Test1'
+    Ex: python vl_logger ~/test.log -r -l 'Starting Step 0 for Test1: Doing Stuff'
+    Ex: python vl_logger ~/test.log -r -l 'Test Suite: Starting Setup of Suite1'
+
+ - Find:
+    By specifying a string to look for, only logs containing the specified string will be printed. If
+    the string is visible after being formatted, then it will also be highlighted. One thing to note
+    is that only the logs that are already set to be shown will be evaluated. As an example,
+    if debug logs are set to be hidden, they will not be displayed even if they contain the specified
+    search string. However, if the the field containing the string is hidden but the rest of the log line
+    is set to print, then the log line will be printed - indicating a match.
+
+    Ex: python vl_logger ~/test.log -r -f '2017-10-30'
 
 =========================================================================================================
 """
 
-# TODO - Update file description
-
 import argparse
 import subprocess
-import re
-
 import requests
 from requests import auth
 
@@ -56,7 +93,8 @@ from bin.vl_console_module import ValenceLogLine as LogLine
 def args():
     # Descriptions for arg parse
     program = "Valence Lollygag Logger"
-    description = "Formats Valence Logs based on custom user preferences to assist in debugging. This " \
+    description = "A non-obtrusive tool that captures Valence Logs being printed to the screen and " \
+                  "formats them based on custom user preferences to assist in debugging. This " \
                   "tool can format logs from the 'vl run' command, stored log file, or an at2 task " \
                   "step instance. When formatting logs from the 'vl run' command, the tool will " \
                   "execute the command directly and the output will be in real time."
@@ -67,12 +105,12 @@ def args():
     file_desc = "Flag indicating to read from log file specified in the vl_source parameter."
     at2_desc = "Flag indicating to fetch AT2 Task Instance logs from the specified AT2 Task Step " \
                "Instance ID specified in the vl_source parameter."
-    find_desc = "Highlight specified string found in the logs."
+    find_desc = "Highlight specified string found in the logs. Not functional when running the 'vl " \
+                "run' command."
     list_desc = "List specified test case or step. Be sure to copy the entire test case or step " \
                 "description --excluding the borders and 'Expect: Pass'. Also remember to use " \
-                "quotation " \
-                "marks."
-    write_desc = "Write log output to specified file."
+                "quotation marks. Not functional when running the 'vl run' command."
+    write_desc = "Write log output to specified file. Not functional when running the 'vl run' command."
     ini_desc = "Directory to look for format .ini file."
 
     # Argument setup and parsing
@@ -99,18 +137,15 @@ if __name__ == '__main__':
                 write_file.write("")
 
         logger = None
-        vl_console_output = Formatter(log_line_cls=LogLine,
-                                      format_config=config,
-                                      ini_filepath=args.ini_path,
-                                      find_str=args.find_str,
-                                      list_step=args.list_step,
-                                      write_path=args.write_path)
 
+        # 'vl run' Case
         if not args.read and not args.at2:
-            # Begin vl run subprocess
+            # Currently not implementing find_str, list_step, or write_path
+            vl_console_output = Formatter(log_line_cls=LogLine,
+                                          format_config=config,
+                                          ini_filepath=args.ini_path)
             proc = subprocess.Popen(["python", "vl", "run", args.vl_source], stdout=subprocess.PIPE,
                                     bufsize=1, universal_newlines=False)
-
             try:
                 logger = LollygagLogger(iter(proc.stdout.readline, b''), vl_console_output)
                 logger.run()
@@ -122,7 +157,14 @@ if __name__ == '__main__':
                 print "Keyboard Interrupt: Exiting Logger"
                 exit(0)
 
+        # Reading from a file
         elif args.read:
+            vl_console_output = Formatter(log_line_cls=LogLine,
+                                          format_config=config,
+                                          ini_filepath=args.ini_path,
+                                          find_str=args.find_str,
+                                          list_step=args.list_step,
+                                          write_path=args.write_path)
             try:
                 arg_path = args.vl_source
                 with open(arg_path, "r") as logfile:
@@ -133,8 +175,14 @@ if __name__ == '__main__':
                 print "Keyboard Interrupt: Exiting Logger"
                 exit(0)
 
+        # Pulling from AT2 Task Step Instance
         elif args.at2:
-
+            vl_console_output = Formatter(log_line_cls=LogLine,
+                                          format_config=config,
+                                          ini_filepath=args.ini_path,
+                                          find_str=args.find_str,
+                                          list_step=args.list_step,
+                                          write_path=args.write_path)
             AT2_USER = config[AT2_TASKINSTANCE_CREDENTIALS]["username"]
             AT2_PASS = config[AT2_TASKINSTANCE_CREDENTIALS]["password"]
 
@@ -161,6 +209,7 @@ if __name__ == '__main__':
                 resp.close()
             print "AT2 option selected. TaskID: {0}.".format(args.vl_source)
 
+        # Invalid arguments
         else:
             print "Please pass valid arguments"
             exit(0)

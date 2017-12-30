@@ -1,10 +1,11 @@
 """
 =========================================================================================================
-Valence Config File Methods and Constants
+Valence LogLine and Header Classes
 =========================================================================================================
 by Nathaniel Hoefer
-Last Updated: 12/2/2017
+Last Updated: 12/30/2017
 """
+
 import datetime
 import re
 from bin.lollygag_logger import LogLine
@@ -13,19 +14,30 @@ import helpers
 
 
 class ValenceLogLine(LogLine):
-    """Stores log line into its various fields per the vl logging.
+    """Stores log line into its various fields per the vl logging format.
 
     Lines with all fields matching with the exception of the details token missing will still be
     considered in standard format. If any other field doesn't match, all of the fields are returned
     to normal, and the type is considered OTHER with the original line being retained.
 
-    # Since date, time, and type are represented objects, the field contains a list where
+    Since date, time, and type are represented objects, the field contains a list where the first
+    index is the object, and the second index is the formatted string representation. This is to allow
+    for changes such as colors can be retained.
 
-    STEP and TITLE types are unique in that the line is stored in the details
+    A field is identified to be removed by setting that field value to None. Any fields marked as None
+    will be disregarded when converting to string.
 
-    :cvar list LOG_LEVELS: The unique log levels specified by Valence
-    :cvar list FIELDS: The unique sections found within a Valence log in standard format
-    :cvar int TOKEN_COUNT: The number of fields
+    :ivar list date: List containing the date of the log - [datetime object, date str]
+    :ivar list time: List containing the time of the log - [datetime object, time str]
+    :ivar list type: List containing the type of the log - [LogType, type str]
+    :ivar str source: Source field of the log line.
+    :ivar str thread: Thread field of the log line.
+    :ivar str details: Details field of the log line, found at end of the log.
+    :ivar bool standard_format: True if log line matches the following format:
+        date time type source thread [details]
+        Ex: 2017-10-30 19:13:32.208116 DEBUG [res.core.det:636] [MainProcess:MainThread] Sending...
+    :ivar bool at2_log: Since at2 logs vary slightly from Valence, this flag is set if it matches the
+        at2 formatting
     """
 
     VALENCE_TOKEN_COUNT = len(ValenceField)
@@ -46,83 +58,6 @@ class ValenceLogLine(LogLine):
         else:
             str_output = self.original_line
         return helpers.condense(str_output, self.max_len)
-
-    def set_field_str(self, field, value):
-        """Sets the string value of a field
-
-        Note: Currently does not change the datetime objects or ValenceField enum. They need to be set
-        individually using self.time[0] = ...
-
-        :param ValenceField field: The field to be set
-        :param str value: The string that the field will be set to. Can also be None.
-        """
-
-        # Change str value in field list
-        if field == ValenceField.DATE or field == ValenceField.TIME or field == ValenceField.TYPE:
-            field_list = getattr(self, field.value)
-            field_list[1] = value
-            setattr(self, field.value, field_list)
-        else:
-            setattr(self, field.value, value)
-
-    def get_field_str(self, field):
-        """Returns the string of any of the Valence fields.
-
-        :param ValenceField field: The field to retrieve string
-        :return: The string value in that field or None if that is the current value assigned.
-        """
-        field_value = getattr(self, field.value)
-        if field_value is None:
-            return None
-
-        if field == ValenceField.DATE or field == ValenceField.TIME or field == ValenceField.TYPE:
-            field_list = field_value
-            return field_list[1]
-        else:
-            return field_value
-
-    def get_log_type(self):
-        """Returns the LogType."""
-        return self.type[0] if self.type else None
-
-    def color_field(self, field, color):
-        """Colors the field str using the specified ANSI escape color sequence."""
-
-        field_value = self.get_field_str(field)
-        if field_value is not None:
-            field_value = color.value + field_value + ColorType.END.value
-            self.set_field_str(field, field_value)
-
-    def remove_field(self, field):
-        """Set the specified field to None.
-
-        :param ValenceField field: Field to be set to None
-        """
-        setattr(self, field.value, None)
-
-    def condense_field(self, field, condense_len=50, collapse_dict=False, collapse_list=False,
-                       collapse_len=30):
-        """Condenses the field to the condense length, and collapses lists and dictionaries that
-        exceed a given length.
-
-        :param ValenceField field: The LogLine field str to be condensed.
-        :param int condense_len: The max length of the field
-        :param bool collapse_dict: If true, collapse dict to the specified collapse_len
-        :param bool collapse_list: If true, collapse list to the specified collapse_len
-        :param int collapse_len: The max length of the structures
-        """
-        current_field_str = getattr(self, field.value)
-        if current_field_str is None:
-            return
-
-        # Collapse dicts or lists if specified
-        if collapse_dict:
-            current_field_str = helpers.collapse_struct(current_field_str, "dict", collapse_len)
-        if collapse_list:
-            current_field_str = helpers.collapse_struct(current_field_str, "list", collapse_len)
-
-        # Condense length of element if it exceeds specified length
-        setattr(self, field.value, helpers.condense(current_field_str, condense_len))
 
     def _default_vals(self):
         """Set all field to default values."""
@@ -217,6 +152,82 @@ class ValenceLogLine(LogLine):
                     return
         self.standard_format = True
 
+    def set_field_str(self, field, value):
+        """Sets the string value of a field
+
+        Note: Currently does not change the datetime objects or ValenceField enum. They need to be set
+        individually using self.time[0] = ...
+
+        :param ValenceField field: The field to be set
+        :param str value: The string that the field will be set to. Can also be None.
+        """
+        # Change str value in field list
+        if field == ValenceField.DATE or field == ValenceField.TIME or field == ValenceField.TYPE:
+            field_list = getattr(self, field.value)
+            field_list[1] = value
+            setattr(self, field.value, field_list)
+        else:
+            setattr(self, field.value, value)
+
+    def get_field_str(self, field):
+        """Returns the string of any of the Valence fields.
+
+        :param ValenceField field: The field to retrieve string
+        :return: The string value in that field or None if that is the current value assigned.
+        """
+        field_value = getattr(self, field.value)
+        if field_value is None:
+            return None
+
+        if field == ValenceField.DATE or field == ValenceField.TIME or field == ValenceField.TYPE:
+            field_list = field_value
+            return field_list[1]
+        else:
+            return field_value
+
+    def get_log_type(self):
+        """Returns the LogType."""
+        return self.type[0] if self.type else None
+
+    def color_field(self, field, color):
+        """Colors the field str using the specified ANSI escape color sequence."""
+
+        field_value = self.get_field_str(field)
+        if field_value is not None:
+            field_value = color.value + field_value + ColorType.END.value
+            self.set_field_str(field, field_value)
+
+    def remove_field(self, field):
+        """Set the specified field to None.
+
+        :param ValenceField field: Field to be set to None
+        """
+        setattr(self, field.value, None)
+
+    def condense_field(self, field, condense_len=50, collapse_dict=False, collapse_list=False,
+                       collapse_len=30):
+        """Condenses the field to the condense length, and collapses lists and dictionaries that
+        exceed a given length.
+
+        :param ValenceField field: The LogLine field str to be condensed.
+        :param int condense_len: The max length of the field
+        :param bool collapse_dict: If true, collapse dict to the specified collapse_len
+        :param bool collapse_list: If true, collapse list to the specified collapse_len
+        :param int collapse_len: The max length of the structures
+        """
+        current_field_str = getattr(self, field.value)
+        if current_field_str is None:
+            return
+
+        # Collapse dicts or lists if specified
+        if collapse_dict:
+            current_field_str = helpers.collapse_struct(current_field_str, "dict", collapse_len)
+        if collapse_list:
+            current_field_str = helpers.collapse_struct(current_field_str, "list", collapse_len)
+
+        # Condense length of element if it exceeds specified length
+        setattr(self, field.value, helpers.condense(current_field_str, condense_len))
+
     def _list_all_field_strings(self):
         """Returns list of all field values as strings. If a value is None, then it has been removed."""
         return [self.get_field_str(field) for field in ValenceField]
@@ -224,7 +235,7 @@ class ValenceLogLine(LogLine):
     def _str_to_date(self, date_str):
         """Converts date str to a datetime object if in the following format: YYYY-MM-DD
 
-        :param str date_str: String representind the date
+        :param str date_str: String represented the date
         :return: datetime object if str formatted correctly, else None
         """
         date = datetime.datetime.strptime(date_str, "%Y-%m-%d")
@@ -252,6 +263,7 @@ class ValenceHeader(LogLine):
 
     :ivar str original_line: The line as it was entered
     :ivar HeaderType type: Type of header
+    :ivar LogType log_type: Type of log
     :ivar str test_name: Name of the test case or suite following the 'Ts' or 'Tc' format.
     :ivar str test_info: Information prior to the colon
     :ivar str test_instruction: Information after the colon
@@ -277,17 +289,6 @@ class ValenceHeader(LogLine):
             str_output = self.color.value + str_output + ColorType.END.value
         return str_output + ColorType.END.value
 
-    def color_header(self, color):
-        """Colors the header str using the specified ANSI escape color sequence.
-
-        :param ColorType color: Color to be used.
-        """
-        self.color = color
-
-    def get_log_type(self):
-        """Returns the LogType."""
-        return self.log_type
-
     def _default_vals(self):
         """Set all field to default values."""
         self.header_type = HeaderType.VALENCE
@@ -296,8 +297,6 @@ class ValenceHeader(LogLine):
         self.test_info = None
         self.test_instruction = None
         self.test_number = 0
-        self.start_time = None
-        self.end_time = None
 
     def _tokenize_line(self, input_str):
         """Splits the input into the various tokens based on whether the header is a title or a step.
@@ -331,3 +330,14 @@ class ValenceHeader(LogLine):
         else:
             self._default_vals()
             return
+
+    def color_header(self, color):
+        """Colors the header str using the specified ANSI escape color sequence.
+
+        :param ColorType color: Color to be used.
+        """
+        self.color = color
+
+    def get_log_type(self):
+        """Returns the LogType."""
+        return self.log_type

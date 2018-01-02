@@ -14,9 +14,10 @@ class ColorType(Enum):
 
     DEBUG = '\033[35m'      # Purple
     INFO = '\033[34m'       # Blue
+    NOTICE = '\033[32m'     # Green
     WARNING = '\033[33m'    # Yellow
     ERROR = '\033[31m'      # Red
-    STEP = '\033[92m'       # Green
+    STEP = '\033[92m'       # Bright Green
     TITLE = '\033[93m'      # Bright Yellow
     OTHER = '\033[0m'       # None
     HIGHLIGHT = '\033[101m' # Bright Red Background
@@ -30,6 +31,7 @@ class LogType(Enum):
 
     DEBUG = 'DEBUG'
     INFO = 'INFO'
+    NOTICE = 'NOTE'
     WARNING = 'WARN'
     ERROR = 'ERROR'
     STEP = 'STEP'

@@ -43,6 +43,7 @@ def create_config_file(file_directory=""):
     config_fields[DISPLAY_LOG_TYPES_SECT] = [
         ("debug",   "False"),
         ("info",    "True"),
+        ("notice",  "True"),
         ("step",    "True"),
         ("title",   "True"),
         ("warning", "True"),

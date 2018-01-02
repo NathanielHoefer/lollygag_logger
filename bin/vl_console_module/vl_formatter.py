@@ -3,14 +3,8 @@
 Valence Console Formatter Class
 =========================================================================================================
 by Nathaniel Hoefer
-Last Updated: 12/2/2017
-
-TODO - Update this description
-
-=========================================================================================================
+Last Updated: 12/30/2017
 """
-
-# TODO - Update file description
 
 import sys
 import helpers
@@ -25,10 +19,21 @@ WRITE_UPDATE_INCREMENT = 10
 
 
 class ValenceConsoleFormatter(LogFormatter):
-    """Class containing log line format functions.
+    """Class containing log line format functions to be passed into the LollygagLogger.
+
+    This class uses a LogLine object to format it and then print it to the console or write it to a
+    file. Settings are specified via a .ini file which include the following:
+     - which log types to display
+     - which log fields to display
+     - which log fields to condense
+     - whether to collapse lists or dicts
+     - whether to use console length for max log line size, or a specified size
+     - the condensed field length and collapsed struct length
+     - whether to use colors
 
     :ivar log_line_cls: the LogLine class used to parse the unformatted log lines
     :ivar format_config: the configparser that contains all of the user options
+    :ivar ini_filepath: the directory of where to look for the .ini config file.
     :ivar find_str: String to highlight if contained in line.
     :ivar list_step: The step or test case to be printed. For test case, match 'Test Case #'. If
         specifying step, list full name out as seen in logs. If empty, all logs will be printed.
@@ -64,19 +69,22 @@ class ValenceConsoleFormatter(LogFormatter):
         self.searching_text_printed = False
 
     def format(self, unformatted_log_line):
-        """Prints the formatted log line to the console based on the format config file options.
+        """Creates and formats the LogLine object, handling any formatting options.
 
+        Current order of formatting:
         1. Create LogLine object
-        2. Store last log time
-        3. Update format_config if it has been updated
-        4. Construct and print header
-        5. Skip line if not marked for print
-        6. Remove and condense fields in standard format
-        7. Add color to type field
-        8. Condense entire line if beyond max and print
+        2. Check to see if finding string
+        3. Store last log time
+        4. Update format_config if it has been updated
+        5. Construct header object
+        6. Skip line if not marked for print
+        7. Remove and condense fields in standard format
+        8. Add color to type field
 
-        :return: Formatted logline as string | empty string | None if not to print
+        :return: Formatted ValenceLogLine | Formatted ValenceHeader | None if not to print
         """
+
+        # TODO - Handle KeyError for incorrect config file
 
         # Strip log line string and use it to create the log_line object
         line = unformatted_log_line.strip("\n\\n")
@@ -134,10 +142,11 @@ class ValenceConsoleFormatter(LogFormatter):
         """Either prints formatted line to console or write it to file based on write flag.
 
         If writing to a file, will print to screen number of lines written. Also, prevents multiple
-        blank lines from being printed in a row.
+        blank lines from being printed in a row. Also condenses LogLine string if specified in .ini file.
 
-        :param ValenceLogLine formatted_log_line: Formatted log line | None - indicating to not print
-        line.
+        :param ValenceLogLine | ValenceHeader formatted_log_line: Formatted log line | None - indicating
+            to not print line.
+        :return: ValenceLogLine if formatted | KILL_SIGNAL if LollygagLogger is to be killed | None
         """
 
         # Increase lines read count and print update if writing to a file
@@ -185,7 +194,6 @@ class ValenceConsoleFormatter(LogFormatter):
 
     def _highlight_line(self, log_line):
         """Highlights the find_str within the log_line."""
-
         replace_str = ColorType.HIGHLIGHT.value + self.find_str + ColorType.END.value
 
         if log_line.standard_format:
@@ -199,13 +207,11 @@ class ValenceConsoleFormatter(LogFormatter):
         return log_line
 
     def _handle_header(self, log_line):
-        """Determines if LogLine is part of header and handles the printing if so.
+        """Determines if LogLine is part of header and handles combining and formatting the header.
 
-        Initially attempts to create header object, store it, then print it. If the header is the
-        'Final Report', then the headers and their ellapsed time will be reported.
-
-        :return: True if LogLine was part of a header, but not to be printed, False if LogLine is not
-        part of header, and a formatted string representing header if header is to be printed.
+        :param ValenceLogLine log_line: Log line that is checked for header status
+        :return: True if LogLine was part of a header, but not to be printed | False if LogLine is not
+        part of header | ValenceHeader if LogLine is to be printed and part of header
         """
         log_type = log_line.get_log_type()
         header_line = self._combine_header_logs(log_type, log_line)
@@ -244,6 +250,10 @@ class ValenceConsoleFormatter(LogFormatter):
 
         Since LogLines are not typically stored and are simply printed, a flag must be set to absorb
         header loglines use as the borders and the header details.
+
+        :param LogType log_type: The current type of the LogLine
+        :param ValenceLogLine log_line: The log line to determine if header
+        :return: ValenceHeader if the log line is the description line of the header | None
         """
         formatted_header = None
         for header_type, is_waiting in self.waiting_for_header.items():
@@ -279,7 +289,7 @@ class ValenceConsoleFormatter(LogFormatter):
     def _condense_fields(self, log_line):
         """Condense and collapse individual line fields to the specified length in format config.
 
-        :param ValenceLogLine log_line: Log line with fields to be removed
+        :param ValenceLogLine log_line: Log line with fields to be condensed
         """
         collapse_dict = helpers.str_to_bool(self.sect_collapse_structs["dict"])
         collapse_list = helpers.str_to_bool(self.sect_collapse_structs["list"])
@@ -320,7 +330,6 @@ class ValenceConsoleFormatter(LogFormatter):
 
     def _print_line(self, log_line):
         """Prints str if no write_path specified, otherwise save line to file specific by write_path."""
-
         log_str = str(log_line)
 
         if self.write_path:

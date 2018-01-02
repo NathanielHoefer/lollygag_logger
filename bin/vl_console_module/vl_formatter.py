@@ -65,8 +65,13 @@ class ValenceConsoleFormatter(LogFormatter):
         # List step variables
         self.listed_step_to_print = False
         self.listed_step_type = None
-        self.listed_steps_status = ListingStatus.SEARCHING  # "Searching" | "Processing" | "Completed"
-        self.searching_text_printed = False
+
+        if self.find_str or self.list_step:
+            self.listed_steps_status = ListingStatus.SEARCHING
+            self.searching_text_printed = False
+        else:
+            self.listed_steps_status = ListingStatus.PROCESSING
+            self.searching_text_printed = True
 
     def format(self, unformatted_log_line):
         """Creates and formats the LogLine object, handling any formatting options.
@@ -146,7 +151,8 @@ class ValenceConsoleFormatter(LogFormatter):
 
         :param ValenceLogLine | ValenceHeader formatted_log_line: Formatted log line | None - indicating
             to not print line.
-        :return: ValenceLogLine if formatted | KILL_SIGNAL if LollygagLogger is to be killed | None
+        :return: ValenceLogLine if formatted | KILL_SIGNAL if LollygagLogger is to be killed before
+        completion | None
         """
 
         # Increase lines read count and print update if writing to a file

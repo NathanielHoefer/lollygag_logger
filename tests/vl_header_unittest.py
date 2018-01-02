@@ -43,9 +43,9 @@ class HeaderParse(unittest.TestCase):
         original_line = "All Test Case Preconditions"
         header = ValenceHeader(original_line)
         self.assertEqual(header.header_type, HeaderType.VALENCE)
-        self.assertEqual(header.test_name, "")
-        self.assertEqual(header.test_info, "")
-        self.assertEqual(header.test_instruction, "")
+        self.assertEqual(header.test_name, None)
+        self.assertEqual(header.test_info, None)
+        self.assertEqual(header.test_instruction, None)
         self.assertEqual(header.test_number, 0)
 
     def test_case_step(self):
@@ -57,13 +57,13 @@ class HeaderParse(unittest.TestCase):
         self.assertEqual(header.test_instruction, "Completed Monitoring")
         self.assertEqual(header.test_number, 2)
 
-    def test_store_header(self):
-
-        config_file = create_config_file()
-        vl_console_output = ValenceConsoleFormatter(ValenceLogLine, config_file)
-        with open("/home/nathaniel/Downloads/test.log", "r") as logfile:
-            logger = LollygagLogger(logfile, vl_console_output)
-            logger.run()
+    # def test_store_header(self):
+    #
+    #     config_file = create_config_file()
+    #     vl_console_output = ValenceConsoleFormatter(ValenceLogLine, config_file)
+    #     with open("/home/hnathani/vl_artifacts/TsBulkVolOperationsSFtoSFS3Swift-2017-11-22T14.22.40/test.log", "r") as logfile:
+    #         logger = LollygagLogger(logfile, vl_console_output)
+    #         logger.run()
 
 
 if __name__ == "__main__":

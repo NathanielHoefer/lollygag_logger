@@ -6,6 +6,8 @@ by Nathaniel Hoefer
 Last Updated: 12/2/2017
 """
 
+# TODO - Rework tests since they are not currently functional
+
 import sys
 import unittest
 from cStringIO import StringIO
@@ -35,18 +37,17 @@ class InitialFormatting(unittest.TestCase):
         self.format_config = create_config_file(os.getcwd())
 
     def test_initialization(self):
-        log_formatter = Output(LogLine, self.format_config, format_config_filepath=CONFIG_PATH)
+        log_formatter = Output(LogLine, self.format_config, ini_filepath=CONFIG_PATH)
         self.assertTrue(log_formatter.log_line_cls is LogLine)
         self.assertTrue(len(log_formatter.format_config.sections()) > 0)
 
     def test_log_newline(self):
-        log_formatter = Output(LogLine, self.format_config, format_config_filepath=CONFIG_PATH)
+        log_formatter = Output(LogLine, self.format_config, ini_filepath=CONFIG_PATH)
         output = []
         with Capturing(output) as output:
             log_formatter.format("\n")
             log_formatter.format("\n\n\n\\n\\n\\n\n\n\n\n\\n\\n\\n\\n\\n\\n")
-        self.assertTrue(len(output) == 1)
-        self.assertTrue(output[0] == "")
+        self.assertTrue(len(output) == 0)
 
     def tearDown(self):
         os.remove(os.getcwd() + "/" + FORMAT_CONFIG_FILE_NAME)
@@ -83,7 +84,7 @@ class DisplayLogTypesFormatting(unittest.TestCase):
         self.format_config.set(DISPLAY_LOG_TYPES_SECT, "other", "True")
         with open(CONFIG_PATH, "wb") as configfile:
             self.format_config.write(configfile)
-        log_formatter = Output(LogLine, self.format_config, format_config_filepath=CONFIG_PATH)
+        log_formatter = Output(LogLine, self.format_config, ini_filepath=CONFIG_PATH)
         display_test_lines = self.test_lines[:4]
         output = []
         with Capturing(output) as output:
@@ -93,15 +94,16 @@ class DisplayLogTypesFormatting(unittest.TestCase):
         self.assertTrue(len(output) == 4)
 
     def test_hide_debug(self):
-        log_formatter = Output(LogLine, self.format_config, format_config_filepath=CONFIG_PATH)
+        log_formatter = Output(LogLine, self.format_config, ini_filepath=CONFIG_PATH)
         self.format_config.set(DISPLAY_LOG_TYPES_SECT, "debug", "False")
         output = []
         with Capturing(output) as output:
-            log_formatter.format(self.test_lines[0])
+            line = log_formatter.format(self.test_lines[0])
+            log_formatter.send(line)
         self.assertTrue(len(output) == 0)
 
     def test_hide_info(self):
-        log_formatter = Output(LogLine, self.format_config, format_config_filepath=CONFIG_PATH)
+        log_formatter = Output(LogLine, self.format_config, ini_filepath=CONFIG_PATH)
         self.format_config.set(DISPLAY_LOG_TYPES_SECT, "info", "False")
         output = []
         with Capturing(output) as output:
@@ -109,7 +111,7 @@ class DisplayLogTypesFormatting(unittest.TestCase):
         self.assertTrue(len(output) == 0)
 
     def test_hide_warning(self):
-        log_formatter = Output(LogLine, self.format_config, format_config_filepath=CONFIG_PATH)
+        log_formatter = Output(LogLine, self.format_config, ini_filepath=CONFIG_PATH)
         self.format_config.set(DISPLAY_LOG_TYPES_SECT, "warning", "False")
         output = []
         with Capturing(output) as output:
@@ -117,7 +119,7 @@ class DisplayLogTypesFormatting(unittest.TestCase):
         self.assertTrue(len(output) == 0)
 
     def test_hide_error(self):
-        log_formatter = Output(LogLine, self.format_config, format_config_filepath=CONFIG_PATH)
+        log_formatter = Output(LogLine, self.format_config, ini_filepath=CONFIG_PATH)
         self.format_config.set(DISPLAY_LOG_TYPES_SECT, "error", "False")
         output = []
         with Capturing(output) as output:
@@ -125,7 +127,7 @@ class DisplayLogTypesFormatting(unittest.TestCase):
         self.assertTrue(len(output) == 0)
 
     def test_hide_other(self):
-        log_formatter = Output(LogLine, self.format_config, format_config_filepath=CONFIG_PATH)
+        log_formatter = Output(LogLine, self.format_config, ini_filepath=CONFIG_PATH)
         self.format_config.set(DISPLAY_LOG_TYPES_SECT, "other", "False")
         output = []
         with Capturing(output) as output:
@@ -133,7 +135,7 @@ class DisplayLogTypesFormatting(unittest.TestCase):
         self.assertTrue(len(output) == 0)
 
     def test_hide_at2_debug(self):
-        log_formatter = Output(LogLine, self.format_config, format_config_filepath=CONFIG_PATH)
+        log_formatter = Output(LogLine, self.format_config, ini_filepath=CONFIG_PATH)
         self.format_config.set(DISPLAY_LOG_TYPES_SECT, "debug", "False")
         output = []
         with Capturing(output) as output:
@@ -141,7 +143,7 @@ class DisplayLogTypesFormatting(unittest.TestCase):
         self.assertTrue(len(output) == 0)
 
     def test_hide_at2_info(self):
-        log_formatter = Output(LogLine, self.format_config, format_config_filepath=CONFIG_PATH)
+        log_formatter = Output(LogLine, self.format_config, ini_filepath=CONFIG_PATH)
         self.format_config.set(DISPLAY_LOG_TYPES_SECT, "info", "False")
         output = []
         with Capturing(output) as output:
@@ -190,35 +192,36 @@ class HeaderFormatting(unittest.TestCase):
         self.format_config.set(DISPLAY_LOG_TYPES_SECT, "step", "False")
         with open(CONFIG_PATH, "wb") as configfile:
             self.format_config.write(configfile)
-        log_formatter = Output(LogLine, self.format_config, format_config_filepath=CONFIG_PATH)
+        log_formatter = Output(LogLine, self.format_config, ini_filepath=CONFIG_PATH)
         output = []
         with Capturing(output) as output:
-            for line in self.test_lines[4:9]:
-                log_formatter.format(line)
-        self.assertTrue(len(output) == 1)
-        self.assertEqual(output[0], self.test_lines[8].strip())
+            for line in self.test_lines[4:8]:
+                log_line = log_formatter.format(line)
+                log_formatter.send(log_line)
+        self.assertTrue(len(output) == 0)
 
     def test_hide_title(self):
         self.format_config.set(DISPLAY_LOG_TYPES_SECT, "title", "False")
         with open(CONFIG_PATH, "wb") as configfile:
             self.format_config.write(configfile)
-        log_formatter = Output(LogLine, self.format_config, format_config_filepath=CONFIG_PATH)
+        log_formatter = Output(LogLine, self.format_config, ini_filepath=CONFIG_PATH)
         output = []
         with Capturing(output) as output:
-            for line in self.test_lines[:5]:
-                log_formatter.format(line)
-        self.assertTrue(len(output) == 1)
-        self.assertEqual(output[0], self.test_lines[3].strip())
+            for line in self.test_lines[:3]:
+                log_line = log_formatter.format(line)
+                log_formatter.send(log_line)
+        self.assertTrue(len(output) == 0)
 
     def test_show_step(self):
         self.format_config.set(DISPLAY_LOG_TYPES_SECT, "step", "True")
         with open(CONFIG_PATH, "wb") as configfile:
             self.format_config.write(configfile)
-        log_formatter = Output(LogLine, self.format_config, format_config_filepath=CONFIG_PATH)
+        log_formatter = Output(LogLine, self.format_config, ini_filepath=CONFIG_PATH)
         output = []
         with Capturing(output) as output:
             for line in self.test_lines[4:9]:
-                log_formatter.format(line)
+                log_line = log_formatter.format(line)
+                log_formatter.send(log_line)
         self.assertTrue(len(output) == 5)
         self.assertEqual(output[0], self.test_lines[4].strip())
         self.assertEqual(output[1], self.test_lines[5].strip())
@@ -229,11 +232,12 @@ class HeaderFormatting(unittest.TestCase):
         self.format_config.set(DISPLAY_LOG_TYPES_SECT, "title", "True")
         with open(CONFIG_PATH, "wb") as configfile:
             self.format_config.write(configfile)
-        log_formatter = Output(LogLine, self.format_config, format_config_filepath=CONFIG_PATH)
+        log_formatter = Output(LogLine, self.format_config, ini_filepath=CONFIG_PATH)
         output = []
         with Capturing(output) as output:
             for line in self.test_lines[:4]:
-                log_formatter.format(line)
+                log_line = log_formatter.format(line)
+                log_formatter.send(log_line)
         self.assertTrue(len(output) == 5)
         self.assertEqual(output[0], self.test_lines[0].strip())
         self.assertEqual(output[1], self.test_lines[1].strip())
@@ -267,7 +271,7 @@ class DisplayFieldsFormatting(unittest.TestCase):
         self.original_line = self.test_lines[7]
 
     def test_hide_all(self):
-        log_formatter = Output(LogLine, self.format_config, format_config_filepath=CONFIG_PATH)
+        log_formatter = Output(LogLine, self.format_config, ini_filepath=CONFIG_PATH)
         self.format_config.set(DISPLAY_FIELDS_SECT, "date", "False")
         self.format_config.set(DISPLAY_FIELDS_SECT, "time", "False")
         self.format_config.set(DISPLAY_FIELDS_SECT, "type", "False")
@@ -282,7 +286,7 @@ class DisplayFieldsFormatting(unittest.TestCase):
         self.assertTrue(len(output) == 1)
 
     def test_hide_date(self):
-        log_formatter = Output(LogLine, self.format_config, format_config_filepath=CONFIG_PATH)
+        log_formatter = Output(LogLine, self.format_config, ini_filepath=CONFIG_PATH)
         self.format_config.set(DISPLAY_FIELDS_SECT, "date", "False")
         self.format_config.set(DISPLAY_FIELDS_SECT, "time", "True")
         self.format_config.set(DISPLAY_FIELDS_SECT, "type", "True")
@@ -300,7 +304,7 @@ class DisplayFieldsFormatting(unittest.TestCase):
         self.assertEqual(output[0], self.test_lines[8].strip())
 
     def test_hide_time(self):
-        log_formatter = Output(LogLine, self.format_config, format_config_filepath=CONFIG_PATH)
+        log_formatter = Output(LogLine, self.format_config, ini_filepath=CONFIG_PATH)
         self.format_config.set(DISPLAY_FIELDS_SECT, "date", "True")
         self.format_config.set(DISPLAY_FIELDS_SECT, "time", "False")
         self.format_config.set(DISPLAY_FIELDS_SECT, "type", "True")
@@ -317,7 +321,7 @@ class DisplayFieldsFormatting(unittest.TestCase):
         self.assertEqual(output[0], self.test_lines[9].strip())
 
     def test_hide_type(self):
-        log_formatter = Output(LogLine, self.format_config, format_config_filepath=CONFIG_PATH)
+        log_formatter = Output(LogLine, self.format_config, ini_filepath=CONFIG_PATH)
         self.format_config.set(DISPLAY_FIELDS_SECT, "date", "True")
         self.format_config.set(DISPLAY_FIELDS_SECT, "time", "True")
         self.format_config.set(DISPLAY_FIELDS_SECT, "type", "False")
@@ -334,7 +338,7 @@ class DisplayFieldsFormatting(unittest.TestCase):
         self.assertEqual(output[0], self.test_lines[10].strip())
 
     def test_hide_source(self):
-        log_formatter = Output(LogLine, self.format_config, format_config_filepath=CONFIG_PATH)
+        log_formatter = Output(LogLine, self.format_config, ini_filepath=CONFIG_PATH)
         self.format_config.set(DISPLAY_FIELDS_SECT, "date", "True")
         self.format_config.set(DISPLAY_FIELDS_SECT, "time", "True")
         self.format_config.set(DISPLAY_FIELDS_SECT, "type", "True")
@@ -351,7 +355,7 @@ class DisplayFieldsFormatting(unittest.TestCase):
         self.assertEqual(output[0], self.test_lines[11].strip())
 
     def test_hide_thread(self):
-        log_formatter = Output(LogLine, self.format_config, format_config_filepath=CONFIG_PATH)
+        log_formatter = Output(LogLine, self.format_config, ini_filepath=CONFIG_PATH)
         self.format_config.set(DISPLAY_FIELDS_SECT, "date", "True")
         self.format_config.set(DISPLAY_FIELDS_SECT, "time", "True")
         self.format_config.set(DISPLAY_FIELDS_SECT, "type", "True")
@@ -368,7 +372,7 @@ class DisplayFieldsFormatting(unittest.TestCase):
         self.assertEqual(output[0], self.test_lines[12].strip())
 
     def test_hide_details(self):
-        log_formatter = Output(LogLine, self.format_config, format_config_filepath=CONFIG_PATH)
+        log_formatter = Output(LogLine, self.format_config, ini_filepath=CONFIG_PATH)
         self.format_config.set(DISPLAY_FIELDS_SECT, "date", "True")
         self.format_config.set(DISPLAY_FIELDS_SECT, "time", "True")
         self.format_config.set(DISPLAY_FIELDS_SECT, "type", "True")
@@ -385,7 +389,7 @@ class DisplayFieldsFormatting(unittest.TestCase):
         self.assertEqual(output[0], self.test_lines[13].strip())
 
     def test_hide_at2_date(self):
-        log_formatter = Output(LogLine, self.format_config, format_config_filepath=CONFIG_PATH)
+        log_formatter = Output(LogLine, self.format_config, ini_filepath=CONFIG_PATH)
         self.format_config.set(DISPLAY_FIELDS_SECT, "date", "False")
         self.format_config.set(DISPLAY_FIELDS_SECT, "time", "True")
         self.format_config.set(DISPLAY_FIELDS_SECT, "type", "True")
@@ -402,7 +406,7 @@ class DisplayFieldsFormatting(unittest.TestCase):
         self.assertEqual(output[0], self.test_lines[26].strip())
 
     def test_hide_at2_time(self):
-        log_formatter = Output(LogLine, self.format_config, format_config_filepath=CONFIG_PATH)
+        log_formatter = Output(LogLine, self.format_config, ini_filepath=CONFIG_PATH)
         self.format_config.set(DISPLAY_FIELDS_SECT, "date", "True")
         self.format_config.set(DISPLAY_FIELDS_SECT, "time", "False")
         self.format_config.set(DISPLAY_FIELDS_SECT, "type", "True")
@@ -419,7 +423,7 @@ class DisplayFieldsFormatting(unittest.TestCase):
         self.assertEqual(output[0], self.test_lines[27].strip())
 
     def test_hide_at2_type(self):
-        log_formatter = Output(LogLine, self.format_config, format_config_filepath=CONFIG_PATH)
+        log_formatter = Output(LogLine, self.format_config, ini_filepath=CONFIG_PATH)
         self.format_config.set(DISPLAY_FIELDS_SECT, "date", "True")
         self.format_config.set(DISPLAY_FIELDS_SECT, "time", "True")
         self.format_config.set(DISPLAY_FIELDS_SECT, "type", "False")
@@ -436,7 +440,7 @@ class DisplayFieldsFormatting(unittest.TestCase):
         self.assertEqual(output[0], self.test_lines[28].strip())
 
     def test_hide_at2_source(self):
-        log_formatter = Output(LogLine, self.format_config, format_config_filepath=CONFIG_PATH)
+        log_formatter = Output(LogLine, self.format_config, ini_filepath=CONFIG_PATH)
         self.format_config.set(DISPLAY_FIELDS_SECT, "date", "True")
         self.format_config.set(DISPLAY_FIELDS_SECT, "time", "True")
         self.format_config.set(DISPLAY_FIELDS_SECT, "type", "True")
@@ -453,7 +457,7 @@ class DisplayFieldsFormatting(unittest.TestCase):
         self.assertEqual(output[0], self.test_lines[29].strip())
 
     def test_hide_at2_details(self):
-        log_formatter = Output(LogLine, self.format_config, format_config_filepath=CONFIG_PATH)
+        log_formatter = Output(LogLine, self.format_config, ini_filepath=CONFIG_PATH)
         self.format_config.set(DISPLAY_FIELDS_SECT, "date", "True")
         self.format_config.set(DISPLAY_FIELDS_SECT, "time", "True")
         self.format_config.set(DISPLAY_FIELDS_SECT, "type", "True")
@@ -479,7 +483,7 @@ class MaxLineFormatting(unittest.TestCase):
         if os.path.isfile(CONFIG_PATH):
             os.remove(CONFIG_PATH)
         self.format_config = create_config_file(os.getcwd())
-        self.log_formatter = Output(LogLine, self.format_config, format_config_filepath=CONFIG_PATH)
+        self.log_formatter = Output(LogLine, self.format_config, ini_filepath=CONFIG_PATH)
 
         with open("test_logs/test.log", "r") as test_log_file:
             self.test_lines = test_log_file.readlines()

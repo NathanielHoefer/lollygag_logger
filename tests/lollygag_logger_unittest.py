@@ -29,8 +29,10 @@ class Capturing(list):
 class TestFormatter(LogFormatter):
 
     def format(self, log_line):
-        print log_line.strip()
+        return log_line.strip()
 
+    def send(self, log_line):
+        print log_line.strip()
 
 class Streaming(unittest.TestCase):
 

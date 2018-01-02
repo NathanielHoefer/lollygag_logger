@@ -16,7 +16,7 @@ import sys
 
 if __name__ == "__main__":
 
-    for line in range(100):
+    for line in range(3):
         print line
         sys.stdout.flush()
         sleep(1)

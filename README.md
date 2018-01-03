@@ -35,8 +35,7 @@ Ex: python vl_logger.py -at2 <step id> -f "<string>"
 ## Format Config File
 The settings are accessed through the `.vl_logger.ini` file which is created on your first run of the logger. Currently, the customization is as follows found within the .ini file:
  - hide/view specific log types
- - hide/view
- - specific log fields
+ - hide/view specific log fields
  - condense fields
  - condense logs to a specified length or the console width
  - collapse dictionaries and lists

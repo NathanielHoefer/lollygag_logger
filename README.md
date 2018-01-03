@@ -4,7 +4,7 @@ This is a tool specifically designed for formatting Valence logs for better legi
 ## Usage
 **To begin a test and format the printed logs**, use the `-run` argument followed by the suite path. This tool utilizes the `vl run` command, so it must be installed and you must execute it from the same directory as if running that command instead. To stop the test, issue a keyboard interupt Ctrl-C just as you would normally.
 ```
-Ex: python vl_logger.py -run <path.to.suite?
+Ex: python vl_logger.py -run <path.to.suite>
 ```
 **To format and print logs from a file**, use the `-r` argument followed by the file path.
 ```

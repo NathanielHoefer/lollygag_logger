@@ -55,6 +55,7 @@ class ValenceConsoleFormatter(LogFormatter):
         self.write_path = write_path
         self.duplicate_blank_line = False
         self.log_lines_read = 0
+        self.previous_log_type = LogType.OTHER
 
         # Format config sections stored individually as dicts
         self._read_vals_from_config_file()
@@ -97,6 +98,7 @@ class ValenceConsoleFormatter(LogFormatter):
         line = unformatted_log_line.strip("\n\\n")
         log_line = self.log_line_cls(line, self._calc_max_len())
 
+
         # Only print the logs with the desired substrings and highlight the substring.
         # Note: If substring is within condensed portion or removed field, the log will still print,
         # but without the highlighting.
@@ -120,6 +122,13 @@ class ValenceConsoleFormatter(LogFormatter):
                 return None
             else:
                 log_line = formatted_header
+
+        # Relabel LogType to previous log line type if currently marked as OTHER
+        if log_line.get_log_type() == LogType.OTHER:
+            log_line.type[0] = self.previous_log_type
+            log_line.set_field_str(self.previous_log_type, self.previous_log_type.value)
+        else:
+            self.previous_log_type = log_line.get_log_type()
 
         # Skip line if type is marked to not display
         log_type = log_line.get_log_type().name.lower()

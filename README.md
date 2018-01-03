@@ -42,7 +42,7 @@ The settings are accessed through the `.vl_logger.ini` file which is created on 
  - color the log type if displayed
 
 By default, it is stored in your home directory, but you may specify another directory by using the `-ini` argument. If using the `-run` option,the .ini file can be updated at any point during the current test, and will reflect any changes on future logs. For example, if you decide that you wish to see debug logs, simply change the option within the format_config file and save it, and any further logs will include the debug logs.
-*Note: The options listed are only what is currently offered. It will be expanded in future releases.
+*Note: The options listed are only what is currently offered. It will be expanded in future releases.*
 
 ## Additional Info
 To execute this tool without the initial `python` command from any directory, execute the following commands.

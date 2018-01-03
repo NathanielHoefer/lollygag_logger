@@ -25,7 +25,7 @@ Ex: python vl_logger.py -at2 <step id> -w <file path>
 ```
 Ex: python vl_logger.py -r <file path> -l "<entire header description>"
 ```
-**Find logs containing specific string:** To specify a string to look for, use the `-f` argument followed by the desired string, then only logs containing the specified string will be printed. If the string is visible after being formatted, then it will also be highlighted.
+**Find logs containing specific string:** To specify a string to look for, use the `-f` argument followed by the desired string, then only logs containing the specified string will be printed. If the string is visible after being formatted, then it will also be highlighted. 
 ```
 Ex: python vl_logger.py -at2 <step id> -f "<string>"
 ```

@@ -1,0 +1,97 @@
+# Display Log Types: Elements 0-6 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+2017-10-30 19:13:32.208116 DEBUG [res.core.absolute.implementation:636] [MainProcess:MainThread] Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc/10.0; {"params": {"IDs": [203, 204]}, "method": "Delete", "id": 54}.
+2017-10-30 19:13:32.208116 INFO [res.core.absolute.implementation:636] [MainProcess:MainThread] Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc/10.0; {"params": {"IDs": [203, 204]}, "method": "Delete", "id": 54}.
+2017-10-30 19:13:32.208116 WARNING [res.core.absolute.implementation:636] [MainProcess:MainThread] Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc/10.0; {"params": {"IDs": [203, 204]}, "method": "Delete", "id": 54}.
+2017-10-30 19:13:32.208116 ERROR [res.core.absolute.implementation:636] [MainProcess:MainThread] Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc/10.0; {"params": {"IDs": [203, 204]}, "method": "Delete", "id": 54}.
+---------------------------------------------------------------------------------------------------------
+=========================================================================================================
+Test Case 0: Starting Teardown of DeletingValues
+
+
+
+# Display Fields: Elements 7-13 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+# Original Line: Element 7
+2017-10-30 19:13:32.208116 INFO [res.core.absolute:636] [MainProcess:MainThread] Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc; {"params": {"IDs": [203]}}.
+
+# Expected Hidden Date: Element 8
+19:13:32.208116 INFO [res.core.absolute:636] [MainProcess:MainThread] Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc; {"params": {"IDs": [203]}}.
+
+# Expected Hidden Time: Element 9
+2017-10-30 INFO [res.core.absolute:636] [MainProcess:MainThread] Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc; {"params": {"IDs": [203]}}.
+
+# Expected Hidden Type: Element 10
+2017-10-30 19:13:32.208116 [res.core.absolute:636] [MainProcess:MainThread] Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc; {"params": {"IDs": [203]}}.
+
+# Expected Hidden Source: Element 11
+2017-10-30 19:13:32.208116 INFO [MainProcess:MainThread] Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc; {"params": {"IDs": [203]}}.
+
+# Expected Hidden Thread: Element 12
+2017-10-30 19:13:32.208116 INFO [res.core.absolute:636] Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc; {"params": {"IDs": [203]}}.
+
+# Expected Hidden Details: Element 13
+2017-10-30 19:13:32.208116 INFO [res.core.absolute:636] [MainProcess:MainThread]
+
+
+
+# Condense Fields: Elements 14-20 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+# At length, no structure: Element 14
+Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc; "params": "IDs": 2031, 21455.
+
+# At length, containing list
+# Original: Element 15
+Sending HTTP POST request to server_url: https://10.10.10.10/json; {"params": "IDs": 2031, 214, 25}.
+# Formatted: Element 16
+Sending HTTP POST request to server_url: https://10.10.10.10/json; {"params": "IDs": 2031, 21...}.
+
+# One over length
+# Original: Element 17
+Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc; "params": "IDs": 20312, 21455.
+# Formatted: Element 18
+Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc; "params": "IDs": 20312, 21...
+
+# One over length, containing list but not collapsing
+# Original: Element 19
+Sending HTTP POST request to server_url: https://10.10.10.10/json; {"params": "IDs": 2031, 214, 255}.
+# Formatted: Element 20
+Sending HTTP POST request to server_url: https://10.10.10.10/json; {"params": "IDs": 2031, 214, 2...
+
+
+
+# Max Line Length: Elements 21-22 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+# Entered: Element 21
+Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc; "params": "IDs": 20313, 21455.
+# Expected: Element 22
+Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc; "params": "IDs": 20313, 21...
+
+
+
+# Display AT2 Log Types: Elements 23-24 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+2017-11-27 21:34:15,389 DEBUG [autologger.main:241] JSON-RPC-POST: method=RemoveAccount, url=https://10.117.207.128/json-rpc/10.0, id=5450
+2017-11-27 21:34:15,436 INFO [tests.suites_refresh.bulk_volume.cases.bulk_volume_operations:774] Deleting all accounts on target cluster
+
+
+
+# Display AT2 Fields: Elements 25-30 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+# Original Line: Element 25
+2017-11-27 21:34:15,436 INFO [res.core.absolute:636] Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc; {"params": {"IDs": [203]}}.
+
+# Expected Hidden Date: Element 26
+21:34:15,436 INFO [res.core.absolute:636] Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc; {"params": {"IDs": [203]}}.
+
+# Expected Hidden Time: Element 27
+2017-11-27 INFO [res.core.absolute:636] Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc; {"params": {"IDs": [203]}}.
+
+# Expected Hidden Type: Element 28
+2017-11-27 21:34:15,436 [res.core.absolute:636] Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc; {"params": {"IDs": [203]}}.
+
+# Expected Hidden Source: Element 29
+2017-11-27 21:34:15,436 INFO Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc; {"params": {"IDs": [203]}}.
+
+# Expected Hidden Details: Element 30
+2017-11-27 21:34:15,436 INFO [res.core.absolute:636]

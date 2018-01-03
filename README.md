@@ -16,6 +16,7 @@ Ex: python vl_logger.py -at2 <step id>
 ```
 ### Other Features
 The following features are available when using the `-r` or `-at2` arguments:
+
 **Write output to file:** Instead of printing the formatted logs to the console, they will be written to the specified file including ACSII color additions with the `-w` argument.
 ```
 Ex: python vl_logger.py -at2 <step id> -w <file path>

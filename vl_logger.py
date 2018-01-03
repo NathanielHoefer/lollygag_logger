@@ -21,7 +21,7 @@ Usage
     directory as if running that command instead. To stop the test, issue a keyboard interupt Ctrl-C just
     as you would normally.
 
-    Ex: python vl_logger.py -run <path.to.suite?
+    Ex: python vl_logger.py -run <path.to.suite>
 
     To format and print logs from a file**, use the `-r` argument followed by the file path.
 
@@ -34,8 +34,8 @@ Usage
 
     Other Features
     The following features are available when using the `-r` or `-at2` arguments:
-    Write output to file:** Instead of printing the formatted logs to the console, they will be written to
-    the specified file including ACSII color additions with the `-w` argument.
+    Write output to file:** Instead of printing the formatted logs to the console, they will be written
+    to the specified file including ACSII color additions with the `-w` argument.
 
     Ex: python vl_logger.py -at2 <step id> -w <file path>
 
@@ -106,6 +106,11 @@ from bin.vl_console_module import ValenceLogLine as LogLine
 
 
 def args():
+    """Args for vl_logger.
+
+    :rtype: ArgumentParser
+    """
+
     # Descriptions for arg parse
     program = "Valence Lollygag Logger"
     description = "A non-obtrusive tool that captures Valence Logs being printed to the screen and " \
@@ -157,7 +162,7 @@ if __name__ == '__main__':
                                       format_config=config,
                                       ini_filepath=args.ini_path)
         proc = subprocess.Popen(["python", "vl", "run", args.suite_path], stdout=subprocess.PIPE,
-                                bufsize=1, universal_newlines=False)
+                                universal_newlines=False)
         try:
             logger = LollygagLogger(iter(proc.stdout.readline, b''), vl_console_output)
             logger.run()

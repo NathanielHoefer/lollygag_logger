@@ -61,7 +61,7 @@ class HeaderParse(unittest.TestCase):
     #
     #     config_file = create_config_file()
     #     vl_console_output = ValenceConsoleFormatter(ValenceLogLine, config_file)
-    #     with open("/home/hnathani/vl_artifacts/TsBulkVolOperationsSFtoSFS3Swift-2017-11-22T14.22.40/test.log", "r") as logfile:
+    #     with open("/home/.../test.log", "r") as logfile:
     #         logger = LollygagLogger(logfile, vl_console_output)
     #         logger.run()
 

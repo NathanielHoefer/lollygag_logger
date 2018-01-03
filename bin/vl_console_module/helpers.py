@@ -8,20 +8,25 @@ Last Updated: 12/30/2017
 
 import copy
 import re
-from enums import ColorType
+from enums import ColorType, LogType
 
 # Valid values from ConfigParser that result in True
 VALID_TRUE_INPUT = ("true", "yes", "t", "y", "1")
 
 
 def str_to_bool(str_bool_val):
-    """Evaluates bool value of string input based on VALID_TRUE_INPUT"""
+    """Evaluates bool value of string input based on VALID_TRUE_INPUT.
+
+    :param str str_bool_val: bool value as string
+    :rtype: bool
+    """
     return str_bool_val.lower() in VALID_TRUE_INPUT
 
 
 def collapse_struct(field_str, data_struct, collapse_len=30):
-    """Shortens the display of the first encountered list or dictionary to a specified length within
-    a given string. If the length of the structure (including the '[]' or '{}' is > the
+    """Shortens the display of the first encountered list or dictionary to a specified length.
+
+    If the length of the structure (including the '[]' or '{}' is > the
     collapsed_struct_len specified in config file, then the structure will be reduced to that length
     and indicated by an ellipse. Ex: [abcdefghijklmnopqrstuvwxyzab] -> [abcdefghijklmnopqrstuvwxy...]
 
@@ -31,6 +36,7 @@ def collapse_struct(field_str, data_struct, collapse_len=30):
     :param str data_struct: "list" or "dict" indicating what data structure to collapse
     :param int collapse_len: The max length of the structures
     :return: String of the element with the specified collapsed structure.
+    :rtype: str
     """
 
     # Determine struct entered
@@ -59,14 +65,14 @@ def collapse_struct(field_str, data_struct, collapse_len=30):
 
 def condense_field(field_str, condense_len=50,
                    collapse_dict=False, collapse_list=False, collapse_len=30):
-    """Condenses each field of a log line to the condense length, and collapses lists and dictionaries
-    that exceed a given length.
+    """Condenses each field of a log line to the condense length, and collapses lists and dict.
 
     :param str field_str: The LogLine field str to be condensed.
     :param int condense_len: The max length of the field
     :param bool collapse_dict: If true, collapse dict to the specified collapse_len
     :param bool collapse_list: If true, collapse list to the specified collapse_len
     :param int collapse_len: The max length of the structures
+    :rtype: str
     """
 
     # Collapse dicts or lists if specified
@@ -86,6 +92,7 @@ def condense(str_line, max_len):
     Does not count \033 escape sequences towards line length.
     :param str str_line: Line to be condensed
     :param int max_len: The maximum length of the line
+    :rtype: str
     """
 
     # Determine the number of extra characters found in the escape sequences and add them to the
@@ -110,6 +117,7 @@ def color_by_type(log_type, log_str):
     :param LogType log_type: Enum of the log type which identifies the color
     :param str log_str: The string to be colored.
     :return: String colored using color value based on type.
+    :rtype: str
     """
 
     return ColorType[log_type.name].value + log_str + ColorType.END.value

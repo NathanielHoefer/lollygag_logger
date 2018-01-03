@@ -34,6 +34,7 @@ class TestFormatter(LogFormatter):
     def send(self, log_line):
         print log_line.strip()
 
+
 class Streaming(unittest.TestCase):
 
     def test_file_stream(self):

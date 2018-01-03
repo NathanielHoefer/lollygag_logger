@@ -1,29 +1,59 @@
-# lollygag_logger
-This application is used to format the logs for better legibility and debugging. This current iteration is a very rough prototype that can be used to format Valence logs from either a log file or directly from the output of the `vl run` command. This script only affects the screen output of the logs, leaving all other aspects such as files intact.
+# vl_logger
+This is a tool specifically designed for formatting Valence logs for better legibility and debugging by allowing customized formatting. It is completely unobtrusive in the sense that it doesn't directly affect any of the artifacts or testing that is being produced. This is accomplished by capturing each log line as it is being printed to the console or read, and runs it through the formatter - affecting only the screen output of the logs, leaving all other aspects such as files intact. Because of this line-by-line formatting, a number of sources can be read from as explained below.
 
-# Usage
-To format a log file, use the `-f` argument followed by the desired log file to be formatted. 
+## Usage
+**To begin a test and format the printed logs**, use the `-run` argument followed by the suite path. This tool utilizes the `vl run` command, so it must be installed and you must execute it from the same directory as if running that command instead. To stop the test, issue a keyboard interupt Ctrl-C just as you would normally.
 ```
-python lollygag_logger.py -f <log file>
-Ex: python lollygag_logger.py -f test.log
+Ex: python vl_logger.py -run <path.to.suite>
 ```
-To format the `vl run` output, execute the script within the same directory as you would if using the `vl run` command. Use the `-vl` argument followed by the suite path.
+**To format and print logs from a file**, use the `-r` argument followed by the file path.
 ```
-python lollygag_logger.py -vl <suite path>
-Ex: python lollygag_logger.py -vl tests.suites_refresh.clones_snapshots_rainyday.suites.TsClonesSnapshotsRainyDaySuite
+Ex: python vl_logger.py -r <file path>
 ```
-You may also execute the script directly by issuing the following commands
+**To format and print logs from a AT2 Task Step Instance**, use the `-at2` argument followed by the task instance step ID.
 ```
-chmod u+x lollygag_logger.py
-ln -s /home/trinidad/projects/lollygag_logger/lollygag_logger.py ~/bin/lollygag_logger
+Ex: python vl_logger.py -at2 <step id>
 ```
+### Other Features
+The following features are available when using the `-r` or `-at2` arguments:
 
-# Format Config File
-If using the log file option, then a format_config file will be created in the same directory of the log file. This file contains various formatting options that allow you to specify how the output is to print to the screen. 
+**Write output to file:** Instead of printing the formatted logs to the console, they will be written to the specified file including ACSII color additions with the `-w` argument.
+```
+Ex: python vl_logger.py -at2 <step id> -w <file path>
+```
+**List specific suite/test case/step:** To only print the logs found within a specific test header, us the `-l` argument. This includes anything that is found within that header. For example, if you wanted to print the logs found within 'Test Case 0: Starting Test...' then all of the associated steps will also be printed. Just keep in mind that the header description (the part in between all of the '-' or '=') needs to be copied exactly.
+```
+Ex: python vl_logger.py -r <file path> -l "<entire header description>"
+```
+**Find logs containing specific string:** To specify a string to look for, use the `-f` argument followed by the desired string, then only logs containing the specified string will be printed. If the string is visible after being formatted, then it will also be highlighted.
+```
+Ex: python vl_logger.py -at2 <step id> -f "<string>"
+```
+*Note: Only the logs that are already set to be shown will be evaluated. As an example, if debug logs are set to be hidden, they will not be displayed even if they contain the specified search string. However, if the the field containing the string is hidden but the rest of the log line is set to print, then the log line will be printed - indicating a match.*
+
+
+## Format Config File
+The settings are accessed through the `.vl_logger.ini` file which is created on your first run of the logger. Currently, the customization is as follows found within the .ini file:
+ - hide/view specific log types
+ - hide/view
+ - specific log fields
+ - condense fields
+ - condense logs to a specified length or the console width
+ - collapse dictionaries and lists
+ - color the log type if displayed
+
+By default, it is stored in your home directory, but you may specify another directory by using the `-ini` argument. If using the `-run` option,the .ini file can be updated at any point during the current test, and will reflect any changes on future logs. For example, if you decide that you wish to see debug logs, simply change the option within the format_config file and save it, and any further logs will include the debug logs.
 *Note: The options listed are only what is currently offered. It will be expanded in future releases.
 
-If using the `vl run` option, then a format_config file will be created in the current working directory. This file can be updated at any point during the current test, and will reflect any changes on future logs. For example, if you decide that you wish to see debug logs, simply change the option within the format_config file and save it, and any further logs will include the debug logs.
-
-# Notes
-This is a preliminary script and is only available for convenience -- so expect small bugs. 
+## Additional Info
+To execute this tool without the initial `python` command from any directory, execute the following commands.
+```
+chmod u+x vl_logger.py
+ln -s <explicit path to repo>/lollygag_logger/vl_logger.py ~/bin/vl_logger
+```
+Then you may execute the tool as follows:
+```
+Ex: vl_logger -at2 <step id> -f "<string>"
+```
 Do not use PDB when using this script, it will not output correctly.
+If you find any bugs or have suggestions, feel free to contact me.

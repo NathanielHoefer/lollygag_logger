@@ -280,6 +280,7 @@ class CondenseColor(unittest.TestCase):
         self.assertTrue(line.standard_format)
         self.assertEqual(line.get_field_str(ValenceField.DETAILS), "Sending...\x1b[0m")
 
+
     def test_collapse_above_len(self):
         log = '2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] S{nding }T'
         line = LogLine(log)

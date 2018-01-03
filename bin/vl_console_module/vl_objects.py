@@ -288,7 +288,7 @@ class ValenceHeader(LogLine):
 
         if self.color:
             str_output = self.color.value + str_output + ColorType.END.value
-        return str_output + ColorType.END.value if self.is_colored else str_output
+        return str_output
 
     def _default_vals(self):
         """Set all field to default values."""

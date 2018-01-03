@@ -270,7 +270,7 @@ class CondenseColor(unittest.TestCase):
         line.condense_field(ValenceField.DETAILS, condense_len=10, collapse_dict=False,
                             collapse_list=False, collapse_len=5)
         self.assertTrue(line.standard_format)
-        self.assertEqual(line.get_field_str(ValenceField.DETAILS), "Sending HT")
+        self.assertEqual(line.get_field_str(ValenceField.DETAILS), "Sending HT\x1b[0m")
 
     def test_condense_above_len(self):
         log = '2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] Sending HTT'
@@ -278,7 +278,7 @@ class CondenseColor(unittest.TestCase):
         line.condense_field(ValenceField.DETAILS, condense_len=10, collapse_dict=False,
                             collapse_list=False, collapse_len=5)
         self.assertTrue(line.standard_format)
-        self.assertEqual(line.get_field_str(ValenceField.DETAILS), "Sending...")
+        self.assertEqual(line.get_field_str(ValenceField.DETAILS), "Sending...\x1b[0m")
 
     def test_collapse_above_len(self):
         log = '2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] S{nding }T'
@@ -286,7 +286,7 @@ class CondenseColor(unittest.TestCase):
         line.condense_field(ValenceField.DETAILS, condense_len=12, collapse_dict=True,
                             collapse_list=False, collapse_len=7)
         self.assertTrue(line.standard_format)
-        self.assertEqual(line.get_field_str(ValenceField.DETAILS), "S{nd...}T")
+        self.assertEqual(line.get_field_str(ValenceField.DETAILS), "S{nd...}T\x1b[0m")
 
     def test_collapse_at_len(self):
         log = '2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] Se{ding }T'
@@ -294,7 +294,7 @@ class CondenseColor(unittest.TestCase):
         line.condense_field(ValenceField.DETAILS, condense_len=12, collapse_dict=True,
                             collapse_list=False, collapse_len=7)
         self.assertTrue(line.standard_format)
-        self.assertEqual(line.get_field_str(ValenceField.DETAILS), "Se{ding }T")
+        self.assertEqual(line.get_field_str(ValenceField.DETAILS), "Se{ding }T\x1b[0m")
 
     def test_collapse_and_condense(self):
         log = '2017-10-30 19:13:32.209878 DEBUG [valence:42] [MainProcess:MainThread] HTTP S{nding }T'
@@ -302,7 +302,7 @@ class CondenseColor(unittest.TestCase):
         line.condense_field(ValenceField.DETAILS, condense_len=10, collapse_dict=True,
                             collapse_list=False, collapse_len=7)
         self.assertTrue(line.standard_format)
-        self.assertEqual(line.get_field_str(ValenceField.DETAILS), "HTTP S{...")
+        self.assertEqual(line.get_field_str(ValenceField.DETAILS), "HTTP S{...\x1b[0m")
 
     def test_color_type(self):
         log = '2017-10-30 19:13:32.209878 WARNING [valence:42] [MainProcess:MainThread] HTTP'

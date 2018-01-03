@@ -174,7 +174,7 @@ class ValenceConsoleFormatter(LogFormatter):
                 print search_text
                 self.searching_text_printed = True
             else:
-                print "---   \r" if self.log_lines_read % 100 < 50 else "   ---\r",
+                print ("---   \r" if self.log_lines_read % 100 < 50 else "   ---\r"),
 
         # Update status when log line is sent through
         if formatted_log_line is None:
@@ -336,7 +336,10 @@ class ValenceConsoleFormatter(LogFormatter):
 
     def _print_line(self, log_line):
         """Prints str if no write_path specified, otherwise save line to file specific by write_path."""
-        log_str = str(log_line)
+        if helpers.str_to_bool(self.format_config[COLORS]["use_colors"]):
+            log_str = str(log_line) + ColorType.END.value
+        else:
+            log_str = str(log_line)
 
         if self.write_path:
             with open(self.write_path, "a") as write_file:

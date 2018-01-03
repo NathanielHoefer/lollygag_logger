@@ -37,7 +37,8 @@ def create_config_file(file_directory=""):
     # Username and password for grabbing AT2 logs from a task instance ID.
     config_fields[AT2_TASKINSTANCE_CREDENTIALS] = [
         ("username", ""),
-        ("password", "")]
+        ("password", ""),
+        ("at2_url",  "https://")]
 
     # Log lines identified by the following types to be printed or ignored
     config_fields[DISPLAY_LOG_TYPES_SECT] = [

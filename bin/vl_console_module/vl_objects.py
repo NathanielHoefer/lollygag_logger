@@ -226,7 +226,8 @@ class ValenceLogLine(LogLine):
             current_field_str = helpers.collapse_struct(current_field_str, "list", collapse_len)
 
         # Condense length of element if it exceeds specified length
-        setattr(self, field.value, helpers.condense(current_field_str, condense_len))
+        setattr(self, field.value, helpers.condense(current_field_str, condense_len) +
+                ColorType.END.value)
 
     def _list_all_field_strings(self):
         """Returns list of all field values as strings. If a value is None, then it has been removed."""

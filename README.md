@@ -1,16 +1,16 @@
 # vl_logger
-This is a tool specifically designed for formatting Valence logs for better legibility and debugging by allowing customized formatting. It is completely unobtrusive in the sense that it doesn't directly effect any of the artifacts or testing that is being produced. This is accomplished by capturing each log line as it is being printed to the console or read, and runs it through the formatter - affecting only the screen output of the logs, leaving all other aspects such as files intact. Because of this line-by-line formatting, a number of sources can be read from as explained below.
+This is a tool specifically designed for formatting Valence logs for better legibility and debugging by allowing customized formatting. It is completely unobtrusive in the sense that it doesn't directly affect any of the artifacts or testing that is being produced. This is accomplished by capturing each log line as it is being printed to the console or read, and runs it through the formatter - affecting only the screen output of the logs, leaving all other aspects such as files intact. Because of this line-by-line formatting, a number of sources can be read from as explained below.
 
 ## Usage
-To begin a test and format the printed logs, use the `-run` argument followed by the suite path. This tool utilizes the `vl run` command, so it must be installed and you must execute it from the same directory as if running that command instead. To stop the test, issue a keyboard interupt Ctrl-C just as you would normally.
+**To begin a test and format the printed logs**, use the `-run` argument followed by the suite path. This tool utilizes the `vl run` command, so it must be installed and you must execute it from the same directory as if running that command instead. To stop the test, issue a keyboard interupt Ctrl-C just as you would normally.
 ```
 Ex: python vl_logger.py -run <path.to.suite?
 ```
-To format and print logs from a file, use the `-r` argument followed by the file path.
+**To format and print logs from a file**, use the `-r` argument followed by the file path.
 ```
 Ex: python vl_logger.py -r <file path>
 ```
-To format and print logs from a AT2 Task Step Instance, use the `-at2` argument followed by the task instance step ID.
+**To format and print logs from a AT2 Task Step Instance**, use the `-at2` argument followed by the task instance step ID.
 ```
 Ex: python vl_logger.py -at2 <step id>
 ```

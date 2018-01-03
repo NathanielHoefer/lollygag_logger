@@ -113,20 +113,18 @@ def args():
                   "tool can format logs from the 'vl run' command, stored log file, or an at2 task " \
                   "step instance. When formatting logs from the 'vl run' command, the tool will " \
                   "execute the command directly and the output will be in real time."
-    vl_desc = "Source of the logs. Without -r or -at2 flags, this tool will attempt to execute the " \
-              "'vl run' command using the vl_source parameter as the suite path. To cancel the " \
-              "'vl run' execution, pass a keyboard interrupt and the test will be cancelled. Refer " \
-              "to -r or -at2 descriptions for additional info."
-    file_desc = "Flag indicating to read from log file specified in the vl_source parameter."
-    at2_desc = "Flag indicating to fetch AT2 Task Instance logs from the specified AT2 Task Step " \
-               "Instance ID specified in the vl_source parameter."
-    find_desc = "Highlight specified string found in the logs. Not functional when running the 'vl " \
-                "run' command."
+    vl_desc = "This argument will attempt to execute the 'vl run' command so you should be in the " \
+              "correct directory before executing. To cancel the 'vl run' execution, pass a keyboard " \
+              "interrupt and the test will be cancelled."
+    file_desc = "Read from log file specified."
+    at2_desc = "Fetch AT2 Task Instance logs from the specified AT2 Task Step Instance ID."
+    find_desc = "Highlight specified string found in the logs. Not functional when running the '-run' " \
+                "command."
     list_desc = "List specified test case or step. Be sure to copy the entire test case or step " \
-                "description --excluding the borders and 'Expect: Pass'. Also remember to use " \
-                "quotation marks. Not functional when running the 'vl run' command."
-    write_desc = "Write log output to specified file. Not functional when running the 'vl run' command."
-    ini_desc = "Directory to look for format .ini file."
+                "description --excluding the borders and 'Expect: Pass'. Not functional when running " \
+                "the '-run' command."
+    write_desc = "Write log output to specified file. Not functional when running the '-run' command."
+    ini_desc = "Directory to look for 'vl_logger.ini' file."
 
     # Argument setup and parsing
     parser = argparse.ArgumentParser(prog=program, description=description)

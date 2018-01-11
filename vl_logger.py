@@ -156,12 +156,12 @@ if __name__ == '__main__':
     logger = None
 
     # 'vl run' Case
-    if not args.read_path and not args.at2_id:
+    if args.suite_path:
         # Currently not implementing find_str, list_step, or write_path
         vl_console_output = Formatter(log_line_cls=LogLine,
                                       format_config=config,
                                       ini_filepath=args.ini_path)
-        proc = subprocess.Popen(["python", "vl", "run", args.suite_path], stdout=subprocess.PIPE,
+        proc = subprocess.Popen(["vl", "run", args.suite_path], stdout=subprocess.PIPE,
                                 universal_newlines=False)
         try:
             logger = LollygagLogger(iter(proc.stdout.readline, b''), vl_console_output)

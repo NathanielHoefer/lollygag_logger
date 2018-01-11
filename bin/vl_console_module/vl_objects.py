@@ -55,9 +55,12 @@ class ValenceLogLine(LogLine):
         if self.standard_format:
             field_strings = self._list_all_field_strings()
             str_output = " ".join([field for field in field_strings if field is not None])
+            return helpers.condense(str_output, self.max_len)
         else:
             str_output = self.original_line
-        return helpers.condense(str_output, self.max_len)
+            str_output = helpers.collapse_struct(str_output, "dict")
+            str_output = helpers.collapse_struct(str_output, "list")
+            return str_output
 
     def _default_vals(self):
         """Set all field to default values."""

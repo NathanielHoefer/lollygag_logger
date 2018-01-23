@@ -280,6 +280,7 @@ class ValenceConsoleFormatter(LogFormatter):
                 self.waiting_for_header[header_type] = True
 
             # Details of border
+            # TODO - Improve to handle 'Expect' lines
             elif log_type == LogType.OTHER and is_waiting:
                 formatted_header = Header(log_line.original_line, self._calc_max_len())
                 break

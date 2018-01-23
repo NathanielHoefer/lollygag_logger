@@ -309,8 +309,9 @@ class ValenceHeader(LogLine):
         """
 
         # Don't try to parse if header not in test case or suite
+        # TODO - Improve to handle 'Expect' lines
         split = input_str.split(":", 1)
-        if len(split) <= 1 or input_str == "Expect: Pass":
+        if len(split) <= 1 or input_str.find("Expect:") >= 0:
             self.original_line = ""
             return
 

@@ -98,12 +98,14 @@ import argparse
 import subprocess
 import requests
 from requests import auth
+import sys
 
 from bin.lollygag_logger import LollygagLogger
 from bin.vl_console_module.vl_config_file import *
 from bin.vl_console_module import ValenceConsoleFormatter as Formatter
 from bin.vl_console_module import ValenceLogLine as LogLine
 
+from valence.driver import main
 
 def args():
     """Args for vl_logger.
@@ -155,22 +157,52 @@ if __name__ == '__main__':
 
     logger = None
 
+    # import os
+    # if not os.isatty(0):
+    #     config = create_config_file()
+    #     vl_console_output = Formatter(log_line_cls=LogLine,
+    #                                   format_config=config)
+    #     try:
+    #         logger = LollygagLogger(sys.stdin, vl_console_output)
+    #         logger.run()
+    #     except KeyboardInterrupt:
+    #         logger.kill()
+    #         print "Keyboard Interrupt: Exiting Logger"
+    #         exit(0)
+    #     exit(0)
+
     # 'vl run' Case
     if args.suite_path:
+
         # Currently not implementing find_str, list_step, or write_path
         vl_console_output = Formatter(log_line_cls=LogLine,
                                       format_config=config,
-                                      ini_filepath=args.ini_path)
-        proc = subprocess.Popen(["vl", "run", args.suite_path], stdout=subprocess.PIPE,
-                                universal_newlines=False)
+                                      ini_filepath=args.ini_path,
+                                      find_str=args.find_str,
+                                      list_step=args.list_step,
+                                      write_path=args.write_path)
+
+        # proc = subprocess.Popen(main.run(args.suite_path), stdout=subprocess.PIPE,
+        #                         universal_newlines=False)
+
+        # rpipe, wpipe = os.pipe()
+        # pid = os.fork()
+        #
+        # if pid == 0:
+        #     try:
+        #         os.close(wpipe)
+        #         rpipe.
+
         try:
-            logger = LollygagLogger(iter(proc.stdout.readline, b''), vl_console_output)
-            logger.run()
-            proc.stdout.close()
-            proc.wait()
+            main.run(args.suite_path)
+
+            # logger = LollygagLogger(iter(proc.stdout.readline, b''), vl_console_output)
+            # logger.run()
+            # proc.stdout.close()
+            # proc.wait()
         except KeyboardInterrupt:
-            proc.kill()
-            logger.kill()
+            # proc.kill()
+            # logger.kill()
             print "Keyboard Interrupt: Exiting Logger"
             exit(0)
 

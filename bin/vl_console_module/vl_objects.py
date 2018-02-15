@@ -8,7 +8,10 @@ Last Updated: 12/30/2017
 
 import datetime
 import re
+import pytz
+import tzlocal
 from bin.lollygag_logger import LogLine
+from bin.lollygag_logger import LogField
 from enums import *
 import helpers
 
@@ -118,12 +121,15 @@ class ValenceLogLine(LogLine):
         # Parse Time
         # Check to see if logs are in valence format or AT2 format based on time then create datetime
         # object for time and assign str to 2nd index
-        if re.match("^\d{2}:\d{2}:\d{2}\.\d{6}$", split[1]) \
-                or re.match("^\d{2}:\d{2}:\d{2},\d{3}$", split[1]):
-            time_values = [self._str_to_time(split[1]), split[1]]
-            self.time = time_values
-        else:
-            self.time = None
+
+        self.datetime = DatetimeField(split[0], split[1])
+
+        # if re.match("^\d{2}:\d{2}:\d{2}\.\d{6}$", split[1]) \
+        #         or re.match("^\d{2}:\d{2}:\d{2},\d{3}$", split[1]):
+        #     time_values = [self._str_to_time(split[1]), split[1]]
+        #     self.time = time_values
+        # else:
+        #     self.time = None
 
         # Parse Type
         # Assign LogType enum to first index and the str representation to the 2nd index.
@@ -257,6 +263,112 @@ class ValenceLogLine(LogLine):
         else:
             time = datetime.datetime.strptime(time_str, "%H:%M:%S.%f")
         return time if time else None
+
+
+class DatetimeField(LogField):
+    """Stores the both the date and time field.
+
+    :param str date_str: Str containing date info
+    :param str time_str: Str containing time info
+    :param bool display_date: If true, include date in str
+    :param bool display_time: If true, include time in str
+    """
+
+    DATE_PATTERN = "^\d{4}-\d{2}-\d{2}$"
+    TIME_PATTERN = "^\d{2}:\d{2}:\d{2}[\.,]\d{3,6}$"
+    DATE_FORMAT = "%Y-%m-%d"
+    TIME_FORMAT = "%H:%M:%S.%f"
+    DATETIME_PATTERN = " ".join([DATE_FORMAT, TIME_FORMAT])
+
+    def __init__(self, date_str, time_str, display_date=True, display_time=True, local_time_zone=False):
+        self.display_date = display_date
+        self.display_time = display_time
+        time_str = time_str.replace(",", ".")
+        if self.is_date_valid(date_str) and self.is_time_valid(time_str):
+            datetime_str = " ".join([date_str, time_str])
+            self.datetime = datetime.datetime.strptime(datetime_str, self.DATETIME_PATTERN)
+            # Convert to local timezone
+            if local_time_zone:
+                self.datetime = self.datetime.replace(tzinfo=pytz.utc).astimezone(
+                    tzlocal.get_localzone())
+        else:
+            self.datetime = None
+
+    def __str__(self):
+        if self.datetime:
+            output_list = list()
+            if self.display_date:
+                output_list.append(self.datetime.strftime(self.DATE_FORMAT))
+            if self.display_time:
+                output_list.append(self.datetime.strftime(self.TIME_FORMAT))
+            return " ".join(output_list)
+        else:
+            return ""
+
+    def is_date_valid(self, date_str):
+        """Checks if date str matches the date pattern.
+
+        :param str date_str: Str containing date info
+        :rtype: bool
+        """
+        return re.match(self.DATE_PATTERN, date_str)
+
+    def is_time_valid(self, time_str):
+        """Checks if time str matches the date pattern.
+
+        :param str time_str: Str containing time info
+        :rtype: bool
+        """
+        return re.match(self.TIME_PATTERN, time_str)
+
+
+class TypeField(LogField):
+
+    def __init__(self, type_str):
+        if type_str in [x.name for x in LogType]:
+            self.type = LogType[type_str]
+        else:
+            self.type = None
+
+    def __str__(self):
+        return str(self.type)
+
+
+class SourceField(LogField):
+
+    REGEX_PATTERN = "^\[.*:.*\]$"
+
+    def __init__(self, source_str):
+        if re.match(self.REGEX_PATTERN, source_str):
+            self.source = source_str
+        else:
+            self.source = ""
+
+    def __str__(self):
+        return self.source
+
+
+class ThreadField(LogField):
+
+    REGEX_PATTERN = "^\[.*:.*\]$"
+
+    def __init__(self, thread_str):
+        if re.match(self.REGEX_PATTERN, thread_str):
+            self.thread = thread_str
+        else:
+            self.thread = ""
+
+    def __str__(self):
+        return self.thread
+
+
+class DetailField(LogField):
+
+    def __init__(self, detail_str):
+        self.detail = detail_str
+
+    def __str__(self):
+        return self.detail
 
 
 class ValenceHeader(LogLine):

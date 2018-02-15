@@ -182,8 +182,8 @@ if __name__ == '__main__':
                                       list_step=args.list_step,
                                       write_path=args.write_path)
 
-        # proc = subprocess.Popen(main.run(args.suite_path), stdout=subprocess.PIPE,
-        #                         universal_newlines=False)
+        proc = subprocess.Popen(["vl", "run", args.suite_path], stdout=subprocess.PIPE,
+                                universal_newlines=False)
 
         # rpipe, wpipe = os.pipe()
         # pid = os.fork()
@@ -194,15 +194,15 @@ if __name__ == '__main__':
         #         rpipe.
 
         try:
-            main.run(args.suite_path)
+            # main.run(args.suite_path)
 
-            # logger = LollygagLogger(iter(proc.stdout.readline, b''), vl_console_output)
-            # logger.run()
-            # proc.stdout.close()
-            # proc.wait()
+            logger = LollygagLogger(iter(proc.stdout.readline, b''), vl_console_output)
+            logger.run()
+            proc.stdout.close()
+            proc.wait()
         except KeyboardInterrupt:
-            # proc.kill()
-            # logger.kill()
+            proc.kill()
+            logger.kill()
             print "Keyboard Interrupt: Exiting Logger"
             exit(0)
 

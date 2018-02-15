@@ -106,3 +106,15 @@ class LogLine:
     @abstractmethod
     def __init__(self, original_line):
         self.original_line = original_line
+
+
+class LogField:
+    """Abstract base class used to break each LogLine into identifiable fields."""
+
+    __metaclass__ = ABCMeta
+
+    REGEX_PATTERN = ".*"
+
+    @abstractmethod
+    def __str__(self):
+        pass

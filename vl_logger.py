@@ -185,6 +185,7 @@ if __name__ == '__main__':
         proc = subprocess.Popen(["vl", "run", args.suite_path], stdout=subprocess.PIPE,
                                 universal_newlines=False)
 
+        # TODO - Try implementing through manipulating logs directly from the logging class
         # rpipe, wpipe = os.pipe()
         # pid = os.fork()
         #

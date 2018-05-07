@@ -1,0 +1,28 @@
+Problem Statement:
+We need a tool that will allow us to more efficiently interpret logs from executed tests. This includes
+using color to differentiate between log types, filter logs by type, filter log fields, condense
+logs to a single line, display logs from specified suites, test cases, and steps, align fields from line
+to line and clearly display the API calls and responses. The user can choose what log types to filter,
+what log fields to filter, what suites/test cases/steps to view, whether to see formatted API calls. This
+ tool will format the logs from the following sources: log files that have already been generated,
+ locally running test executed from the tool, AT2 task instances.
+
+User stories:
+
+Color log type field based on type
+The log type fields on each log will be colored a unique color based on the type. The more important
+critial the log, the more contrasting color should be used.
+
+Color suite/test case/step headers
+The headers for the suites, test cases, steps are to be colored with contrasting colors in order to
+quickly identify.
+
+ - Filter logs based on log type
+ - Condense logs to fit on a single line
+ - Filter log fields
+ - Convert timestamp from UTC to custom timezone
+ - View API calls and responses
+ - View logs from specific suites/test cases/steps
+ - Read and format from log file
+ - Format from AT2 Valence task step instance
+ - Execute and format test suite using vl

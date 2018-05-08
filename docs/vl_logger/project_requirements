@@ -1,11 +1,24 @@
 Problem Statement:
-We need a tool that will allow us to more efficiently interpret logs from executed tests. This includes
-using color to differentiate between log types, filter logs by type, filter log fields, condense
-logs to a single line, display logs from specified suites, test cases, and steps, align fields from line
-to line and clearly display the API calls and responses. The user can choose what log types to filter,
-what log fields to filter, what suites/test cases/steps to view, whether to see formatted API calls. This
- tool will format the logs from the following sources: log files that have already been generated,
- locally running test executed from the tool, AT2 task instances.
+We need a tool that will allow us to more efficiently interpret logs from executed tests and extract more information that is readily visible from various sources.
+For formatting, this includes:
+  - using color to differentiate between log types,
+  - filter logs by type,
+  - filter log fields,
+  - condense logs to a single line,
+  - display logs from specified suites, test cases, and steps,
+  - align fields from line to line
+Additional information includes:
+ - clearly display the API calls and responses
+ - duration of suites/test cases/steps
+The user can choose the following
+ - what log types to filter,
+ - what log fields to filter,
+ - what suites/test cases/steps to view,
+ - whether to see formatted API calls.
+Various sources:
+ - log files that have already been generated,
+ - locally running test executed from the tool,
+ - AT2 task instances.
 
 User stories:
 

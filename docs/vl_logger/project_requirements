@@ -5,37 +5,26 @@ For formatting, this includes:
   - filter logs by type,
   - filter log fields,
   - condense logs to a single line,
-  - display logs from specified suites, test cases, and steps,
   - align fields from line to line
-Additional information includes:
+More information to be extracted includes:
  - clearly display the API calls and responses
  - duration of suites/test cases/steps
 The user can choose the following
  - what log types to filter,
- - what log fields to filter,
- - what suites/test cases/steps to view,
- - whether to see formatted API calls.
+ - what log fields to filter
 Various sources:
  - log files that have already been generated,
  - locally running test executed from the tool,
  - AT2 task instances.
 
-User stories:
 
-Color log type field based on type
-The log type fields on each log will be colored a unique color based on the type. The more important
-critial the log, the more contrasting color should be used.
+Features:
+As a user, format logs from a local file that uses color to differentiate between log types, filter logs by type, filter log fields, condense logs to a single line, align fields from line to line.
 
-Color suite/test case/step headers
-The headers for the suites, test cases, steps are to be colored with contrasting colors in order to
-quickly identify.
+As a user, choose to show API calls and responses in a clear manner
 
- - Filter logs based on log type
- - Condense logs to fit on a single line
- - Filter log fields
- - Convert timestamp from UTC to custom timezone
- - View API calls and responses
- - View logs from specific suites/test cases/steps
- - Read and format from log file
- - Format from AT2 Valence task step instance
- - Execute and format test suite using vl
+As a user, choose to what suites/test cases/steps to show and their durations
+
+Provide a config file that allows user to decide what log types to filter, what log fields to filter
+
+As a user, execute a local suite and format the output as it is being produced.

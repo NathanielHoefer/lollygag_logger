@@ -18,8 +18,29 @@ Various sources:
  - AT2 task instances.
 
 
-Features:
-As a user, format logs from a local file that uses color to differentiate between log types, filter logs by type, filter log fields, condense logs to a single line, align fields from line to line.
+Stories:
+Title: Design Basic Structure for Command.
+Type: Enabler
+Description: Design the initial command and arguments to allow for consistency between options.
+Acceptance Criteria: When the program is executed with the '-h' option, a list of commands to be implemented within this feature are to be displayed.
+
+Title: Format Log Type by Color
+Type: User Story
+Description: As a user, I want to format logs from a local file that uses color to differentiate between log types, so that I can more easily triage logs.
+Acceptance Criteria: Given logs are in vl format within a file, when the program is executed with the file as an argument, then the file will be printed to stdout with console color formatting around the log type.
+
+Title: Read Logs from a File
+Type: User Story
+Description: As a user, I want to read the logs in from a file, so that later they can be formatted.
+Acceptance Criteria: Given any state, when the program is executed with a log file as an argument, then each line will be printed to stdout as it was.
+
+Title: Convert Log Lines to Objects
+Type: Enabler
+Description: As the logs are coming in, convert the line into an object that can identify the various fields.
+Acceptance Criteria:
+    - Given any state, when
+
+As a user, I want to filter logs by type so that I can more easily triage logs
 
 As a user, choose to show API calls and responses in a clear manner
 
@@ -28,3 +49,7 @@ As a user, choose to what suites/test cases/steps to show and their durations
 Provide a config file that allows user to decide what log types to filter, what log fields to filter
 
 As a user, execute a local suite and format the output as it is being produced.
+
+Stories:
+
+As a user, I want to

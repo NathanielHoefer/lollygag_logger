@@ -53,3 +53,20 @@ As a user, execute a local suite and format the output as it is being produced.
 Stories:
 
 As a user, I want to
+
+
+
+
+User Interface:
+
+Read from log file
+vl-logger -r[--read] test.log
+
+Read from log file and view specific test case
+vl-logger -r test.log -t[--testcase] [tc number|tc name]
+
+Read from log file and view specific step from test case
+vl-logger -r test.log -t [tc number|tc name]:[step number]
+
+Read from log file and view API calls and responses
+vl-logger -r test.log -a[--api]

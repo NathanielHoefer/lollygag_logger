@@ -1,0 +1,189 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>VL Objects &#8212; vl-logger 2.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="vl-logger 2.0 documentation" href="index.html" />
+    <link rel="prev" title="Welcome to vl-logger’s documentation!" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="vl-objects">
+<h1>VL Objects<a class="headerlink" href="#vl-objects" title="Permalink to this headline">¶</a></h1>
+<blockquote>
+<div><span class="target" id="module-vl_objects"></span><dl class="class">
+<dt id="vl_objects.VLogLine">
+<em class="property">class </em><code class="descclassname">vl_objects.</code><code class="descname">VLogLine</code><span class="sig-paren">(</span><em>original_line</em><span class="sig-paren">)</span><a class="headerlink" href="#vl_objects.VLogLine" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract base class for all other log line elements.</p>
+<dl class="staticmethod">
+<dt id="vl_objects.VLogLine.get_type">
+<em class="property">static </em><code class="descname">get_type</code><span class="sig-paren">(</span><em>unf_str</em><span class="sig-paren">)</span><a class="headerlink" href="#vl_objects.VLogLine.get_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the VL log type of the passed string.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>unf_str</strong> (<em>str</em>) &#8211; Unformatted VL log line</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">VLogType</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="vl_objects.VLogLine.create_log_line">
+<em class="property">static </em><code class="descname">create_log_line</code><span class="sig-paren">(</span><em>unf_str</em>, <em>type</em><span class="sig-paren">)</span><a class="headerlink" href="#vl_objects.VLogLine.create_log_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the appropriate VLogLine object based on type.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>unf_str</strong> (<em>str</em>) &#8211; Unformatted VL log line</li>
+<li><strong>type</strong> (<em>VLogType</em>) &#8211; Type of VLogLine object to create.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">VLogLine|None</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">VLogLine if unf_str matches pattern of type, else None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="vl_objects.VLogLine.set_max_line_len">
+<em class="property">classmethod </em><code class="descname">set_max_line_len</code><span class="sig-paren">(</span><em>max_len</em><span class="sig-paren">)</span><a class="headerlink" href="#vl_objects.VLogLine.set_max_line_len" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the maximum length of the VLogLine string.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>max_len</strong> (<em>int</em>) &#8211; Max number of chars in VLogLine string.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="vl_objects.VLogLine.parse_fields">
+<code class="descname">parse_fields</code><span class="sig-paren">(</span><em>unf_str</em><span class="sig-paren">)</span><a class="headerlink" href="#vl_objects.VLogLine.parse_fields" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse the unformatted string into the various fields and create the appropriate VL objects.</p>
+<p>Note: This method is abstract.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>unf_str</strong> (<em>str</em>) &#8211; Unformatted VL log line</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="vl_objects.VLogLine.get_pattern">
+<em class="property">classmethod </em><code class="descname">get_pattern</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#vl_objects.VLogLine.get_pattern" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the regex pattern that is used for identifying VL log objects.</p>
+<p>Note: This method is abstract.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div></blockquote>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Welcome to vl-logger&#8217;s documentation!</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/vl_objects.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Nathaniel Hoefer.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/vl_objects.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

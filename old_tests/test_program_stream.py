@@ -7,7 +7,7 @@ Test Program Stream
 by Nathaniel Hoefer
 Last Updated: 12/14/2017
 
-Used solely for tests LollygagLogger by printing values a second apart.
+Used solely for old_tests LollygagLogger by printing values a second apart.
 """
 
 from time import sleep

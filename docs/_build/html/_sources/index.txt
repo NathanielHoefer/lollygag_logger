@@ -11,7 +11,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   vl_objects
+   vlog
 
 
 Indices and tables

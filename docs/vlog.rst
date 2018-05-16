@@ -1,7 +1,7 @@
 VL Objects
 ==========
 
- .. module:: vl_objects
+ .. module:: vlog
 
  .. autoclass:: VLogLine
     :members:

@@ -18,9 +18,7 @@
 #
 import os
 import sys
-sys.path.append(os.path.abspath('../bin/vl_console_module'))
-#sys.path.append(os.path.abspath('../bin/lollygag_logger'))
-#sys.path.append(os.path.abspath('../bin'))
+sys.path.append(os.path.abspath('../vl_logger'))
 sys.path.append(os.path.abspath('..'))
 
 

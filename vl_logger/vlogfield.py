@@ -87,16 +87,36 @@ class Type(LogField):
 
 
 class Source(LogField):
-    """Represents the source field.
+    """Represents the source field."""
 
-    :ivar str source_token: Source token from VL log
-    """
+    SOURCE_PATTERN = "^\[.*:.*\]$"
 
     def __init__(self, source_token):
-        pass
+        """Initialize source field from ``str`` token.
+
+        :param str source_token: Source token from VL log
+        :raise ValueError: On value that doesn't follow date and time format
+        """
+        try:
+            source_token = source_token.strip("[]")
+            module, _, line_number = source_token.partition(":")
+        except ValueError:
+            msg = "The source token '" + source_token + "' is not vaild."
+            raise ValueError(msg)
+        self.module = module
+        self.line_number = int(line_number)
 
     def __str__(self):
-        pass
+        """Convert type field to ``str``."""
+        return "".join(["[", self.module, ":", str(self.line_number), "]"])
+
+    def get_module(self):
+        """Return the ``str`` module of the field."""
+        return self.module
+
+    def get_line_number(self):
+        """Return the ``int`` line number of the field."""
+        return self.line_number
 
 
 class Thread(LogField):

@@ -36,5 +36,16 @@ class TestFieldCreation(unittest.TestCase):
         with self.assertRaises(ValueError):
             vlogfield.Type("Garbage")
 
+    def test_correct_source_field(self):
+        token = "[res.core.absolute:636]"
+        source = vlogfield.Source(token)
+        self.assertEqual(str(source), token)
+        self.assertEqual(source.get_module(), "res.core.absolute")
+        self.assertEqual(source.get_line_number(), 636)
+
+    def test_incorrect_source_field(self):
+        with self.assertRaises(ValueError):
+            vlogfield.Source("Garbage")
+
 if __name__ == '__main__':
     unittest.main()

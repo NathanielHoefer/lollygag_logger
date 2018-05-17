@@ -1,6 +1,7 @@
 import six
 import abc
 import re
+from datetime import datetime
 
 @six.add_metaclass(abc.ABCMeta)
 class LogField(object):
@@ -26,14 +27,22 @@ class DatetimeField(LogField):
 
     :ivar str datetime_token: Date and time token from VL log field
     """
-    DATE_PATTERN = "\d{4}-\d{2}-\d{2}"
-    TIME_PATTERN = "\d{2}:\d{2}:\d{2}\.\d{6}"
+    DATE_RE_PATTERN = "\d{4}-\d{2}-\d{2}"
+    TIME_RE_PATTERN = "\d{2}:\d{2}:\d{2}\.\d{6}"
+    DATE_FORMAT = "%Y-%m-%d"
+    TIME_FORMAT = "%H:%M:%S.%f"
 
     def __init__(self, datetime_token):
-        pass
+        try:
+            format = " ".join([self.DATE_FORMAT, self.TIME_FORMAT])
+            self.datetime = datetime.strptime(datetime_token, format)
+        except ValueError:
+            msg = "The datetime token '" + datetime_token + "' is not vaild."
+            raise ValueError(msg)
 
     def __str__(self):
-        pass
+        format = " ".join([self.DATE_FORMAT, self.TIME_FORMAT])
+        return self.datetime.strftime(format)
 
     @classmethod
     def get_pattern(cls):
@@ -42,7 +51,7 @@ class DatetimeField(LogField):
 
         :rtype: str
         """
-        return "^" + cls.DATE_PATTERN + " " + cls.TIME_PATTERN + "$"
+        return "^" + cls.DATE_RE_PATTERN + " " + cls.TIME_RE_PATTERN + "$"
 
 
 class TypeField(LogField):

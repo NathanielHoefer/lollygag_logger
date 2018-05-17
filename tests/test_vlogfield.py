@@ -13,5 +13,11 @@ class TestFieldCreation(unittest.TestCase):
         with self.assertRaises(ValueError):
             vlogfield.DatetimeField(token)
 
+    def test_get_pattern(self):
+        pattern = " ".join(["\d{4}-\d{2}-\d{2}", "\d{2}:\d{2}:\d{2}\.\d{6}"])
+        pattern = "".join(["^", pattern, "$"])
+        self.assertEqual(vlogfield.DatetimeField.get_pattern(), pattern)
+
+
 if __name__ == '__main__':
     unittest.main()

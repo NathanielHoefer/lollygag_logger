@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>VL Objects &mdash; vl-logger 2.0 documentation</title>
+    <title>VL Log Lines &mdash; vl-logger 2.0 documentation</title>
     
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -24,6 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="vl-logger 2.0 documentation" href="index.html" />
+    <link rel="next" title="VL Log Fields" href="vlogfield.html" />
     <link rel="prev" title="Welcome to vl-logger’s documentation!" href="index.html" />
    
   
@@ -37,8 +38,8 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="vl-objects">
-<h1>VL Objects<a class="headerlink" href="#vl-objects" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="vl-log-lines">
+<h1>VL Log Lines<a class="headerlink" href="#vl-log-lines" title="Permalink to this headline">¶</a></h1>
 <blockquote>
 <div><span class="target" id="module-vlog"></span><dl class="class">
 <dt id="vlog.VLogLine">
@@ -61,7 +62,8 @@
 <dl class="method">
 <dt id="vlog.VLogLine.parse_fields">
 <code class="descname">parse_fields</code><span class="sig-paren">(</span><em>unf_str</em><span class="sig-paren">)</span><a class="headerlink" href="#vlog.VLogLine.parse_fields" title="Permalink to this definition">¶</a></dt>
-<dd><p>Parse the unformatted string into the various fields and create the appropriate VL objects.</p>
+<dd><p>Parse the unformatted string into the various fields and create the
+appropriate VL objects.</p>
 <p>Note: This method is abstract.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -76,7 +78,8 @@
 <dl class="classmethod">
 <dt id="vlog.VLogLine.get_pattern">
 <em class="property">classmethod </em><code class="descname">get_pattern</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#vlog.VLogLine.get_pattern" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the regex pattern that is used for identifying VL log objects.</p>
+<dd><p>Returns the regex pattern that is used for identifying VL log
+objects.</p>
 <p>Note: This method is abstract.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -103,6 +106,7 @@
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
       <li>Previous: <a href="index.html" title="previous chapter">Welcome to vl-logger&#8217;s documentation!</a></li>
+      <li>Next: <a href="vlogfield.html" title="next chapter">VL Log Fields</a></li>
   </ul></li>
 </ul>
 </div>

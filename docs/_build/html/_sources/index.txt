@@ -12,6 +12,7 @@ Contents:
    :maxdepth: 2
 
    vlog
+   vlogfield
 
 
 Indices and tables

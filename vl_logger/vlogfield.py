@@ -15,7 +15,7 @@ class LogField(object):
 
     @abc.abstractmethod
     def __str__(self):
-        """Abstract method for returning string of field."""
+        """Abstract method for returning ``str`` of field."""
         pass
 
     @classmethod
@@ -27,11 +27,8 @@ class LogField(object):
         return cls.PATTERN
 
 
-class DatetimeField(LogField):
-    """Represents both date and time field.
-
-    :ivar str datetime_token: Date and time token from VL log field
-    """
+class Datetime(LogField):
+    """Represents both date and time field."""
 
     DATE_RE_PATTERN = "\d{4}-\d{2}-\d{2}"
     TIME_RE_PATTERN = "\d{2}:\d{2}:\d{2}\.\d{6}"
@@ -39,8 +36,9 @@ class DatetimeField(LogField):
     TIME_FORMAT = "%H:%M:%S.%f"
 
     def __init__(self, datetime_token):
-        """Initialize datetime field.
+        """Initialize datetime field from ``str`` token.
 
+        :param str datetime_token: Date and time token from VL log field
         :raise ValueError: On value that doesn't follow date and time format
         """
         try:
@@ -51,33 +49,28 @@ class DatetimeField(LogField):
             raise ValueError(msg)
 
     def __str__(self):
-        """Convert date and time fields to string following vl formatting."""
+        """Convert date and time fields to ``str`` following vl formatting."""
         format = " ".join([self.DATE_FORMAT, self.TIME_FORMAT])
         return self.datetime.strftime(format)
 
     def get_datetime(self):
-        """Return the datetime object of the field."""
+        """Return the ``datetime`` object of the field."""
         return self.datetime
 
     @classmethod
     def get_pattern(cls):
-        """Return the regex pattern used for identifying VL datetime field.
-
-        :rtype: str
-        """
+        """Return the regex ``str`` used for identifying VL datetime field."""
         return "^" + cls.DATE_RE_PATTERN + " " + cls.TIME_RE_PATTERN + "$"
 
 
-class TypeField(LogField):
-    """Represents the type field.
-
-    :ivar VLogType type: Type of log
-    """
+class Type(LogField):
+    """Represents the type field."""
 
     def __init__(self, type):
-        """Initialize datetime field.
+        """Initialize datetime field from ``VLogType`` token.
 
-        :raise ValueError: On types not in VLogType enum
+        :param VLogType type: Type of log
+        :raise ValueError: On types not in ``VLogType``
         """
         if type in list(VLogType):
             self.type = type
@@ -85,15 +78,15 @@ class TypeField(LogField):
             raise ValueError("Invalid type '" + type + "'")
 
     def __str__(self):
-        """Convert type field to string."""
+        """Convert type field to ``str``."""
         return self.type.value
 
     def get_type(self):
-        """Return the VLogType."""
+        """Return the ``VLogType`` of the field."""
         return self.type
 
 
-class SourceField(LogField):
+class Source(LogField):
     """Represents the source field.
 
     :ivar str source_token: Source token from VL log
@@ -106,7 +99,7 @@ class SourceField(LogField):
         pass
 
 
-class ThreadField(LogField):
+class Thread(LogField):
     """Represents the thread field.
 
     :ivar str thread_token: Thread token from VL log
@@ -119,7 +112,7 @@ class ThreadField(LogField):
         pass
 
 
-class DetailsField(LogField):
+class Details(LogField):
     """Represents the details field.
 
     :ivar str details_token: Details token from VL log

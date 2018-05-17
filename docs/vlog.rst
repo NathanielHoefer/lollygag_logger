@@ -1,5 +1,5 @@
-VL Objects
-==========
+VL Log Lines
+============
 
  .. module:: vlog
 

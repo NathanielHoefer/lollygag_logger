@@ -1,7 +1,11 @@
+"""This module defines all of the VL field objects found in standard logs."""
+
 import six
 import abc
 import re
 from datetime import datetime
+from vl_logger.venums import VLogType
+
 
 @six.add_metaclass(abc.ABCMeta)
 class LogField(object):
@@ -11,11 +15,12 @@ class LogField(object):
 
     @abc.abstractmethod
     def __str__(self):
+        """Abstract method for returning string of field."""
         pass
 
     @classmethod
     def get_pattern(cls):
-        """Returns the regex pattern that is used for identifying VL log field.
+        """Return the regex pattern that is used for identifying VL log field.
 
         :rtype: str
         """
@@ -27,12 +32,17 @@ class DatetimeField(LogField):
 
     :ivar str datetime_token: Date and time token from VL log field
     """
+
     DATE_RE_PATTERN = "\d{4}-\d{2}-\d{2}"
     TIME_RE_PATTERN = "\d{2}:\d{2}:\d{2}\.\d{6}"
     DATE_FORMAT = "%Y-%m-%d"
     TIME_FORMAT = "%H:%M:%S.%f"
 
     def __init__(self, datetime_token):
+        """Initialize datetime field.
+
+        :raise ValueError: On value that doesn't follow date and time format
+        """
         try:
             format = " ".join([self.DATE_FORMAT, self.TIME_FORMAT])
             self.datetime = datetime.strptime(datetime_token, format)
@@ -41,13 +51,17 @@ class DatetimeField(LogField):
             raise ValueError(msg)
 
     def __str__(self):
+        """Convert date and time fields to string following vl formatting."""
         format = " ".join([self.DATE_FORMAT, self.TIME_FORMAT])
         return self.datetime.strftime(format)
 
+    def get_datetime(self):
+        """Return the datetime object of the field."""
+        return self.datetime
+
     @classmethod
     def get_pattern(cls):
-        """Returns the regex pattern that is used for identifying VL datetime
-        field.
+        """Return the regex pattern used for identifying VL datetime field.
 
         :rtype: str
         """
@@ -57,14 +71,26 @@ class DatetimeField(LogField):
 class TypeField(LogField):
     """Represents the type field.
 
-    :ivar str type_token: Type token from VL log
+    :ivar VLogType type: Type of log
     """
 
-    def __init__(self, type_token):
-        pass
+    def __init__(self, type):
+        """Initialize datetime field.
+
+        :raise ValueError: On types not in VLogType enum
+        """
+        if type in list(VLogType):
+            self.type = type
+        else:
+            raise ValueError("Invalid type '" + type + "'")
 
     def __str__(self):
-        pass
+        """Convert type field to string."""
+        return self.type.value
+
+    def get_type(self):
+        """Return the VLogType."""
+        return self.type
 
 
 class SourceField(LogField):

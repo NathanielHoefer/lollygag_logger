@@ -1,9 +1,10 @@
 """This module defines all of the VL field objects found in standard logs."""
 
-import six
 import abc
-import re
 from datetime import datetime
+
+import six
+
 from vl_logger.venums import VLogType
 
 
@@ -11,12 +12,13 @@ from vl_logger.venums import VLogType
 class LogField(object):
     """Abstract base class used for representing fields in log lines."""
 
-    PATTERN = ""
+    LOG_TYPES = [VLogType.DEBUG, VLogType.INFO, VLogType.NOTICE,
+                 VLogType.WARNING, VLogType.ERROR, VLogType.CRITICAL]
+    PATTERN = ".*"
 
     @abc.abstractmethod
     def __str__(self):
         """Abstract method for returning ``str`` of field."""
-        pass
 
     @classmethod
     def get_pattern(cls):
@@ -85,6 +87,12 @@ class Type(LogField):
         """Return the ``VLogType`` of the field."""
         return self.type
 
+    @classmethod
+    def get_pattern(cls):
+        """Return the regex ``str`` used for identifying VL type field."""
+        type_str_list = ["^" + x.value + "$" for x in cls.LOG_TYPES]
+        return "|".join(type_str_list)
+
 
 class Source(LogField):
     """Represents the source field."""
@@ -95,19 +103,21 @@ class Source(LogField):
         """Initialize source field from ``str`` token.
 
         :param str source_token: Source token from VL log
-        :raise ValueError: On value that doesn't follow date and time format
+        :raise ValueError: On value that doesn't follow source format
         """
         try:
             source_token = source_token.strip("[]")
             module, _, line_number = source_token.partition(":")
+            if not line_number:
+                raise ValueError
         except ValueError:
-            msg = "The source token '" + source_token + "' is not vaild."
+            msg = "The source token '" + source_token + "' is not valid."
             raise ValueError(msg)
         self.module = module
         self.line_number = int(line_number)
 
     def __str__(self):
-        """Convert type field to ``str``."""
+        """Convert source field to ``str``."""
         return "".join(["[", self.module, ":", str(self.line_number), "]"])
 
     def get_module(self):
@@ -118,6 +128,11 @@ class Source(LogField):
         """Return the ``int`` line number of the field."""
         return self.line_number
 
+    @classmethod
+    def get_pattern(cls):
+        """Return the regex ``str`` used for identifying VL source field."""
+        return cls.SOURCE_PATTERN
+
 
 class Thread(LogField):
     """Represents the thread field.
@@ -125,11 +140,41 @@ class Thread(LogField):
     :ivar str thread_token: Thread token from VL log
     """
 
+    THREAD_PATTERN = "^\[.*:.*\]$"
+
     def __init__(self, thread_token):
-        pass
+        """Initialize thread field from ``str`` token.
+
+        :param str thread_token: Thread token from VL log
+        :raise ValueError: On value that doesn't follow thread format
+        """
+        try:
+            thread_token = thread_token.strip("[]")
+            process, _, thread = thread_token.partition(":")
+            if not thread:
+                raise ValueError
+        except ValueError:
+            msg = "The thread token '" + thread_token + "' is not valid."
+            raise ValueError(msg)
+        self.process = process
+        self.thread = thread
 
     def __str__(self):
-        pass
+        """Convert thread field to ``str``."""
+        return "".join(["[", self.process, ":", self.thread, "]"])
+
+    def get_process(self):
+        """Return the ``str`` process of the field."""
+        return self.process
+
+    def get_thread(self):
+        """Return the ``str`` thread of the field."""
+        return self.thread
+
+    @classmethod
+    def get_pattern(cls):
+        """Return the regex ``str`` used for identifying VL thread field."""
+        return cls.THREAD_PATTERN
 
 
 class Details(LogField):
@@ -139,7 +184,9 @@ class Details(LogField):
     """
 
     def __init__(self, details_token):
-        pass
+        """Initialize thread field from ``str`` token."""
+        self.details = details_token
 
     def __str__(self):
-        pass
+        """Convert details field to ``str``."""
+        return self.details

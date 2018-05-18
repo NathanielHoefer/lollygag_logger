@@ -23,3 +23,17 @@ VL Log Fields
 
     .. automethod:: __init__
     .. automethod:: __str__
+
+ .. autoclass:: Thread
+    :members:
+    :member-order: bysource
+
+    .. automethod:: __init__
+    .. automethod:: __str__
+
+ .. autoclass:: Details
+    :members:
+    :member-order: bysource
+
+    .. automethod:: __init__
+    .. automethod:: __str__

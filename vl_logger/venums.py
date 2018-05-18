@@ -6,10 +6,10 @@ class VLogType(Enum):
 
     DEBUG = 'DEBUG'
     INFO = 'INFO'
-    NOTICE = 'NOTE'
-    WARNING = 'WARN'
+    NOTICE = 'NOTICE'
+    WARNING = 'WARNING'
     ERROR = 'ERROR'
-    CRITICAL = 'CRIT'
+    CRITICAL = 'CRITICAL'
     OTHER = 'OTHER'
     STEP_H = 'STEP'
     TEST_CASE_H = 'TCASE'

@@ -135,10 +135,7 @@ class Source(LogField):
 
 
 class Thread(LogField):
-    """Represents the thread field.
-
-    :ivar str thread_token: Thread token from VL log
-    """
+    """Represents the thread field."""
 
     THREAD_PATTERN = "^\[.*:.*\]$"
 
@@ -178,10 +175,7 @@ class Thread(LogField):
 
 
 class Details(LogField):
-    """Represents the details field.
-
-    :ivar str details_token: Details token from VL log
-    """
+    """Represents the details field."""
 
     def __init__(self, details_token):
         """Initialize thread field from ``str`` token."""

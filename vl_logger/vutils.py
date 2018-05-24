@@ -24,8 +24,13 @@ class VLogType(Enum):
     def get_type(cls, unf_str):
         """Returns the VL log type of the passed string.
 
+        If there is no match to a current type, then ``None`` is returned.
+        The current supported types are::
+
+            DEBUG | INFO | NOTICE | WARNING | ERROR | CRITICAL
+
         :param str unf_str: Unformatted VL log line
-        :rtype: VLogType
+        :rtype: VLogType | None
         """
 
         std_pattern = VPatterns.get_std()

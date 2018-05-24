@@ -1,3 +1,6 @@
-.idea*
+# Sphinx
+*_build/
+
+# Pycharm
+*.idea/
 *.pyc
-doc/_build*

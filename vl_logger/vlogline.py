@@ -33,7 +33,7 @@ class Base(LogLine):
         return None
 
     @abc.abstractmethod
-    def parse_fields(self, unf_str):
+    def _parse_fields(self, unf_str):
         """Parse the unformatted string into the various fields and create the
         appropriate VL objects.
 
@@ -45,12 +45,33 @@ class Base(LogLine):
 
 
 class Standard(Base):
+    """Standard VL Log Line.
+
+    A standard VL log line is identified by the following format
+
+    .. code-block:: none
+
+        <date> <time> <type> <source> <thread> <details>
+
+        Ex:
+        2017-10-30 19:13:32.208116 DEBUG [res.core:636]
+        [MainProcess:MainThread] Sending HTTP POST request
+    """
 
     def __init__(self, unf_str, type=None):
+        """Initializes the standard VL log line.
+
+        If the log type has already been determined prior to initializing, then
+        the type can be passed in, otherwise it will be determined.
+
+        :param str unf_str: Unformatted VL log line
+        :param `vutils.VLogType`_ type: The type of VL log line
+        """
         self.datetime, self.type, self.source, self.thread, \
-        self.details = self.parse_fields(unf_str, type)
+        self.details = self._parse_fields(unf_str, type)
 
     def __str__(self):
+        """Formatted string representing Standard VLogLine."""
         return " ".join([
             str(self.datetime),
             str(self.type),
@@ -59,7 +80,12 @@ class Standard(Base):
             str(self.details)
         ])
 
-    def parse_fields(self, unf_str, type=None):
+    def _parse_fields(self, unf_str, type=None):
+        """Parses the string into the various fields.
+
+        :return a list of the vlogfield objects in the order that they appeared
+        :rtype list
+        """
         tokens = unf_str.split(" ", self.UNF_LINE_SPLIT_COUNT)
         fields = []
         fields.append(vlogfield.Datetime(" ".join([tokens[0], tokens[1]])))

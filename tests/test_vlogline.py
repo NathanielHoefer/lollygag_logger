@@ -19,6 +19,10 @@ class TestLogLineCreation(unittest.TestCase):
         std_log = vlogline.Standard(line, VLogType.DEBUG)
         self.assertEqual(str(std_log), line)
 
+    def test_set_max_len(self):
+        vlogline.Standard.set_max_line_len(50)
+        self.assertEqual(vlogline.Standard.MAX_LINE_LEN, 50)
+
 
 
 if __name__ == '__main__':

@@ -30,6 +30,10 @@ class TestGetType(unittest.TestCase):
                "[MainProcess:MainThread] Sending HTTP POST request"
         self.assertEqual(VLogType.get_type(line), VLogType.CRITICAL)
 
+        line = "2017-10-30 19:13:32.208116 Garbage CRITICAL [res.core:636] " \
+               "[MainProcess:MainThread] Sending HTTP POST request"
+        self.assertEqual(VLogType.get_type(line), None)
+
 
 class TestGetPatterns(unittest.TestCase):
 

@@ -16,14 +16,6 @@ class LogField(object):
     def __str__(self):
         """Abstract method for returning ``str`` of field."""
 
-    @classmethod
-    def get_pattern(cls):
-        """Return the regex pattern that is used for identifying VL log field.
-
-        :rtype: str
-        """
-        return cls.PATTERN
-
 
 class Datetime(LogField):
     """Represents both date and time field."""

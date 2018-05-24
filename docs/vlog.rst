@@ -1,8 +1,11 @@
 VL Log Lines
 ============
 
- .. module:: vlog
+ .. module:: vlogline
 
- .. autoclass:: VLogLine
+ .. autoclass:: Standard
     :members:
     :member-order: bysource
+
+    .. automethod:: __init__
+    .. automethod:: __str__

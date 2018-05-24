@@ -1,6 +1,8 @@
-from abc import ABCMeta, abstractmethod
-from threading import Thread
 import Queue
+import abc
+from threading import Thread
+
+import six
 
 COMPLETED_SIGNAL = "Log Read Complete. Stop Formatting"
 KILL_SIGNAL = "Stop command issued. Reading and Formatting Logs Interrupted " \
@@ -75,32 +77,27 @@ class LollygagLogger:
         self.kill_logging = True
 
 
+@six.add_metaclass(abc.ABCMeta)
 class LogFormatter:
     """Abstract base class\used in the LollygagLogger to format incoming
     LogLine objects.
     """
-    __metaclass__ = ABCMeta
 
-    @abstractmethod
+    @abc.abstractmethod
     def format(self, log_line):
         """Subclasses must handle an unformatted log line string and return a
         LogLine object.
         """
         pass
 
-    @abstractmethod
+    @abc.abstractmethod
     def send(self, log_line):
         """Subclasses must handle a formatted log line object."""
         pass
 
 
+@six.add_metaclass(abc.ABCMeta)
 class LogLine:
     """Abstract base class used in the LollygagLogger to tokenize a single
     log.
     """
-
-    __metaclass__ = ABCMeta
-
-    @abstractmethod
-    def __init__(self, original_line):
-        self.original_line = original_line

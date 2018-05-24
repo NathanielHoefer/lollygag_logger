@@ -5,16 +5,12 @@ from datetime import datetime
 
 import six
 
-from vl_logger.venums import VLogType
+from vl_logger.vutils import VLogType
 
 
 @six.add_metaclass(abc.ABCMeta)
 class LogField(object):
     """Abstract base class used for representing fields in log lines."""
-
-    LOG_TYPES = [VLogType.DEBUG, VLogType.INFO, VLogType.NOTICE,
-                 VLogType.WARNING, VLogType.ERROR, VLogType.CRITICAL]
-    PATTERN = ".*"
 
     @abc.abstractmethod
     def __str__(self):
@@ -32,8 +28,6 @@ class LogField(object):
 class Datetime(LogField):
     """Represents both date and time field."""
 
-    DATE_RE_PATTERN = "\d{4}-\d{2}-\d{2}"
-    TIME_RE_PATTERN = "\d{2}:\d{2}:\d{2}\.\d{6}"
     DATE_FORMAT = "%Y-%m-%d"
     TIME_FORMAT = "%H:%M:%S.%f"
 
@@ -59,11 +53,6 @@ class Datetime(LogField):
         """Return the ``datetime`` object of the field."""
         return self.datetime
 
-    @classmethod
-    def get_pattern(cls):
-        """Return the regex ``str`` used for identifying VL datetime field."""
-        return "^" + cls.DATE_RE_PATTERN + " " + cls.TIME_RE_PATTERN + "$"
-
 
 class Type(LogField):
     """Represents the type field."""
@@ -87,17 +76,9 @@ class Type(LogField):
         """Return the ``VLogType`` of the field."""
         return self.type
 
-    @classmethod
-    def get_pattern(cls):
-        """Return the regex ``str`` used for identifying VL type field."""
-        type_str_list = ["^" + x.value + "$" for x in cls.LOG_TYPES]
-        return "|".join(type_str_list)
-
 
 class Source(LogField):
     """Represents the source field."""
-
-    SOURCE_PATTERN = "^\[.*:.*\]$"
 
     def __init__(self, source_token):
         """Initialize source field from ``str`` token.
@@ -128,16 +109,9 @@ class Source(LogField):
         """Return the ``int`` line number of the field."""
         return self.line_number
 
-    @classmethod
-    def get_pattern(cls):
-        """Return the regex ``str`` used for identifying VL source field."""
-        return cls.SOURCE_PATTERN
-
 
 class Thread(LogField):
     """Represents the thread field."""
-
-    THREAD_PATTERN = "^\[.*:.*\]$"
 
     def __init__(self, thread_token):
         """Initialize thread field from ``str`` token.
@@ -167,11 +141,6 @@ class Thread(LogField):
     def get_thread(self):
         """Return the ``str`` thread of the field."""
         return self.thread
-
-    @classmethod
-    def get_pattern(cls):
-        """Return the regex ``str`` used for identifying VL thread field."""
-        return cls.THREAD_PATTERN
 
 
 class Details(LogField):

@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime
 
 from vl_logger import vlogfield
-from vl_logger.venums import VLogType
+from vl_logger.vutils import VLogType
 
 
 class TestFieldCreation(unittest.TestCase):
@@ -51,20 +51,6 @@ class TestFieldCreation(unittest.TestCase):
             vlogfield.Source("Garbage")
         with self.assertRaises(ValueError):
             vlogfield.Thread("Garbage")
-
-    def test_get_patterns(self):
-        base_pattern = ".*"
-        dt_pattern = " ".join(["\d{4}-\d{2}-\d{2}", "\d{2}:\d{2}:\d{2}\.\d{6}"])
-        dt_pattern = "".join(["^", dt_pattern, "$"])
-        type_pattern = "^DEBUG$|^INFO$|^NOTICE$|^WARNING$|^ERROR$|^CRITICAL$"
-        source_pattern = "^\[.*:.*\]$"
-        thread_pattern = "^\[.*:.*\]$"
-
-        self.assertEqual(vlogfield.LogField.get_pattern(), base_pattern)
-        self.assertEqual(vlogfield.Datetime.get_pattern(), dt_pattern)
-        self.assertEqual(vlogfield.Type.get_pattern(), type_pattern)
-        self.assertEqual(vlogfield.Source.get_pattern(), source_pattern)
-        self.assertEqual(vlogfield.Thread.get_pattern(), thread_pattern)
 
 
 if __name__ == '__main__':

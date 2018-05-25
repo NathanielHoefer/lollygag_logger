@@ -6,7 +6,7 @@ by Nathaniel Hoefer
 Last Updated: 12/2/2017
 """
 
-# TODO - Rework tests since they are not currently functional
+# TODO - Rework unittests since they are not currently functional
 
 import sys
 import unittest

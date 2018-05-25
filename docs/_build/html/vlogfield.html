@@ -1,0 +1,368 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>VL Log Fields &mdash; vl-logger 2.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="vl-logger 2.0 documentation" href="index.html"/>
+        <link rel="prev" title="VL Log Lines" href="vlog.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> vl-logger
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="vlog.html">VL Log Lines</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">VL Log Fields</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">vl-logger</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>VL Log Fields</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/vlogfield.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="vl-log-fields">
+<h1>VL Log Fields<a class="headerlink" href="#vl-log-fields" title="Permalink to this headline">¶</a></h1>
+<blockquote>
+<div><span class="target" id="module-vlogfield"></span><dl class="class">
+<dt id="vlogfield.Datetime">
+<em class="property">class </em><code class="descclassname">vlogfield.</code><code class="descname">Datetime</code><span class="sig-paren">(</span><em>datetime_token</em><span class="sig-paren">)</span><a class="headerlink" href="#vlogfield.Datetime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents both date and time field.</p>
+<dl class="method">
+<dt id="vlogfield.Datetime.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>datetime_token</em><span class="sig-paren">)</span><a class="headerlink" href="#vlogfield.Datetime.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize datetime field from <code class="docutils literal"><span class="pre">str</span></code> token.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>datetime_token</strong> (<em>str</em>) &#8211; Date and time token from VL log field</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><strong>ValueError</strong> &#8211; On value that doesn&#8217;t follow date and time format</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="vlogfield.Datetime.__str__">
+<code class="descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#vlogfield.Datetime.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert date and time fields to <code class="docutils literal"><span class="pre">str</span></code> following vl formatting.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="vlogfield.Datetime.get_datetime">
+<code class="descname">get_datetime</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#vlogfield.Datetime.get_datetime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the <code class="docutils literal"><span class="pre">datetime</span></code> object of the field.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="vlogfield.Type">
+<em class="property">class </em><code class="descclassname">vlogfield.</code><code class="descname">Type</code><span class="sig-paren">(</span><em>type</em><span class="sig-paren">)</span><a class="headerlink" href="#vlogfield.Type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents the type field.</p>
+<dl class="method">
+<dt id="vlogfield.Type.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>type</em><span class="sig-paren">)</span><a class="headerlink" href="#vlogfield.Type.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize datetime field from <code class="docutils literal"><span class="pre">VLogType</span></code> token.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>type</strong> (<em>VLogType</em>) &#8211; Type of log</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><strong>ValueError</strong> &#8211; On types not in <code class="docutils literal"><span class="pre">VLogType</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="vlogfield.Type.__str__">
+<code class="descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#vlogfield.Type.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert type field to <code class="docutils literal"><span class="pre">str</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="vlogfield.Type.get_type">
+<code class="descname">get_type</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#vlogfield.Type.get_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the <code class="docutils literal"><span class="pre">VLogType</span></code> of the field.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="vlogfield.Source">
+<em class="property">class </em><code class="descclassname">vlogfield.</code><code class="descname">Source</code><span class="sig-paren">(</span><em>source_token</em><span class="sig-paren">)</span><a class="headerlink" href="#vlogfield.Source" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents the source field.</p>
+<dl class="method">
+<dt id="vlogfield.Source.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>source_token</em><span class="sig-paren">)</span><a class="headerlink" href="#vlogfield.Source.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize source field from <code class="docutils literal"><span class="pre">str</span></code> token.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>source_token</strong> (<em>str</em>) &#8211; Source token from VL log</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><strong>ValueError</strong> &#8211; On value that doesn&#8217;t follow source format</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="vlogfield.Source.__str__">
+<code class="descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#vlogfield.Source.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert source field to <code class="docutils literal"><span class="pre">str</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="vlogfield.Source.get_module">
+<code class="descname">get_module</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#vlogfield.Source.get_module" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the <code class="docutils literal"><span class="pre">str</span></code> module of the field.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="vlogfield.Source.get_line_number">
+<code class="descname">get_line_number</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#vlogfield.Source.get_line_number" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the <code class="docutils literal"><span class="pre">int</span></code> line number of the field.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="vlogfield.Thread">
+<em class="property">class </em><code class="descclassname">vlogfield.</code><code class="descname">Thread</code><span class="sig-paren">(</span><em>thread_token</em><span class="sig-paren">)</span><a class="headerlink" href="#vlogfield.Thread" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents the thread field.</p>
+<dl class="method">
+<dt id="vlogfield.Thread.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>thread_token</em><span class="sig-paren">)</span><a class="headerlink" href="#vlogfield.Thread.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize thread field from <code class="docutils literal"><span class="pre">str</span></code> token.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>thread_token</strong> (<em>str</em>) &#8211; Thread token from VL log</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><strong>ValueError</strong> &#8211; On value that doesn&#8217;t follow thread format</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="vlogfield.Thread.__str__">
+<code class="descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#vlogfield.Thread.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert thread field to <code class="docutils literal"><span class="pre">str</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="vlogfield.Thread.get_process">
+<code class="descname">get_process</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#vlogfield.Thread.get_process" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the <code class="docutils literal"><span class="pre">str</span></code> process of the field.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="vlogfield.Thread.get_thread">
+<code class="descname">get_thread</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#vlogfield.Thread.get_thread" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the <code class="docutils literal"><span class="pre">str</span></code> thread of the field.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="vlogfield.Details">
+<em class="property">class </em><code class="descclassname">vlogfield.</code><code class="descname">Details</code><span class="sig-paren">(</span><em>details_token</em><span class="sig-paren">)</span><a class="headerlink" href="#vlogfield.Details" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents the details field.</p>
+<dl class="method">
+<dt id="vlogfield.Details.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>details_token</em><span class="sig-paren">)</span><a class="headerlink" href="#vlogfield.Details.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize thread field from <code class="docutils literal"><span class="pre">str</span></code> token.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="vlogfield.Details.__str__">
+<code class="descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#vlogfield.Details.__str__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert details field to <code class="docutils literal"><span class="pre">str</span></code>.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div></blockquote>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="vlog.html" class="btn btn-neutral" title="VL Log Lines" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Nathaniel Hoefer.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'2.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

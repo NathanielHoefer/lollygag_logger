@@ -319,3 +319,46 @@ class StepHeader(Header):
         fields.append(action)
         fields.append(expected_result)
         return fields
+
+
+class GeneralHeader(Header):
+    """General Header VL Log Line.
+
+    A General Header VL log line is identified by the following format:
+
+    .. code-block:: none
+
+        ============================* (len of 105)
+        <Any description>
+        ============================* (len of 105)
+
+        Ex:
+        ============================* (len of 105)
+        Final Report
+        ============================* (len of 105)
+
+    .. note::
+
+        Don't include the borders in the unf_str.
+        Only the information between the borders.
+    """
+
+    BORDER_CHAR = "="
+
+    def __init__(self, unf_str):
+        """Initialize the general header VL log line.
+
+        :param str unf_str: Unformatted VL log line
+        """
+        self.desc = unf_str
+
+    def __str__(self):
+        """Formatted string representing general header VLogLine.
+
+        This does include the borders surrounding the header string.
+        """
+        return self._add_border(self.desc)
+
+    def _parse_fields(self, unf_str):
+        """Currently a NoOp."""
+        return unf_str

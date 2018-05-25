@@ -62,16 +62,15 @@ class TestLogLineCreation(unittest.TestCase):
         self.assertEqual(step_h.action, "Verify Something")
         self.assertEqual(step_h.expected_results, "Something else")
 
-    # def test_general_header_creation(self):
-    #     line = "Final Report"
-    #     exp_result = "======================================================" \
-    #                  "===================================================\n" \
-    #                  "Final Report\n" \
-    #                  "======================================================" \
-    #                  "==================================================="
-    #     gen_h = vlogline.GeneralHeader(line)
-    #     self.assertEqual(str(gen_h), exp_result)
-
+    def test_general_header_creation(self):
+        line = "Final Report"
+        exp_result = "======================================================" \
+                     "===================================================\n" \
+                     "Final Report\n" \
+                     "======================================================" \
+                     "==================================================="
+        gen_h = vlogline.GeneralHeader(line)
+        self.assertEqual(str(gen_h), exp_result)
 
 
 if __name__ == '__main__':

@@ -20,3 +20,7 @@ VL Log Lines
  .. autoclass:: StepHeader
     :members:
     :member-order: bysource
+
+ .. autoclass:: GeneralHeader
+    :members:
+    :member-order: bysource

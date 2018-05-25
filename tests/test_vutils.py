@@ -36,8 +36,8 @@ class TestGetType(unittest.TestCase):
         line = "=Test Case 0: Starting Test of TcTest="
         self.assertEqual(VLogType.get_type(line), VLogType.TEST_CASE_H)
 
-        line = "-Starting Step 5 for TcTest: Verify Something\n" \
-               "Expect: Something else-"
+        line = "-Starting Step 5 for TcTest: Verify Something-\n" \
+               "-Expect: Something else-"
         self.assertEqual(VLogType.get_type(line), VLogType.STEP_H)
 
         line = "=Final Report="

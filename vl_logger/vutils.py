@@ -36,6 +36,9 @@ class VLogType(Enum):
         :param str unf_str: Unformatted VL log line
         :rtype: VLogType | None
         """
+        if not unf_str:
+            return None
+
         if re.match(VPatterns.get_std(), unf_str):
             type = re.search(VPatterns.get_std_type(), unf_str).group(0)
             if type == cls.DEBUG.value:
@@ -85,7 +88,7 @@ class VPatterns(object):
 
     # Test Step Patterns
     STEP_HEADER_PATTERN = "-Starting Step \d+ for " + CASE_NAME_PATTERN \
-                          + ": .*" + "\nExpect: .*-"
+                          + ": .*-" + "\n-Expect: .*-"
 
     # General Header Patterns
     GENERAL_HEADER_PATTERN = "=.*="
@@ -158,14 +161,6 @@ class VPatterns(object):
         """Return the regex ``str`` for identifying VL general header."""
         return cls.GENERAL_HEADER_PATTERN
 
-
-def create_log_line(unf_str, type):
-    """Create the appropriate VLogLine object based on type.
-
-    :param str unf_str: Unformatted VL log line
-    :param VLogType type: Type of VLogLine object to create.
-    :rtype: Base | None
-    :returns: VLogLine if unf_str matches pattern of type, else None
-    """
-    fmt_log = None
-    return fmt_log
+    @classmethod
+    def std_log_types(cls):
+        return cls.LOG_TYPES

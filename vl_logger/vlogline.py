@@ -327,8 +327,9 @@ class StepHeader(Header):
         :return a list of the step header fields
         :rtype list(str)
         """
-        unf_str = unf_str.strip(self.BORDER_CHAR)
         line1, line2 = unf_str.split("\n")
+        line1 = line1.strip(self.BORDER_CHAR)
+        line2 = line2.strip(self.BORDER_CHAR)
         id, action = line1.split(": ")
         case_name = re.search(VPatterns.get_test_case_name(),
                               id).group(0)

@@ -8,4 +8,7 @@ VL Log Lines
     :member-order: bysource
 
     .. automethod:: __init__
-    .. automethod:: __str__
+
+ .. autoclass:: SuiteHeader
+    :members:
+    :member-order: bysource

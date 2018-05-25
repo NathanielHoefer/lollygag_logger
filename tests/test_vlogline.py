@@ -23,6 +23,49 @@ class TestLogLineCreation(unittest.TestCase):
         vlogline.Standard.set_max_line_len(50)
         self.assertEqual(vlogline.Standard.MAX_LINE_LEN, 50)
 
+    def test_suite_header_creation(self):
+        line = "Test Suite: Starting Setup of TsSuite"
+        exp_result = "======================================================" \
+                     "===================================================\n" \
+                     "Test Suite: Starting Setup of TsSuite\n" \
+                     "======================================================" \
+                     "==================================================="
+        suite_h = vlogline.SuiteHeader(line)
+        self.assertEqual(str(suite_h), exp_result)
+        self.assertEqual(suite_h.suite_name, "TsSuite")
+
+    # def test_case_header_creation(self):
+    #     line = "Test Case 0: Starting Test of TcTest"
+    #     exp_result = "======================================================" \
+    #                  "===================================================\n" \
+    #                  "Test Case 0: Starting Test of TcTest\n" \
+    #                  "======================================================" \
+    #                  "==================================================="
+    #     case_h = vlogline.TestCaseHeader(line)
+    #     self.assertEqual(str(case_h), exp_result)
+    #
+    # def test_step_header_creation(self):
+    #     line = "Starting Step 5 for TcTest: Verify Something\n" \
+    #            "Expect: Something else"
+    #     exp_result = "------------------------------------------------------" \
+    #                  "---------------------------------------------------\n" \
+    #                  "Starting Step 5 for TcTest: Verify Something\n" \
+    #                  "Expect: Something else\n" \
+    #                  "------------------------------------------------------" \
+    #                  "---------------------------------------------------"
+    #     step_h = vlogline.StepHeader(line)
+    #     self.assertEqual(str(step_h), exp_result)
+    #
+    # def test_general_header_creation(self):
+    #     line = "Final Report"
+    #     exp_result = "======================================================" \
+    #                  "===================================================\n" \
+    #                  "Final Report\n" \
+    #                  "======================================================" \
+    #                  "==================================================="
+    #     gen_h = vlogline.GeneralHeader(line)
+    #     self.assertEqual(str(gen_h), exp_result)
+
 
 
 if __name__ == '__main__':

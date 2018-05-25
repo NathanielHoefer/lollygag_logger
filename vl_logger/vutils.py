@@ -1,3 +1,5 @@
+"""Module containing VL Utility classes and functions."""
+
 import re
 
 from enum import Enum
@@ -22,7 +24,7 @@ class VLogType(Enum):
 
     @classmethod
     def get_type(cls, unf_str):
-        """Returns the VL log type of the passed string.
+        """Return the VL log type of the passed string.
 
         If there is no match to a current type, then ``None`` is returned.
         The current supported types are::
@@ -32,7 +34,6 @@ class VLogType(Enum):
         :param str unf_str: Unformatted VL log line
         :rtype: VLogType | None
         """
-
         std_pattern = VPatterns.get_std()
         if re.match(std_pattern, unf_str):
             type = re.search(VPatterns.get_std_type(), unf_str).group(0)
@@ -64,6 +65,10 @@ class VPatterns(object):
     SOURCE_PATTERN = "\[.*:.*\]"
     THREAD_PATTERN = "\[.*:.*\]"
     DETAIL_PATTERN = ".*"
+
+    # Suite Header Patterns
+    SUITE_NAME_PATTERN = "Ts.*"
+    SUITE_HEADER_PATTERN = "Test Suite: .* " + SUITE_NAME_PATTERN
 
     @classmethod
     def get_std(cls):
@@ -103,9 +108,19 @@ class VPatterns(object):
         """Return the regex ``str`` used for identifying VL thread field."""
         return cls.DETAIL_PATTERN
 
+    @classmethod
+    def get_suite_name(cls):
+        """Return the regex ``str`` used for identifying VL suite name."""
+        return cls.SUITE_NAME_PATTERN
+
+    @classmethod
+    def get_suite_header(cls):
+        """Return the regex ``str`` used for identifying VL suite header."""
+        return cls.SUITE_HEADER_PATTERN
+
 
 def create_log_line(unf_str, type):
-    """Creates the appropriate VLogLine object based on type.
+    """Create the appropriate VLogLine object based on type.
 
     :param str unf_str: Unformatted VL log line
     :param VLogType type: Type of VLogLine object to create.

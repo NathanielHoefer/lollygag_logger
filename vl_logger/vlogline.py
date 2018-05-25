@@ -1,9 +1,13 @@
-import six
-import abc
+"""Module containing all Log Line Objects."""
 
-from vl_logger.lollygag_logger import LogLine
+import abc
+import re
+
+import six
 from vl_logger import vlogfield
+from vl_logger.lollygag_logger import LogLine
 from vl_logger.vutils import VLogType
+from vl_logger.vutils import VPatterns
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -11,7 +15,7 @@ class Base(LogLine):
     """Abstract base class for all other log line elements."""
 
     PATTERN = ""
-    MAX_LINE_LEN = 100
+    MAX_LINE_LEN = 105
     UNF_LINE_SPLIT_COUNT = 5
     FIELDS = [vlogfield.Datetime,
               vlogfield.Type,
@@ -21,11 +25,16 @@ class Base(LogLine):
 
     @classmethod
     def set_max_line_len(cls, max_len):
-        """Sets the maximum length of the VLogLine string.
+        """Set the maximum length of the VLogLine string.
 
         :param int max_len: Max number of chars in VLogLine string.
         """
         cls.MAX_LINE_LEN = max_len
+
+    @classmethod
+    def get_max_line_len(cls):
+        """Return the maximum length of the VLogLine string."""
+        return cls.MAX_LINE_LEN
 
     @abc.abstractmethod
     def __str__(self):
@@ -34,10 +43,7 @@ class Base(LogLine):
 
     @abc.abstractmethod
     def _parse_fields(self, unf_str):
-        """Parse the unformatted string into the various fields and create the
-        appropriate VL objects.
-
-        Note: This method is abstract.
+        """Parse the string into the various fields.
 
         :param str unf_str: Unformatted VL log line
         """
@@ -54,12 +60,11 @@ class Standard(Base):
         <date> <time> <type> <source> <thread> <details>
 
         Ex:
-        2017-10-30 19:13:32.208116 DEBUG [res.core:636]
-        [MainProcess:MainThread] Sending HTTP POST request
+        2017-10-30 19:13:32.208116 DEBUG [res.core:636] [MainProcess:MainThread] Sending HTTP POST request  # nopep8
     """
 
     def __init__(self, unf_str, type=None):
-        """Initializes the standard VL log line.
+        """Initialize the standard VL log line.
 
         If the log type has already been determined prior to initializing, then
         the type can be passed in, otherwise it will be determined.
@@ -68,7 +73,7 @@ class Standard(Base):
         :param `vutils.VLogType`_ type: The type of VL log line
         """
         self.datetime, self.type, self.source, self.thread, \
-        self.details = self._parse_fields(unf_str, type)
+            self.details = self._parse_fields(unf_str, type)
 
     def __str__(self):
         """Formatted string representing Standard VLogLine."""
@@ -81,7 +86,7 @@ class Standard(Base):
         ])
 
     def _parse_fields(self, unf_str, type=None):
-        """Parses the string into the various fields.
+        """Parse the string into the various fields.
 
         :return a list of the vlogfield objects in the order that they appeared
         :rtype list
@@ -97,3 +102,85 @@ class Standard(Base):
         fields.append(vlogfield.Thread(tokens[4]))
         fields.append(vlogfield.Details(tokens[5]))
         return fields
+
+
+@six.add_metaclass(abc.ABCMeta)
+class Header(Base):
+    """Abstract base class for all other header log line elements."""
+
+    BORDER_CHAR = "="
+
+    @abc.abstractmethod
+    def _add_border(self, header_str):
+        """Return string with border before and after header string."""
+        return None
+
+    @classmethod
+    def get_border_char(cls):
+        """Return the character used for the border."""
+        return cls.BORDER_CHAR
+
+
+class SuiteHeader(Header):
+    """Suite Header VL Log Line.
+
+    A Suite Header VL log line is identified by the following format:
+
+    .. code-block:: none
+
+        ============================* (len of 105)
+        Test Suite: <Description ending in suite name (Ts.*)>
+        ============================* (len of 105)
+
+        Ex:
+        ============================* (len of 105)
+        Test Suite: Starting Setup of TsSuite
+        ============================* (len of 105)
+
+    .. note::
+
+        Don't include the borders in the unf_str.
+        Only the information between the borders.
+    """
+
+    BORDER_CHAR = "="
+
+    def __init__(self, unf_str):
+        """Initialize the suite header VL log line.
+
+        :param str unf_str: Unformatted VL log line
+        """
+        self.suite_name, self.desc = self._parse_fields(unf_str)
+
+    def __str__(self):
+        """Formatted string representing Standard VLogLine."""
+        header_str = " ".join([
+            "Test Suite:",
+            self.desc
+        ])
+        return self._add_border(header_str)
+
+    def _parse_fields(self, unf_str):
+        """Parse the string into the suite header fields.
+
+        Fields::
+
+            Suite Name, Description
+
+        :return a list of the suite header fields
+        :rtype list(str)
+        """
+        _, desc_token = unf_str.split(": ")
+        fields = []
+        suite_name = re.search(VPatterns.get_suite_name(), desc_token).group(0)
+        fields.append(suite_name)
+        fields.append(desc_token)
+        return fields
+
+    def _add_border(self, header_str):
+        """Return the header string with borders.
+
+        The length of the border is determined by the Max Line Length.
+        """
+        border = self.BORDER_CHAR * self.get_max_line_len()
+        return "\n".join([border, header_str, border])

@@ -70,6 +70,10 @@ class VPatterns(object):
     SUITE_NAME_PATTERN = "Ts.*"
     SUITE_HEADER_PATTERN = "Test Suite: .* " + SUITE_NAME_PATTERN
 
+    # Test Case Patterns
+    CASE_NAME_PATTERN = "Tc.*"
+    CASE_HEADER_PATTERN = "Test Case \d+: .* " + CASE_NAME_PATTERN
+
     @classmethod
     def get_std(cls):
         """Return the regex ``str`` for a standard vlogline."""
@@ -117,6 +121,16 @@ class VPatterns(object):
     def get_suite_header(cls):
         """Return the regex ``str`` used for identifying VL suite header."""
         return cls.SUITE_HEADER_PATTERN
+
+    @classmethod
+    def get_test_case_name(cls):
+        """Return the regex ``str`` used for identifying VL test case name."""
+        return cls.CASE_NAME_PATTERN
+
+    @classmethod
+    def get_test_case_header(cls):
+        """Return the regex ``str`` for identifying VL test case header."""
+        return cls.CASE_HEADER_PATTERN
 
 
 def create_log_line(unf_str, type):

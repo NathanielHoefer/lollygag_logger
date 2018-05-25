@@ -12,3 +12,7 @@ VL Log Lines
  .. autoclass:: SuiteHeader
     :members:
     :member-order: bysource
+
+ .. autoclass:: TestCaseHeader
+    :members:
+    :member-order: bysource

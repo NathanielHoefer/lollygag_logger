@@ -153,7 +153,10 @@ class SuiteHeader(Header):
         self.suite_name, self.desc = self._parse_fields(unf_str)
 
     def __str__(self):
-        """Formatted string representing Standard VLogLine."""
+        """Formatted string representing suite header VLogLine.
+
+        This does include the borders surrounding the header string.
+        """
         header_str = " ".join([
             "Test Suite:",
             self.desc
@@ -174,6 +177,77 @@ class SuiteHeader(Header):
         fields = []
         suite_name = re.search(VPatterns.get_suite_name(), desc_token).group(0)
         fields.append(suite_name)
+        fields.append(desc_token)
+        return fields
+
+    def _add_border(self, header_str):
+        """Return the header string with borders.
+
+        The length of the border is determined by the Max Line Length.
+        """
+        border = self.BORDER_CHAR * self.get_max_line_len()
+        return "\n".join([border, header_str, border])
+
+
+class TestCaseHeader(Header):
+    """Test Case Header VL Log Line.
+
+    A Test Case Header VL log line is identified by the following format:
+
+    .. code-block:: none
+
+        ============================* (len of 105)
+        Test Case #: <Description ending in test case name (Tc.*)>
+        ============================* (len of 105)
+
+        Ex:
+        ============================* (len of 105)
+        Test Case 0: Starting Test of TcTest
+        ============================* (len of 105)
+
+    .. note::
+
+        Don't include the borders in the unf_str.
+        Only the information between the borders.
+    """
+
+    BORDER_CHAR = "="
+
+    def __init__(self, unf_str):
+        """Initialize the test case header VL log line.
+
+        :param str unf_str: Unformatted VL log line
+        """
+        self.test_case_name, self.number, \
+            self.desc = self._parse_fields(unf_str)
+
+    def __str__(self):
+        """Formatted string representing test case header VLogLine.
+
+        This does include the borders surrounding the header string.
+        """
+        header_str = "".join([
+            "Test Case ", str(self.number), ": ", self.desc
+        ])
+        return self._add_border(header_str)
+
+    def _parse_fields(self, unf_str):
+        """Parse the string into the test case header fields.
+
+        Fields::
+
+            Test Case Name, Number, Description
+
+        :return a list of the test case header fields
+        :rtype list(str)
+        """
+        unf_str = unf_str.lstrip("Test Case ")
+        number, desc_token = unf_str.split(": ")
+        case_name = re.search(VPatterns.get_test_case_name(),
+                              desc_token).group(0)
+        fields = []
+        fields.append(case_name)
+        fields.append(int(number))
         fields.append(desc_token)
         return fields
 

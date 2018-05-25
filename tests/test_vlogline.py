@@ -34,16 +34,18 @@ class TestLogLineCreation(unittest.TestCase):
         self.assertEqual(str(suite_h), exp_result)
         self.assertEqual(suite_h.suite_name, "TsSuite")
 
-    # def test_case_header_creation(self):
-    #     line = "Test Case 0: Starting Test of TcTest"
-    #     exp_result = "======================================================" \
-    #                  "===================================================\n" \
-    #                  "Test Case 0: Starting Test of TcTest\n" \
-    #                  "======================================================" \
-    #                  "==================================================="
-    #     case_h = vlogline.TestCaseHeader(line)
-    #     self.assertEqual(str(case_h), exp_result)
-    #
+    def test_case_header_creation(self):
+        line = "Test Case 0: Starting Test of TcTest"
+        exp_result = "======================================================" \
+                     "===================================================\n" \
+                     "Test Case 0: Starting Test of TcTest\n" \
+                     "======================================================" \
+                     "==================================================="
+        case_h = vlogline.TestCaseHeader(line)
+        self.assertEqual(str(case_h), exp_result)
+        self.assertEqual(case_h.test_case_name, "TcTest")
+        self.assertEqual(case_h.number, 0)
+
     # def test_step_header_creation(self):
     #     line = "Starting Step 5 for TcTest: Verify Something\n" \
     #            "Expect: Something else"

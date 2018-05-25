@@ -140,6 +140,15 @@ class SuiteHeader(Header):
         Test Suite: Starting Setup of TsSuite
         ============================* (len of 105)
 
+    .. testcode::
+
+        from vl_logger import vlogline
+
+        # Note how '=' must be added before and after the header string
+        # to indicate that it is a header.
+        unf_str = "=Test Suite: Starting Setup of TsSuite="
+        suite_header = vlogline.SuiteHeader(unf_str)
+
     .. note::
 
         Don't include the borders in the unf_str.
@@ -176,6 +185,7 @@ class SuiteHeader(Header):
         :return a list of the suite header fields
         :rtype list(str)
         """
+        unf_str = unf_str.strip(self.BORDER_CHAR)
         _, desc_token = unf_str.split(": ")
         fields = []
         suite_name = re.search(VPatterns.get_suite_name(), desc_token).group(0)
@@ -199,6 +209,15 @@ class TestCaseHeader(Header):
         ============================* (len of 105)
         Test Case 0: Starting Test of TcTest
         ============================* (len of 105)
+
+    .. testcode::
+
+        from vl_logger import vlogline
+
+        # Note how '=' must be added before and after the header string
+        # to indicate that it is a header.
+        unf_str = "=Test Case 0: Starting Test of TcTest="
+        test_case_header = vlogline.TestCaseHeader(unf_str)
 
     .. note::
 
@@ -236,6 +255,7 @@ class TestCaseHeader(Header):
         :return a list of the test case header fields
         :rtype list(str)
         """
+        unf_str = unf_str.strip(self.BORDER_CHAR)
         unf_str = unf_str.lstrip("Test Case ")
         number, desc_token = unf_str.split(": ")
         case_name = re.search(VPatterns.get_test_case_name(),
@@ -307,6 +327,7 @@ class StepHeader(Header):
         :return a list of the step header fields
         :rtype list(str)
         """
+        unf_str = unf_str.strip(self.BORDER_CHAR)
         line1, line2 = unf_str.split("\n")
         id, action = line1.split(": ")
         case_name = re.search(VPatterns.get_test_case_name(),
@@ -337,6 +358,15 @@ class GeneralHeader(Header):
         Final Report
         ============================* (len of 105)
 
+    .. testcode::
+
+        from vl_logger import vlogline
+
+        # Note how '=' must be added before and after the header string
+        # to indicate that it is a header.
+        unf_str = "=Final Report="
+        general_header = vlogline.GeneralHeader(unf_str)
+
     .. note::
 
         Don't include the borders in the unf_str.
@@ -350,7 +380,7 @@ class GeneralHeader(Header):
 
         :param str unf_str: Unformatted VL log line
         """
-        self.desc = unf_str
+        self.desc = self._parse_fields(unf_str)
 
     def __str__(self):
         """Formatted string representing general header VLogLine.
@@ -360,5 +390,6 @@ class GeneralHeader(Header):
         return self._add_border(self.desc)
 
     def _parse_fields(self, unf_str):
-        """Currently a NoOp."""
+        """Remove the border char from string."""
+        unf_str = unf_str.strip(self.BORDER_CHAR)
         return unf_str

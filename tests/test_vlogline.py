@@ -24,7 +24,7 @@ class TestLogLineCreation(unittest.TestCase):
         self.assertEqual(vlogline.Standard.MAX_LINE_LEN, 50)
 
     def test_suite_header_creation(self):
-        line = "Test Suite: Starting Setup of TsSuite"
+        line = "=Test Suite: Starting Setup of TsSuite="
         exp_result = "======================================================" \
                      "===================================================\n" \
                      "Test Suite: Starting Setup of TsSuite\n" \
@@ -35,7 +35,7 @@ class TestLogLineCreation(unittest.TestCase):
         self.assertEqual(suite_h.suite_name, "TsSuite")
 
     def test_case_header_creation(self):
-        line = "Test Case 0: Starting Test of TcTest"
+        line = "=Test Case 0: Starting Test of TcTest="
         exp_result = "======================================================" \
                      "===================================================\n" \
                      "Test Case 0: Starting Test of TcTest\n" \
@@ -47,8 +47,8 @@ class TestLogLineCreation(unittest.TestCase):
         self.assertEqual(case_h.number, 0)
 
     def test_step_header_creation(self):
-        line = "Starting Step 5 for TcTest: Verify Something\n" \
-               "Expect: Something else"
+        line = "-Starting Step 5 for TcTest: Verify Something\n" \
+               "Expect: Something else-"
         exp_result = "------------------------------------------------------" \
                      "---------------------------------------------------\n" \
                      "Starting Step 5 for TcTest: Verify Something\n" \
@@ -63,7 +63,7 @@ class TestLogLineCreation(unittest.TestCase):
         self.assertEqual(step_h.expected_results, "Something else")
 
     def test_general_header_creation(self):
-        line = "Final Report"
+        line = "=Final Report="
         exp_result = "======================================================" \
                      "===================================================\n" \
                      "Final Report\n" \

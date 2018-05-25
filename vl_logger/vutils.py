@@ -18,9 +18,10 @@ class VLogType(Enum):
     STEP_H = 'STEP'
     TEST_CASE_H = 'TCASE'
     SUITE_H = 'SUITE'
+    GENERAL_H = 'GENERAL'
 
     __order__ = "DEBUG INFO NOTICE WARNING ERROR CRITICAL OTHER STEP_H " \
-                "TEST_CASE_H SUITE_H"
+                "TEST_CASE_H SUITE_H GENERAL_H"
 
     @classmethod
     def get_type(cls, unf_str):
@@ -29,13 +30,13 @@ class VLogType(Enum):
         If there is no match to a current type, then ``None`` is returned.
         The current supported types are::
 
-            DEBUG | INFO | NOTICE | WARNING | ERROR | CRITICAL
+            DEBUG | INFO | NOTICE | WARNING | ERROR | CRITICAL | STEP_H
+            | TEST_CASE_H | SUITE_H | GENERAL_H
 
         :param str unf_str: Unformatted VL log line
         :rtype: VLogType | None
         """
-        std_pattern = VPatterns.get_std()
-        if re.match(std_pattern, unf_str):
+        if re.match(VPatterns.get_std(), unf_str):
             type = re.search(VPatterns.get_std_type(), unf_str).group(0)
             if type == cls.DEBUG.value:
                 return VLogType.DEBUG
@@ -49,6 +50,14 @@ class VLogType(Enum):
                 return VLogType.ERROR
             elif type == cls.CRITICAL.value:
                 return VLogType.CRITICAL
+        elif re.match(VPatterns.get_suite_header(), unf_str):
+            return VLogType.SUITE_H
+        elif re.match(VPatterns.get_test_case_header(), unf_str):
+            return VLogType.TEST_CASE_H
+        elif re.match(VPatterns.get_step_header(), unf_str):
+            return VLogType.STEP_H
+        elif re.match(VPatterns.get_general_header(), unf_str):
+            return VLogType.GENERAL_H
         return None
 
 
@@ -68,15 +77,18 @@ class VPatterns(object):
 
     # Suite Header Patterns
     SUITE_NAME_PATTERN = "Ts.*"
-    SUITE_HEADER_PATTERN = "Test Suite: .* " + SUITE_NAME_PATTERN
+    SUITE_HEADER_PATTERN = "=Test Suite: .*" + SUITE_NAME_PATTERN + "="
 
     # Test Case Patterns
     CASE_NAME_PATTERN = "Tc.*"
-    CASE_HEADER_PATTERN = "Test Case \d+: .* " + CASE_NAME_PATTERN
+    CASE_HEADER_PATTERN = "=Test Case \d+: .*" + CASE_NAME_PATTERN + "="
 
     # Test Step Patterns
-    STEP_HEADER_PATTERN = "Starting Step \d+ for " + CASE_NAME_PATTERN \
-                          + ": .*" + "\nExpect: .*"
+    STEP_HEADER_PATTERN = "-Starting Step \d+ for " + CASE_NAME_PATTERN \
+                          + ": .*" + "\nExpect: .*-"
+
+    # General Header Patterns
+    GENERAL_HEADER_PATTERN = "=.*="
 
     @classmethod
     def get_std(cls):
@@ -135,6 +147,16 @@ class VPatterns(object):
     def get_test_case_header(cls):
         """Return the regex ``str`` for identifying VL test case header."""
         return cls.CASE_HEADER_PATTERN
+
+    @classmethod
+    def get_step_header(cls):
+        """Return the regex ``str`` for identifying VL step header."""
+        return cls.STEP_HEADER_PATTERN
+
+    @classmethod
+    def get_general_header(cls):
+        """Return the regex ``str`` for identifying VL general header."""
+        return cls.GENERAL_HEADER_PATTERN
 
 
 def create_log_line(unf_str, type):

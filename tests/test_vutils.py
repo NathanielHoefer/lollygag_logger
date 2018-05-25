@@ -30,6 +30,19 @@ class TestGetType(unittest.TestCase):
                "[MainProcess:MainThread] Sending HTTP POST request"
         self.assertEqual(VLogType.get_type(line), VLogType.CRITICAL)
 
+        line = "=Test Suite: Starting Setup of TsSuite="
+        self.assertEqual(VLogType.get_type(line), VLogType.SUITE_H)
+
+        line = "=Test Case 0: Starting Test of TcTest="
+        self.assertEqual(VLogType.get_type(line), VLogType.TEST_CASE_H)
+
+        line = "-Starting Step 5 for TcTest: Verify Something\n" \
+               "Expect: Something else-"
+        self.assertEqual(VLogType.get_type(line), VLogType.STEP_H)
+
+        line = "=Final Report="
+        self.assertEqual(VLogType.get_type(line), VLogType.GENERAL_H)
+
         line = "2017-10-30 19:13:32.208116 Garbage CRITICAL [res.core:636] " \
                "[MainProcess:MainThread] Sending HTTP POST request"
         self.assertEqual(VLogType.get_type(line), None)

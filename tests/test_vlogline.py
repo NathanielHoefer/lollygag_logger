@@ -46,18 +46,22 @@ class TestLogLineCreation(unittest.TestCase):
         self.assertEqual(case_h.test_case_name, "TcTest")
         self.assertEqual(case_h.number, 0)
 
-    # def test_step_header_creation(self):
-    #     line = "Starting Step 5 for TcTest: Verify Something\n" \
-    #            "Expect: Something else"
-    #     exp_result = "------------------------------------------------------" \
-    #                  "---------------------------------------------------\n" \
-    #                  "Starting Step 5 for TcTest: Verify Something\n" \
-    #                  "Expect: Something else\n" \
-    #                  "------------------------------------------------------" \
-    #                  "---------------------------------------------------"
-    #     step_h = vlogline.StepHeader(line)
-    #     self.assertEqual(str(step_h), exp_result)
-    #
+    def test_step_header_creation(self):
+        line = "Starting Step 5 for TcTest: Verify Something\n" \
+               "Expect: Something else"
+        exp_result = "------------------------------------------------------" \
+                     "---------------------------------------------------\n" \
+                     "Starting Step 5 for TcTest: Verify Something\n" \
+                     "Expect: Something else\n" \
+                     "------------------------------------------------------" \
+                     "---------------------------------------------------"
+        step_h = vlogline.StepHeader(line)
+        self.assertEqual(str(step_h), exp_result)
+        self.assertEqual(step_h.test_case_name, "TcTest")
+        self.assertEqual(step_h.number, 5)
+        self.assertEqual(step_h.action, "Verify Something")
+        self.assertEqual(step_h.expected_results, "Something else")
+
     # def test_general_header_creation(self):
     #     line = "Final Report"
     #     exp_result = "======================================================" \

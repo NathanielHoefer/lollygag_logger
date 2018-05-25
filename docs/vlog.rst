@@ -16,3 +16,7 @@ VL Log Lines
  .. autoclass:: TestCaseHeader
     :members:
     :member-order: bysource
+
+ .. autoclass:: StepHeader
+    :members:
+    :member-order: bysource

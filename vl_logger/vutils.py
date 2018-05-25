@@ -74,6 +74,10 @@ class VPatterns(object):
     CASE_NAME_PATTERN = "Tc.*"
     CASE_HEADER_PATTERN = "Test Case \d+: .* " + CASE_NAME_PATTERN
 
+    # Test Step Patterns
+    STEP_HEADER_PATTERN = "Starting Step \d+ for " + CASE_NAME_PATTERN \
+                          + ": .*" + "\nExpect: .*"
+
     @classmethod
     def get_std(cls):
         """Return the regex ``str`` for a standard vlogline."""

@@ -110,10 +110,13 @@ class Header(Base):
 
     BORDER_CHAR = "="
 
-    @abc.abstractmethod
     def _add_border(self, header_str):
-        """Return string with border before and after header string."""
-        return None
+        """Return the header string with borders.
+
+        The length of the border is determined by the Max Line Length.
+        """
+        border = self.BORDER_CHAR * self.get_max_line_len()
+        return "\n".join([border, header_str, border])
 
     @classmethod
     def get_border_char(cls):
@@ -180,14 +183,6 @@ class SuiteHeader(Header):
         fields.append(desc_token)
         return fields
 
-    def _add_border(self, header_str):
-        """Return the header string with borders.
-
-        The length of the border is determined by the Max Line Length.
-        """
-        border = self.BORDER_CHAR * self.get_max_line_len()
-        return "\n".join([border, header_str, border])
-
 
 class TestCaseHeader(Header):
     """Test Case Header VL Log Line.
@@ -251,10 +246,76 @@ class TestCaseHeader(Header):
         fields.append(desc_token)
         return fields
 
-    def _add_border(self, header_str):
-        """Return the header string with borders.
 
-        The length of the border is determined by the Max Line Length.
+class StepHeader(Header):
+    """Step Header VL Log Line.
+
+    A Step Header VL log line is identified by the following format:
+
+    .. code-block:: none
+
+        ----------------------------* (len of 105)
+        Starting Step # for Test case name (Tc.*): <Action>
+        Expect: <Expected results>
+        ----------------------------* (len of 105)
+
+        Ex:
+        ----------------------------* (len of 105)
+        Starting Step 5 for TcTest: Verify Something
+        Expect: Something Verified Successfully
+        ----------------------------* (len of 105)
+
+    .. note::
+
+        Don't include the borders in the unf_str.
+        Only the information between the borders as a single string with
+        a newline character separating the two lines.
+    """
+
+    BORDER_CHAR = "-"
+
+    def __init__(self, unf_str):
+        """Initialize the step header VL log line.
+
+        :param str unf_str: Unformatted VL log line
         """
-        border = self.BORDER_CHAR * self.get_max_line_len()
-        return "\n".join([border, header_str, border])
+        self.test_case_name, self.number, self.action, \
+            self.expected_results = self._parse_fields(unf_str)
+
+    def __str__(self):
+        """Formatted string representing step header VLogLine.
+
+        This does include the borders surrounding the header string.
+        """
+        step_str = "".join([
+            "Starting Step ", str(self.number), " for ", self.test_case_name,
+            ": ", self.action
+        ])
+        expected_results_str = "".join([
+            "Expect: ", self.expected_results
+        ])
+        header_str = "\n".join([step_str, expected_results_str])
+        return self._add_border(header_str)
+
+    def _parse_fields(self, unf_str):
+        """Parse the string into the step header fields.
+
+        Fields::
+
+            Test Case Name, Number, Action, Expected Results
+
+        :return a list of the step header fields
+        :rtype list(str)
+        """
+        line1, line2 = unf_str.split("\n")
+        id, action = line1.split(": ")
+        case_name = re.search(VPatterns.get_test_case_name(),
+                              id).group(0)
+        number = re.search("\d+", id).group(0)
+        _, expected_result = line2.split(": ")
+        fields = []
+        fields.append(case_name)
+        fields.append(int(number))
+        fields.append(action)
+        fields.append(expected_result)
+        return fields

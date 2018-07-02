@@ -7,8 +7,23 @@ import re
 
 class VFormatter(LogFormatter):
 
+    DISPLAY_LOG_TYPES = [
+        # VLogType.DEBUG,
+        VLogType.INFO,
+        VLogType.NOTICE,
+        VLogType.WARNING,
+        VLogType.ERROR,
+        VLogType.CRITICAL,
+        VLogType.OTHER,
+        VLogType.STEP_H,
+        VLogType.TEST_CASE_H,
+        VLogType.SUITE_H,
+        VLogType.GENERAL_H
+    ]
+
     def __init__(self):
         self.border_flag = ""
+        self.last_line_empty = False
         self.stored_logs = []
 
     def format(self, unf_str):
@@ -20,6 +35,9 @@ class VFormatter(LogFormatter):
 
         type = VLogType.get_type(unf_str)
 
+        if type and type not in self.DISPLAY_LOG_TYPES:
+            return None
+
         fmt_log = self.create_log_line(unf_str, type)
         if fmt_log:
             return fmt_log
@@ -29,9 +47,12 @@ class VFormatter(LogFormatter):
     def send(self, fmt_log):
 
         if fmt_log:
+            self.last_line_empty = False
             print fmt_log
         elif fmt_log == "":
-            print ""
+            if not self.last_line_empty:
+                self.last_line_empty = True
+                print ""
 
     def create_log_line(self, unf_str, type):
         """Create the appropriate VLogLine object based on type.

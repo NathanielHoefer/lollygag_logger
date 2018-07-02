@@ -7,6 +7,7 @@ import six
 from vl_logger import vlogfield
 from vl_logger.lollygag_logger import LogLine
 from vl_logger.vutils import VLogType
+from vl_logger.vutils import VLogStdFields
 from vl_logger.vutils import VPatterns
 from vl_logger.vutils import Colorize
 
@@ -24,6 +25,14 @@ class Base(LogLine):
               vlogfield.Thread,
               vlogfield.Details]
     COLORIZE = True
+    DISPLAY_FIELDS = [
+        # VLogStdFields.DATE,
+        VLogStdFields.TIME,
+        VLogStdFields.TYPE,
+        VLogStdFields.SOURCE,
+        # VLogStdFields.THREAD,
+        VLogStdFields.DETAILS
+    ]
 
     @abc.abstractmethod
     def __str__(self):
@@ -81,19 +90,17 @@ class Standard(Base):
         """
         self.datetime, self.type, self.source, self.thread, \
             self.details = self._parse_fields(unf_str, type)
+        self._set_config()
 
     def __str__(self):
         """Formatted string representing Standard VLogLine."""
         fields = []
         fields.append(str(self.datetime))
-        if self.COLORIZE:
-            fields.append(Colorize.apply(str(self.type), self.type.type))
-        else:
-            fields.append(str(self.type))
+        fields.append(str(self.type))
         fields.append(str(self.source))
         fields.append(str(self.thread))
         fields.append(str(self.details))
-        return " ".join(fields)
+        return " ".join(x for x in fields if x)
 
     def _parse_fields(self, unf_str, type=None):
         """Parse the string into the various fields.
@@ -102,16 +109,28 @@ class Standard(Base):
         :rtype list
         """
         tokens = unf_str.split(" ", self.UNF_LINE_SPLIT_COUNT)
+        if not type:
+            type = VLogType.get_type(unf_str)
         fields = []
         fields.append(vlogfield.Datetime(" ".join([tokens[0], tokens[1]])))
-        if type:
-            fields.append(vlogfield.Type(type))
-        else:
-            fields.append(vlogfield.Type(VLogType.get_type(unf_str)))
+        fields.append(vlogfield.Type(type))
         fields.append(vlogfield.Source(tokens[3]))
         fields.append(vlogfield.Thread(tokens[4]))
         fields.append(vlogfield.Details(tokens[5]))
         return fields
+
+    def _set_config(self):
+        """Sets the individual field options such as color and display."""
+        if self.COLORIZE:
+            self.type.colorize = True
+
+        # Fields to display
+        self.datetime.display_date = True if VLogStdFields.DATE in self.DISPLAY_FIELDS else False
+        self.datetime.display_time = True if VLogStdFields.TIME in self.DISPLAY_FIELDS else False
+        self.type.display = True if VLogStdFields.TYPE in self.DISPLAY_FIELDS else False
+        self.source.display = True if VLogStdFields.SOURCE in self.DISPLAY_FIELDS else False
+        self.thread.display = True if VLogStdFields.THREAD in self.DISPLAY_FIELDS else False
+        self.details.display = True if VLogStdFields.DETAILS in self.DISPLAY_FIELDS else False
 
 
 @six.add_metaclass(abc.ABCMeta)

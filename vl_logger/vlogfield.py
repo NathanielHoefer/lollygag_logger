@@ -2,6 +2,7 @@
 
 import abc
 from datetime import datetime
+from vl_logger.vutils import Colorize
 
 import six
 
@@ -32,14 +33,23 @@ class Datetime(LogField):
         try:
             format = " ".join([self.DATE_FORMAT, self.TIME_FORMAT])
             self.datetime = datetime.strptime(datetime_token, format)
+            self.display_date = True
+            self.display_time = True
         except ValueError:
             msg = "The datetime token '" + datetime_token + "' is not vaild."
             raise ValueError(msg)
 
     def __str__(self):
         """Convert date and time fields to ``str`` following vl formatting."""
-        format = " ".join([self.DATE_FORMAT, self.TIME_FORMAT])
-        return self.datetime.strftime(format)
+        if self.display_date and self.display_time:
+            str_format = " ".join([self.DATE_FORMAT, self.TIME_FORMAT])
+        elif self.display_time:
+            str_format = self.TIME_FORMAT
+        elif self.display_date:
+            str_format = self.DATE_FORMAT
+        else:
+            return ""
+        return self.datetime.strftime(str_format)
 
     def get_datetime(self):
         """Return the ``datetime`` object of the field."""
@@ -55,6 +65,8 @@ class Type(LogField):
         :param VLogType type: Type of log
         :raise ValueError: On types not in ``VLogType``
         """
+        self.colorize = False
+        self.display = True
         if type in list(VLogType):
             self.type = type
         else:
@@ -62,7 +74,12 @@ class Type(LogField):
 
     def __str__(self):
         """Convert type field to ``str``."""
-        return self.type.value
+        output = self.type.value
+        if not self.display:
+            output = ""
+        if self.colorize and output:
+            output = Colorize.apply(self.type.value, self.type)
+        return output
 
     def get_type(self):
         """Return the ``VLogType`` of the field."""
@@ -88,10 +105,14 @@ class Source(LogField):
             raise ValueError(msg)
         self.module = module
         self.line_number = int(line_number)
+        self.display = True
 
     def __str__(self):
         """Convert source field to ``str``."""
-        return "".join(["[", self.module, ":", str(self.line_number), "]"])
+        output = ""
+        if self.display:
+            output = "".join(["[", self.module, ":", str(self.line_number), "]"])
+        return output
 
     def get_module(self):
         """Return the ``str`` module of the field."""
@@ -121,10 +142,14 @@ class Thread(LogField):
             raise ValueError(msg)
         self.process = process
         self.thread = thread
+        self.display = True
 
     def __str__(self):
         """Convert thread field to ``str``."""
-        return "".join(["[", self.process, ":", self.thread, "]"])
+        output = ""
+        if self.display:
+            output = "".join(["[", self.process, ":", self.thread, "]"])
+        return output
 
     def get_process(self):
         """Return the ``str`` process of the field."""
@@ -141,7 +166,11 @@ class Details(LogField):
     def __init__(self, details_token):
         """Initialize thread field from ``str`` token."""
         self.details = details_token
+        self.display = True
 
     def __str__(self):
         """Convert details field to ``str``."""
-        return self.details
+        output = ""
+        if self.display:
+            output = self.details
+        return output

@@ -71,6 +71,17 @@ class VLogType(Enum):
         return None
 
 
+class VLogStdFields(Enum):
+    """Enums representing the fields in the standard logs."""
+
+    DATE = 'DATE'
+    TIME = 'TIME'
+    TYPE = 'TYPE'
+    SOURCE = 'SOURCE'
+    THREAD = 'THREAD'
+    DETAILS = 'DETAILS'
+
+
 class Colorize:
     """Provides methods to color logs based on their VLogType."""
 

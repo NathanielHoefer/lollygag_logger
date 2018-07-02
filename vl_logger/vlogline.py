@@ -8,6 +8,7 @@ from vl_logger import vlogfield
 from vl_logger.lollygag_logger import LogLine
 from vl_logger.vutils import VLogType
 from vl_logger.vutils import VPatterns
+from vl_logger.vutils import Colorize
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -22,6 +23,20 @@ class Base(LogLine):
               vlogfield.Source,
               vlogfield.Thread,
               vlogfield.Details]
+    COLORIZE = True
+
+    @abc.abstractmethod
+    def __str__(self):
+        """Formatted string representing VLogLine object."""
+        return None
+
+    @abc.abstractmethod
+    def _parse_fields(self, unf_str):
+        """Parse the string into the various fields.
+
+        :param str unf_str: Unformatted VL log line
+        """
+        pass
 
     @classmethod
     def set_max_line_len(cls, max_len):
@@ -36,18 +51,10 @@ class Base(LogLine):
         """Return the maximum length of the VLogLine string."""
         return cls.MAX_LINE_LEN
 
-    @abc.abstractmethod
-    def __str__(self):
-        """Formatted string representing VLogLine object."""
-        return None
-
-    @abc.abstractmethod
-    def _parse_fields(self, unf_str):
-        """Parse the string into the various fields.
-
-        :param str unf_str: Unformatted VL log line
-        """
-        pass
+    @classmethod
+    def colorize(cls, set=True):
+        """If `set == True`, logs will be colorized."""
+        cls.COLORIZE = set
 
 
 class Standard(Base):
@@ -77,13 +84,16 @@ class Standard(Base):
 
     def __str__(self):
         """Formatted string representing Standard VLogLine."""
-        return " ".join([
-            str(self.datetime),
-            str(self.type),
-            str(self.source),
-            str(self.thread),
-            str(self.details)
-        ])
+        fields = []
+        fields.append(str(self.datetime))
+        if self.COLORIZE:
+            fields.append(Colorize.apply(str(self.type), self.type.type))
+        else:
+            fields.append(str(self.type))
+        fields.append(str(self.source))
+        fields.append(str(self.thread))
+        fields.append(str(self.details))
+        return " ".join(fields)
 
     def _parse_fields(self, unf_str, type=None):
         """Parse the string into the various fields.
@@ -162,6 +172,7 @@ class SuiteHeader(Header):
 
         :param str unf_str: Unformatted VL log line
         """
+        self.type = VLogType.SUITE_H
         self.suite_name, self.desc = self._parse_fields(unf_str)
 
     def __str__(self):
@@ -173,7 +184,10 @@ class SuiteHeader(Header):
             "Test Suite:",
             self.desc
         ])
-        return self._add_border(header_str)
+        header_str = self._add_border(header_str)
+        if self.COLORIZE:
+            header_str = Colorize.apply(header_str, self.type)
+        return header_str
 
     def _parse_fields(self, unf_str):
         """Parse the string into the suite header fields.
@@ -232,6 +246,7 @@ class TestCaseHeader(Header):
 
         :param str unf_str: Unformatted VL log line
         """
+        self.type = VLogType.TEST_CASE_H
         self.test_case_name, self.number, \
             self.desc = self._parse_fields(unf_str)
 
@@ -243,7 +258,10 @@ class TestCaseHeader(Header):
         header_str = "".join([
             "Test Case ", str(self.number), ": ", self.desc
         ])
-        return self._add_border(header_str)
+        header_str = self._add_border(header_str)
+        if self.COLORIZE:
+            header_str = Colorize.apply(header_str, self.type)
+        return header_str
 
     def _parse_fields(self, unf_str):
         """Parse the string into the test case header fields.
@@ -299,6 +317,7 @@ class StepHeader(Header):
 
         :param str unf_str: Unformatted VL log line
         """
+        self.type = VLogType.STEP_H
         self.test_case_name, self.number, self.action, \
             self.expected_results = self._parse_fields(unf_str)
 
@@ -315,7 +334,10 @@ class StepHeader(Header):
             "Expect: ", self.expected_results
         ])
         header_str = "\n".join([step_str, expected_results_str])
-        return self._add_border(header_str)
+        header_str = self._add_border(header_str)
+        if self.COLORIZE:
+            header_str = Colorize.apply(header_str, self.type)
+        return header_str
 
     def _parse_fields(self, unf_str):
         """Parse the string into the step header fields.
@@ -381,6 +403,7 @@ class GeneralHeader(Header):
 
         :param str unf_str: Unformatted VL log line
         """
+        self.type = VLogType.GENERAL_H
         self.desc = self._parse_fields(unf_str)
 
     def __str__(self):
@@ -388,7 +411,10 @@ class GeneralHeader(Header):
 
         This does include the borders surrounding the header string.
         """
-        return self._add_border(self.desc)
+        header_str = self._add_border(self.desc)
+        if self.COLORIZE:
+            header_str = Colorize.apply(header_str, self.type)
+        return header_str
 
     def _parse_fields(self, unf_str):
         """Remove the border char from string."""

@@ -3,6 +3,7 @@
 import re
 
 from enum import Enum
+from colorama import Fore, Back, Style
 
 """
 Different conditions of tracebacks:
@@ -68,6 +69,30 @@ class VLogType(Enum):
         elif re.match(VPatterns.get_general_header(), unf_str):
             return VLogType.GENERAL_H
         return None
+
+
+class Colorize:
+    """Provides methods to color logs based on their VLogType."""
+
+    COLORS = {
+        'DEBUG': Fore.MAGENTA,
+        'INFO': Fore.BLUE,
+        'NOTICE': Fore.GREEN,
+        'WARNING': Fore.YELLOW,
+        'ERROR': Style.BRIGHT + Fore.RED,
+        'CRITICAL': Style.BRIGHT + Back.RED + Fore.YELLOW,
+        'OTHER': Style.RESET_ALL,
+        'STEP_H': Style.BRIGHT + Fore.CYAN,
+        'TEST_CASE_H': Style.BRIGHT + Fore.MAGENTA,
+        'SUITE_H': Style.BRIGHT + Fore.BLUE,
+        'GENERAL_H': Style.BRIGHT + Fore.GREEN
+    }
+
+    @classmethod
+    def apply(cls, text, type=VLogType.OTHER):
+        """Applies the console coloring to the given text based on the given VLogType."""
+        color = cls.COLORS[type.name]
+        return color + text + Style.RESET_ALL
 
 
 class VPatterns(object):

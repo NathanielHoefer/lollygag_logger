@@ -12,6 +12,4 @@ modules = [
 ]
 suite = unittest.TestSuite(modules)
 
-
-if __name__ == '__main__':
-    unittest.TextTestRunner().run(suite)
+unittest.TextTestRunner().run(suite)

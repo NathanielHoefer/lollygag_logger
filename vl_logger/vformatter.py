@@ -4,6 +4,7 @@ from vl_logger.vutils import VLogType
 from vl_logger.vutils import VPatterns
 import re
 
+
 class VFormatter(LogFormatter):
 
     def __init__(self):
@@ -15,7 +16,7 @@ class VFormatter(LogFormatter):
         if unf_str.isspace():
             return ""
 
-        unf_str = self.check_border(unf_str.strip())
+        unf_str = self.check_border(unf_str.rstrip("\n"))
 
         type = VLogType.get_type(unf_str)
 
@@ -63,23 +64,23 @@ class VFormatter(LogFormatter):
         :return: None if initial border or
         """
         if re.match("=+", unf_str):
-            if self.border == "=":
-                self.border = ""
+            if self.border_flag == "=":
+                self.border_flag = ""
                 return self._pull_logs()
             else:
-                self.border = "="
+                self.border_flag = "="
                 return None
         elif re.match("-+", unf_str):
-            if self.border == "-":
-                self.border = ""
+            if self.border_flag == "-":
+                self.border_flag = ""
                 return self._pull_logs()
             else:
-                self.border = "-"
+                self.border_flag = "-"
                 return None
 
         # Header details
-        if self.border:
-            unf_str = self.border + unf_str + self.border
+        if self.border_flag:
+            unf_str = self.border_flag + unf_str + self.border_flag
             self._store_log(unf_str)
             return None
         else:

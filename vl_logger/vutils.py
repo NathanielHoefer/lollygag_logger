@@ -4,6 +4,12 @@ import re
 
 from enum import Enum
 
+"""
+Different conditions of tracebacks:
+1. EOF: Starts with '|!!! Exception Occurred:
+
+
+"""
 
 class VLogType(Enum):
     """Enums representing the types of log lines."""

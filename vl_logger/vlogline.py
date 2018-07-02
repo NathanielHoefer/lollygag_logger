@@ -33,6 +33,8 @@ class Base(LogLine):
         # VLogStdFields.THREAD,
         VLogStdFields.DETAILS
     ]
+    CONDENSE_LINE = True
+    SHORTEN_TYPE = True
 
     @abc.abstractmethod
     def __str__(self):
@@ -100,7 +102,14 @@ class Standard(Base):
         fields.append(str(self.source))
         fields.append(str(self.thread))
         fields.append(str(self.details))
-        return " ".join(x for x in fields if x)
+        output = " ".join(x for x in fields if x)
+
+        if self.CONDENSE_LINE:
+            line_len = self.MAX_LINE_LEN
+            if self.COLORIZE:
+                line_len += Colorize.esc_len(self.type.get_type())
+            output = output[:line_len]
+        return output
 
     def _parse_fields(self, unf_str, type=None):
         """Parse the string into the various fields.
@@ -116,13 +125,16 @@ class Standard(Base):
         fields.append(vlogfield.Type(type))
         fields.append(vlogfield.Source(tokens[3]))
         fields.append(vlogfield.Thread(tokens[4]))
-        fields.append(vlogfield.Details(tokens[5]))
+        fields.append(vlogfield.Details(tokens[5] if len(tokens) >= 6 else ""))
         return fields
 
     def _set_config(self):
         """Sets the individual field options such as color and display."""
         if self.COLORIZE:
             self.type.colorize = True
+
+        if self.SHORTEN_TYPE:
+            self.type.shorten_type = True
 
         # Fields to display
         self.datetime.display_date = True if VLogStdFields.DATE in self.DISPLAY_FIELDS else False

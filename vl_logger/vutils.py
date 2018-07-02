@@ -16,11 +16,11 @@ class VLogType(Enum):
     """Enums representing the types of log lines."""
 
     DEBUG = 'DEBUG'
-    INFO = 'INFO'
-    NOTICE = 'NOTICE'
-    WARNING = 'WARNING'
+    INFO = 'INFO '
+    NOTICE = 'NOTE '
+    WARNING = 'WARN '
     ERROR = 'ERROR'
-    CRITICAL = 'CRITICAL'
+    CRITICAL = 'CRIT '
     OTHER = 'OTHER'
     STEP_H = 'STEP'
     TEST_CASE_H = 'TCASE'
@@ -48,17 +48,17 @@ class VLogType(Enum):
 
         if re.match(VPatterns.get_std(), unf_str):
             type = re.search(VPatterns.get_std_type(), unf_str).group(0)
-            if type == cls.DEBUG.value:
+            if type == cls.DEBUG.name:
                 return VLogType.DEBUG
-            elif type == cls.INFO.value:
+            elif type == cls.INFO.name:
                 return VLogType.INFO
-            elif type == cls.NOTICE.value:
+            elif type == cls.NOTICE.name:
                 return VLogType.NOTICE
-            elif type == cls.WARNING.value:
+            elif type == cls.WARNING.name:
                 return VLogType.WARNING
-            elif type == cls.ERROR.value:
+            elif type == cls.ERROR.name:
                 return VLogType.ERROR
-            elif type == cls.CRITICAL.value:
+            elif type == cls.CRITICAL.name:
                 return VLogType.CRITICAL
         elif re.match(VPatterns.get_suite_header(), unf_str):
             return VLogType.SUITE_H
@@ -104,6 +104,11 @@ class Colorize:
         """Applies the console coloring to the given text based on the given VLogType."""
         color = cls.COLORS[type.name]
         return color + text + Style.RESET_ALL
+
+    @classmethod
+    def esc_len(cls, log_type):
+        """Returns the length of escape characters in a given log line."""
+        return len(cls.COLORS[log_type.name]) + len(Style.RESET_ALL)
 
 
 class VPatterns(object):
@@ -154,7 +159,7 @@ class VPatterns(object):
     @classmethod
     def get_std_type(cls):
         """Return the regex ``str`` used for identifying VL type field."""
-        type_str_list = [x.value for x in cls.LOG_TYPES]
+        type_str_list = [x.name for x in cls.LOG_TYPES]
         type_str = "|".join(type_str_list)
         return "".join(["(", type_str, ")"])
 

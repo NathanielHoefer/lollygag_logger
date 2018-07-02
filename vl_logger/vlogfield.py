@@ -67,6 +67,7 @@ class Type(LogField):
         """
         self.colorize = False
         self.display = True
+        self.shorten_type = False
         if type in list(VLogType):
             self.type = type
         else:
@@ -77,8 +78,12 @@ class Type(LogField):
         output = self.type.value
         if not self.display:
             output = ""
+        if self.shorten_type:
+            output = self.type.value
+        else:
+            output = self.type.name
         if self.colorize and output:
-            output = Colorize.apply(self.type.value, self.type)
+            output = Colorize.apply(output, self.type)
         return output
 
     def get_type(self):

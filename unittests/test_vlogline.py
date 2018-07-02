@@ -21,7 +21,7 @@ class TestLogLineCreation(unittest.TestCase):
 
     def test_std_log_creation_no_details(self):
         line = "2017-10-30 19:13:32.208116 INFO [res.core:636] " \
-               "[MainProcess:MainThread] "
+               "[MainProcess:MainThread]"
         std_log = vlogline.Standard(line, VLogType.INFO)
         self.assertEqual(str(std_log), line)
 

@@ -21,13 +21,14 @@ class VLogType(Enum):
     WARNING = 'WARN '
     ERROR = 'ERROR'
     CRITICAL = 'CRIT '
+    TRACEBACK = 'TRACEBACK'
     OTHER = 'OTHER'
     STEP_H = 'STEP'
     TEST_CASE_H = 'TCASE'
     SUITE_H = 'SUITE'
     GENERAL_H = 'GENERAL'
 
-    __order__ = "DEBUG INFO NOTICE WARNING ERROR CRITICAL OTHER STEP_H " \
+    __order__ = "DEBUG INFO NOTICE WARNING ERROR CRITICAL TRACEBACK OTHER STEP_H " \
                 "TEST_CASE_H SUITE_H GENERAL_H"
 
     @classmethod
@@ -37,7 +38,7 @@ class VLogType(Enum):
         If there is no match to a current type, then ``None`` is returned.
         The current supported types are::
 
-            DEBUG | INFO | NOTICE | WARNING | ERROR | CRITICAL | STEP_H
+            DEBUG | INFO | NOTICE | WARNING | ERROR | CRITICAL | TRACEBACK | STEP_H
             | TEST_CASE_H | SUITE_H | GENERAL_H
 
         :param str unf_str: Unformatted VL log line
@@ -60,6 +61,8 @@ class VLogType(Enum):
                 return VLogType.ERROR
             elif type == cls.CRITICAL.name:
                 return VLogType.CRITICAL
+        elif re.match(VPatterns.get_traceback(), unf_str):
+            return VLogType.TRACEBACK
         elif re.match(VPatterns.get_suite_header(), unf_str):
             return VLogType.SUITE_H
         elif re.match(VPatterns.get_test_case_header(), unf_str):
@@ -140,6 +143,10 @@ class VPatterns(object):
     # General Header Patterns
     GENERAL_HEADER_PATTERN = "=.*="
 
+    TRACEBACK_PATTERN = "^(.*)Traceback \(most recent call last\):\s*$"
+    TRACEBACK_STEP_PATTERN = "^\s*File \"(.+\.py)\", line (\d+), in (\w+)\\n\s+(.+)$"
+    TRACEBACK_EXCEPTION_PATTERN = "^(\w+): (.*)$"
+
     @classmethod
     def get_std(cls):
         """Return the regex ``str`` for a standard vlogline."""
@@ -177,6 +184,16 @@ class VPatterns(object):
     def get_std_details(cls):
         """Return the regex ``str`` used for identifying VL thread field."""
         return cls.DETAIL_PATTERN
+
+    @classmethod
+    def get_traceback(cls):
+        """Return the regex ``str`` used for identifying VL tracebacks."""
+        return cls.TRACEBACK_PATTERN
+
+    @classmethod
+    def get_traceback_exception(cls):
+        """Return the regex ``str`` used for identifying VL tracebacks."""
+        return cls.TRACEBACK_EXCEPTION_PATTERN
 
     @classmethod
     def get_suite_name(cls):

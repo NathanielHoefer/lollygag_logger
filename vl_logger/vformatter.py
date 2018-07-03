@@ -17,6 +17,7 @@ class VFormatter(LogFormatter):
         VLogType.WARNING,
         VLogType.ERROR,
         VLogType.CRITICAL,
+        VLogType.TRACEBACK,
         VLogType.OTHER,
         VLogType.STEP_H,
         VLogType.TEST_CASE_H,
@@ -26,30 +27,34 @@ class VFormatter(LogFormatter):
 
     def __init__(self):
         self.border_flag = ""
+        self.traceback_flag = False
+        self.tb_leading_char = ""
         self.last_line_empty = False
         self.stored_logs = []
+        self.curr_log_type = None
         self._set_log_len()
 
     def format(self, unf_str):
         fmt_logs = []
         if unf_str.isspace():
-            fmt_logs.append("")
+            fmt_logs.append("")  # Print a blank line
             return fmt_logs
 
         unf_str = self.check_border(unf_str.rstrip("\n"))
-        type = VLogType.get_type(unf_str)
+        self.curr_log_type = VLogType.get_type(unf_str)
+        unf_str = self.check_traceback(unf_str)
 
         # Discard logs that aren't to be displayed
-        if type and type not in self.DISPLAY_LOG_TYPES:
-            fmt_logs.append(None)
+        if self.curr_log_type and self.curr_log_type not in self.DISPLAY_LOG_TYPES:
+            fmt_logs.append(None)  # Don't print anything
             return fmt_logs
 
-        fmt_log = self.create_log_line(unf_str, type)
+        fmt_log = self.create_log_line(unf_str, self.curr_log_type)
         if fmt_log:
-            fmt_logs.append(fmt_log)
+            fmt_logs.append(fmt_log)  # Print classified log
             return fmt_logs
         else:
-            fmt_logs.append(unf_str)
+            fmt_logs.append(unf_str)  # Print unclassified log
             return fmt_logs
 
     def send(self, fmt_logs):
@@ -78,6 +83,11 @@ class VFormatter(LogFormatter):
         fmt_log = None
         if type in VPatterns.std_log_types():
             fmt_log = vlogline.Standard(unf_str, type)
+            # if self.is_traceback_log(fmt_log):
+            #     self.stored_logs.append(fmt_log)
+            #     return None
+        elif type == VLogType.TRACEBACK:
+            fmt_log = vlogline.Traceback(unf_str)
         elif type == VLogType.SUITE_H:
             fmt_log = vlogline.SuiteHeader(unf_str)
         elif type == VLogType.TEST_CASE_H:
@@ -116,6 +126,27 @@ class VFormatter(LogFormatter):
             return None
         else:
             return unf_str
+
+    def check_traceback(self, unf_log):
+        """Handle traceback operations."""
+        if self.curr_log_type == VLogType.TRACEBACK:
+            self.tb_leading_char = re.match(VPatterns.get_traceback(), unf_log).group(1)
+            self._store_log(unf_log[len(self.tb_leading_char):])
+            self.traceback_flag = True
+            return None
+        elif not self.traceback_flag:
+            return unf_log
+        elif re.match(VPatterns.get_traceback_exception(), unf_log[len(self.tb_leading_char):]):
+            output = self.stored_logs
+            output.append(unf_log[len(self.tb_leading_char):])
+            self.curr_log_type = VLogType.TRACEBACK
+            self.stored_logs = []
+            self.traceback_flag = False
+            self.tb_leading_char = ""
+            return output
+        elif not self.curr_log_type and unf_log:
+            self._store_log(unf_log[len(self.tb_leading_char):])
+            return None
 
     def _store_log(self, unf_str):
         self.stored_logs.append(unf_str)

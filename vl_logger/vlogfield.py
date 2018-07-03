@@ -1,8 +1,10 @@
 """This module defines all of the VL field objects found in standard logs."""
 
 import abc
+import re
 from datetime import datetime
 from vl_logger.vutils import Colorize
+from vl_logger.vutils import VPatterns
 
 import six
 
@@ -75,13 +77,12 @@ class Type(LogField):
 
     def __str__(self):
         """Convert type field to ``str``."""
-        output = self.type.value
-        if not self.display:
-            output = ""
         if self.shorten_type:
             output = self.type.value
         else:
             output = self.type.name
+        if not self.display:
+            output = ""
         if self.colorize and output:
             output = Colorize.apply(output, self.type)
         return output
@@ -179,3 +180,77 @@ class Details(LogField):
         if self.display:
             output = self.details
         return output
+
+
+"""
+TracebackStep
+    File: str
+    LineNum: int
+    Function: str
+    Line: str
+
+TracebackException
+    Exception: str
+    Desc: str
+"""
+
+
+class TracebackStep(LogField):
+    """Represents the traceback step field."""
+
+    def __init__(self, step_token):
+        """Initialize step fields from ``str`` token."""
+        m = re.match(VPatterns.TRACEBACK_STEP_PATTERN, step_token)
+        if m:
+            self.file = m.group(1)
+            self.line_num = int(m.group(2))
+            self.function = m.group(3)
+            self.line = m.group(4)
+        else:
+            self.file = ""
+            self.line_num = 0
+            self.function = ""
+            self.line = ""
+
+    def __str__(self):
+        """Convert traceback step field to ``str``."""
+        output = "  File \"{}\", line {}, in {}\n    {}".format(self.file, self.line_num,
+                                                            self.function, self.line)
+        return output
+
+    def get_file(self):
+        return self.file
+
+    def get_line_num(self):
+        return self.line_num
+
+    def get_function(self):
+        return self.function
+
+    def get_line(self):
+        return self.line
+
+
+class TracebackException(LogField):
+    """Represents the traceback exception field."""
+
+    def __init__(self, exception_token):
+        """Initialize exception field from ``str`` token."""
+        m = re.match(VPatterns.TRACEBACK_EXCEPTION_PATTERN, exception_token)
+        if m:
+            self.exception = m.group(1)
+            self.desc = m.group(2)
+        else:
+            self.exception = ""
+            self.desc = ""
+
+    def __str__(self):
+        """Convert traceback exception field to ``str``."""
+        output = "{}: {}".format(self.exception, self.desc)
+        return output
+
+    def get_exception(self):
+        return self.exception
+
+    def get_desc(self):
+        return self.desc

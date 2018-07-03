@@ -41,6 +41,24 @@ class TestFieldCreation(unittest.TestCase):
         details = vlogfield.Details(details_token)
         self.assertEqual(str(details), details_token)
 
+    def test_correct_traceback_tokens(self):
+        step_token = 'File "/home/http_utils.py", line 1078, in _call_cluster_api\n' \
+                     '  check_json_rpc_response(json_response, retry_faults, method)'
+        exp_token = '''ApiCallMethodException: Error calling Method: ''' \
+                    '''DoesNotExist. JSON response: {u'id': 63}'''
+        step = vlogfield.TracebackStep(step_token)
+        self.assertEqual(step.get_file(), "/home/http_utils.py")
+        self.assertEqual(step.get_line_num(), 1078)
+        self.assertEqual(step.get_function(), "_call_cluster_api")
+        self.assertEqual(step.get_line(), "check_json_rpc_response(json_response, retry_faults, method)")
+        self.assertEqual(str(step), step_token)
+
+        exception = vlogfield.TracebackException(exp_token)
+        self.assertEqual(str(exception), exp_token)
+        self.assertEqual(exception.get_exception(), "ApiCallMethodException")
+        self.assertEqual(exception.get_desc(), "Error calling Method: "
+                                               "DoesNotExist. JSON response: {u'id': 63}")
+
     def test_incorrect_tokens(self):
         token = "Garbage"
         with self.assertRaises(ValueError):

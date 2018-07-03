@@ -25,6 +25,16 @@ class TestLogLineCreation(unittest.TestCase):
         std_log = vlogline.Standard(line, VLogType.INFO)
         self.assertEqual(str(std_log), line)
 
+    def test_traceback_creation(self):
+        lines = ['Traceback (most recent call last):',
+                 '  File "/home/http_utils.py", line 1078, in _call_cluster_api',
+                 '    check_json_rpc_response(json_response, retry_faults, method)',
+                 '  File "/home/testing/http_utils.py", line 1031, in check_json_rpc_response',
+                 '    response)',
+                 'ApiCallMethodException: DoesNotExist. JSON response: {u\'id\': 63}']
+        trc_log = vlogline.Traceback(lines)
+        self.assertEqual(str(trc_log), "\n".join(lines))
+
     def test_set_max_len(self):
         vlogline.Standard.set_max_line_len(50)
         self.assertEqual(vlogline.Standard.MAX_LINE_LEN, 50)

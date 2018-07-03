@@ -92,6 +92,7 @@ class Standard(Base):
         """
         self.datetime, self.type, self.source, self.thread, \
             self.details = self._parse_fields(unf_str, type)
+        self.additional_logs = []
         self._set_config()
 
     def __str__(self):
@@ -109,6 +110,9 @@ class Standard(Base):
             if self.COLORIZE:
                 line_len += Colorize.esc_len(self.type.get_type())
             output = output[:line_len]
+
+        if self.additional_logs:
+            output = "\n".join([output].extend(self.additional_logs))
         return output
 
     def _parse_fields(self, unf_str, type=None):
@@ -143,6 +147,42 @@ class Standard(Base):
         self.source.display = True if VLogStdFields.SOURCE in self.DISPLAY_FIELDS else False
         self.thread.display = True if VLogStdFields.THREAD in self.DISPLAY_FIELDS else False
         self.details.display = True if VLogStdFields.DETAILS in self.DISPLAY_FIELDS else False
+
+
+class Traceback(Base):
+
+    def __init__(self, unf_str_list):
+        """Initialize the traceback.
+
+        If the log type has already been determined prior to initializing, then
+        the type can be passed in, otherwise it will be determined.
+
+        :param str unf_str: Unformatted VL log line
+        :param `vutils.VLogType`_ type: The type of VL log line
+        """
+        self.steps, self.exception = self._parse_fields(unf_str_list)
+
+    def __str__(self):
+        """Formatted string representing VLogLine Traceback log."""
+        header = "Traceback (most recent call last):"
+        steps = "\n".join([str(step) for step in self.steps])
+        output = "\n".join([header, steps, str(self.exception)])
+        return output
+
+    def _parse_fields(self, unf_str_list):
+        """Parse the string into the various fields.
+
+        :param list(str) unf_str_list: Unformatted VL log line
+        """
+        unf_steps = unf_str_list[1:-1]
+        unf_exception = unf_str_list[-1]
+
+        fmt_steps = []
+        for line1, line2 in zip(unf_steps[0::2], unf_steps[1::2]):
+            step = "\n".join([line1, line2])
+            fmt_steps.append(vlogfield.TracebackStep(step))
+        fmt_exception = vlogfield.TracebackException(unf_exception)
+        return fmt_steps, fmt_exception
 
 
 @six.add_metaclass(abc.ABCMeta)

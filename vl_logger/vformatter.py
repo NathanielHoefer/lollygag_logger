@@ -3,6 +3,8 @@ from vl_logger import vlogline
 from vl_logger.vutils import VLogType
 from vl_logger.vutils import VPatterns
 import re
+import sys
+import os
 
 
 class VFormatter(LogFormatter):
@@ -25,9 +27,9 @@ class VFormatter(LogFormatter):
         self.border_flag = ""
         self.last_line_empty = False
         self.stored_logs = []
+        self._set_log_len()
 
     def format(self, unf_str):
-
         if unf_str.isspace():
             return ""
 
@@ -45,7 +47,6 @@ class VFormatter(LogFormatter):
             return unf_str
 
     def send(self, fmt_log):
-
         if fmt_log:
             self.last_line_empty = False
             print fmt_log
@@ -114,3 +115,13 @@ class VFormatter(LogFormatter):
         logs = "\n".join(self.stored_logs)
         self.stored_logs = []
         return logs
+
+    def _set_log_len(self):
+        console_width = 0
+        if sys.stdin.isatty():
+            widths_tuple = os.popen('stty size', 'r').read().split()
+            if widths_tuple:
+                _, console_width = widths_tuple
+                console_width = int(console_width)
+        if console_width:
+            vlogline.Base.set_max_line_len(console_width)  # TODO - Use interface when created

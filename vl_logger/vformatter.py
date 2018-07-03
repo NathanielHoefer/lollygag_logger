@@ -5,6 +5,7 @@ from vl_logger.vutils import VPatterns
 import re
 import sys
 import os
+from colorama import Fore, Back, Style
 
 
 class VFormatter(LogFormatter):
@@ -30,30 +31,38 @@ class VFormatter(LogFormatter):
         self._set_log_len()
 
     def format(self, unf_str):
+        fmt_logs = []
         if unf_str.isspace():
-            return ""
+            fmt_logs.append("")
+            return fmt_logs
 
         unf_str = self.check_border(unf_str.rstrip("\n"))
-
         type = VLogType.get_type(unf_str)
 
+        # Discard logs that aren't to be displayed
         if type and type not in self.DISPLAY_LOG_TYPES:
-            return None
+            fmt_logs.append(None)
+            return fmt_logs
 
         fmt_log = self.create_log_line(unf_str, type)
         if fmt_log:
-            return fmt_log
+            fmt_logs.append(fmt_log)
+            return fmt_logs
         else:
-            return unf_str
+            fmt_logs.append(unf_str)
+            return fmt_logs
 
-    def send(self, fmt_log):
-        if fmt_log:
-            self.last_line_empty = False
-            print fmt_log
-        elif fmt_log == "":
-            if not self.last_line_empty:
-                self.last_line_empty = True
-                print ""
+    def send(self, fmt_logs):
+        for log in fmt_logs:
+            if isinstance(log, str):  # TODO - Remove when completed with tracebacks
+                print Fore.GREEN + log + Style.RESET_ALL
+            elif log:
+                self.last_line_empty = False
+                print log
+            elif log == "":
+                if not self.last_line_empty:
+                    self.last_line_empty = True
+                    print ""
 
     def create_log_line(self, unf_str, type):
         """Create the appropriate VLogLine object based on type.

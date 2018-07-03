@@ -19,28 +19,12 @@ Various sources:
 
 
 Stories:
-Title: Design Basic Structure for Command.
-Type: Enabler
-Description: Design the initial command and arguments to allow for consistency between options.
-Acceptance Criteria: When the program is executed with the '-h' option, a list of commands to be implemented within this feature are to be displayed.
-
-Title: Format Log Type by Color
-Type: User Story
-Description: As a user, I want to format logs from a local file that uses color to differentiate between log types, so that I can more easily triage logs.
-Acceptance Criteria: Given logs are in vl format within a file, when the program is executed with the file as an argument, then the file will be printed to stdout with console color formatting around the log type.
-
-Title: Read Logs from a File
-Type: User Story
-Description: As a user, I want to read the logs in from a file, so that later they can be formatted.
-Acceptance Criteria: Given any state, when the program is executed with a log file as an argument, then each line will be printed to stdout as it was.
 
 Title: Convert Log Lines to Objects
 Type: Enabler
 Description: As the logs are coming in, convert the line into an object that can identify the various fields.
 Acceptance Criteria:
     - Given any state, when
-
-As a user, I want to filter logs by type so that I can more easily triage logs
 
 As a user, choose to show API calls and responses in a clear manner
 
@@ -70,3 +54,22 @@ vl-logger -r test.log -t [tc number|tc name]:[step number]
 
 Read from log file and view API calls and responses
 vl-logger -r test.log -a[--api]
+
+
+Completed Stories:
+Title: Design Basic Structure for Command.
+Type: Enabler
+Description: Design the initial command and arguments to allow for consistency between options.
+Acceptance Criteria: When the program is executed with the '-h' option, a list of commands to be implemented within this feature are to be displayed.
+
+Title: Format Log Type by Color
+Type: User Story
+Description: As a user, I want to format logs from a local file that uses color to differentiate between log types, so that I can more easily triage logs.
+Acceptance Criteria: Given logs are in vl format within a file, when the program is executed with the file as an argument, then the file will be printed to stdout with console color formatting around the log type.
+
+Title: Read Logs from a File
+Type: User Story
+Description: As a user, I want to read the logs in from a file, so that later they can be formatted.
+Acceptance Criteria: Given any state, when the program is executed with a log file as an argument, then each line will be printed to stdout as it was.
+
+- As a user, I want to filter logs by type so that I can more easily triage logs

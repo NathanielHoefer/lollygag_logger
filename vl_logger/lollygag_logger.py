@@ -64,9 +64,9 @@ class LollygagLogger:
             if unformatted_log_line == COMPLETED_SIGNAL or self.kill_logging:
                 exit(0)
 
-            formatted_log_line = self.log_formatter.format(
+            formatted_log_line_buffer = self.log_formatter.format(
                 unformatted_log_line)
-            signal = self.log_formatter.send(formatted_log_line)
+            signal = self.log_formatter.send(formatted_log_line_buffer)
             if signal == KILL_SIGNAL:
                 self.kill()
 

@@ -7,6 +7,7 @@ Formats the logs to be output to the screen.
 import argparse
 
 from vl_logger.vformatter import VFormatter
+from vl_logger.vconfiginterface import VConfigInterface
 from vl_logger.lollygag_logger import LollygagLogger
 
 
@@ -37,6 +38,7 @@ if __name__ == '__main__':
 
     logger = None
 
+    config = VConfigInterface(use_unformatted=True)
     vl_console_output = VFormatter()
     try:
         with open(args.read_path, "r") as logfile:

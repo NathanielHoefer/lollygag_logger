@@ -16,15 +16,11 @@ from vl_logger.vutils import Colorize
 class Base(LogLine):
     """Abstract base class for all other log line elements."""
 
-    PATTERN = ""
+    # Configuration Settings
     MAX_LINE_LEN = 105
-    UNF_LINE_SPLIT_COUNT = 5
-    FIELDS = [vlogfield.Datetime,
-              vlogfield.Type,
-              vlogfield.Source,
-              vlogfield.Thread,
-              vlogfield.Details]
     COLORIZE = False
+    CONDENSE_LINE = False
+    SHORTEN_TYPE = False
     DISPLAY_FIELDS = [
         VLogStdFields.DATE,
         VLogStdFields.TIME,
@@ -33,8 +29,14 @@ class Base(LogLine):
         VLogStdFields.THREAD,
         VLogStdFields.DETAILS
     ]
-    CONDENSE_LINE = False
-    SHORTEN_TYPE = False
+
+    # Other Settings
+    UNF_LINE_SPLIT_COUNT = 5
+    FIELDS = [vlogfield.Datetime,
+              vlogfield.Type,
+              vlogfield.Source,
+              vlogfield.Thread,
+              vlogfield.Details]
 
     @abc.abstractmethod
     def __str__(self):
@@ -51,9 +53,11 @@ class Base(LogLine):
 
     @classmethod
     def set_max_line_len(cls, max_len):
-        """Set the maximum length of the VLogLine string.
+        """Set the maximum length of the standard log line strings when printed.
 
-        :param int max_len: Max number of chars in VLogLine string.
+        This doesn't include header descriptions, tracebacks, or logs not classified.
+
+        :param int max_len: Max number of chars to print for each string.
         """
         cls.MAX_LINE_LEN = max_len
 
@@ -64,8 +68,31 @@ class Base(LogLine):
 
     @classmethod
     def colorize(cls, set=True):
-        """If `set == True`, logs will be colorized."""
+        """Use the colored option if available in a ``LogLine`` object."""
         cls.COLORIZE = set
+
+    @classmethod
+    def condense_line(cls, set=True):
+        """Condense the ``str`` output of standard logs to the specified max line length."""
+        cls.CONDENSE_LINE = set
+
+    @classmethod
+    def shorten_type(cls, set=True):
+        """Printed log types are shortened to 5 characters to ensure consistency between lines."""
+        cls.SHORTEN_TYPE = set
+
+    @classmethod
+    def display_fields(cls, fields):
+        """Print only the ``VLogStdFields`` specified.
+
+        .. code-block:: python
+
+            from vl_logger.vutils import VLogStdFields
+            Base.display_fields([VLogStdFields.TIME, VLogStdFields.TYPE])
+
+        :param [VLogStdFields] fields: The enums specifying which logs to print.
+        """
+        cls.DISPLAY_FIELDS = fields
 
 
 class Standard(Base):

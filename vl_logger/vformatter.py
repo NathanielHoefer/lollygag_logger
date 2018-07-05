@@ -1,11 +1,11 @@
-from vl_logger.lollygag_logger import LogFormatter
-from vl_logger import vlogline
-from vl_logger.vutils import VLogType
-from vl_logger.vutils import VPatterns
+import os
 import re
 import sys
-import os
-from colorama import Fore, Back, Style
+
+from vl_logger import vlogline
+from vl_logger.lollygag_logger import LogFormatter
+from vl_logger.vutils import VLogType
+from vl_logger.vutils import VPatterns
 
 
 class VFormatter(LogFormatter):
@@ -151,6 +151,24 @@ class VFormatter(LogFormatter):
         elif self.curr_log_type == VLogType.OTHER and unf_log:
             self._store_log(unf_log)
             return None
+
+    @classmethod
+    def display_log_types(cls, types):
+        """Print only the ``VLogType``s specified.
+
+        .. code-block:: python
+
+            from vl_logger.vutils import VLogType
+            VFormatter.set_display_log_types([VLogType.DEBUG, VLogType.INFO])
+
+        :param [VLogType] types: The enums specifying which logs types to print.
+        """
+        cls.DISPLAY_LOG_TYPES = types
+
+    @classmethod
+    def use_console_width(cls, set=True):
+        """Use the console width as the max line width if available."""
+        cls.CONSOLE_WIDTH = set
 
     def _store_log(self, unf_str):
         self.stored_logs.append(unf_str)

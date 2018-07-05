@@ -13,6 +13,7 @@ Contents:
 
    vlog
    vlogfield
+   vconfiginterface
 
 
 Indices and tables

@@ -198,9 +198,10 @@ TracebackException
 class TracebackStep(LogField):
     """Represents the traceback step field."""
 
-    def __init__(self, step_token):
+    def __init__(self, step_token, leading_chars=""):
         """Initialize step fields from ``str`` token."""
         m = re.match(VPatterns.TRACEBACK_STEP_PATTERN, step_token)
+        self.leading_chars = leading_chars
         if m:
             self.file = m.group(1)
             self.line_num = int(m.group(2))
@@ -214,8 +215,9 @@ class TracebackStep(LogField):
 
     def __str__(self):
         """Convert traceback step field to ``str``."""
-        output = "  File \"{}\", line {}, in {}\n    {}".format(self.file, self.line_num,
-                                                            self.function, self.line)
+        output = "{0}  File \"{1}\", line {2}, in {3}\n{0}    {4}".format(self.leading_chars,
+                                                                          self.file, self.line_num,
+                                                                          self.function, self.line)
         return output
 
     def get_file(self):
@@ -234,9 +236,10 @@ class TracebackStep(LogField):
 class TracebackException(LogField):
     """Represents the traceback exception field."""
 
-    def __init__(self, exception_token):
+    def __init__(self, exception_token, leading_chars=""):
         """Initialize exception field from ``str`` token."""
         m = re.match(VPatterns.TRACEBACK_EXCEPTION_PATTERN, exception_token)
+        self.leading_chars = leading_chars
         if m:
             self.exception = m.group(1)
             self.desc = m.group(2)
@@ -246,7 +249,7 @@ class TracebackException(LogField):
 
     def __str__(self):
         """Convert traceback exception field to ``str``."""
-        output = "{}: {}".format(self.exception, self.desc)
+        output = "{0}{1}: {2}".format(self.leading_chars, self.exception, self.desc)
         return output
 
     def get_exception(self):

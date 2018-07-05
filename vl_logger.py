@@ -33,29 +33,29 @@ def args():
 
 
 if __name__ == '__main__':
-    # args = args()
-    #
-    # logger = None
-    #
-    # vl_console_output = VFormatter()
-    # try:
-    #     with open(args.read_path, "r") as logfile:
-    #         logger = LollygagLogger(logfile, vl_console_output)
-    #         logger.run()
-    # except KeyboardInterrupt:
-    #     logger.kill()
-    #     print "Keyboard Interrupt: Exiting Logger"
-    #     exit(0)
+    args = args()
 
     logger = None
-    path = "/home/nathaniel/vl_artifacts/TsDriveEncryptionPersistenceAndAccessibility-2018-02-07T16.14.18/test.log"
 
     vl_console_output = VFormatter()
     try:
-        with open(path, "r") as logfile:
+        with open(args.read_path, "r") as logfile:
             logger = LollygagLogger(logfile, vl_console_output)
             logger.run()
     except KeyboardInterrupt:
         logger.kill()
         print "Keyboard Interrupt: Exiting Logger"
         exit(0)
+
+    # logger = None
+    # path = "/home/nathaniel/vl_artifacts/TsDriveEncryptionPersistenceAndAccessibility-2018-02-07T16.14.18/test.log"
+    #
+    # vl_console_output = VFormatter()
+    # try:
+    #     with open(path, "r") as logfile:
+    #         logger = LollygagLogger(logfile, vl_console_output)
+    #         logger.run()
+    # except KeyboardInterrupt:
+    #     logger.kill()
+    #     print "Keyboard Interrupt: Exiting Logger"
+    #     exit(0)

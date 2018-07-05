@@ -71,6 +71,8 @@ class VLogType(Enum):
             return VLogType.STEP_H
         elif re.match(VPatterns.get_general_header(), unf_str):
             return VLogType.GENERAL_H
+        elif re.match(VPatterns.OTHER_PATTERN, unf_str):
+            return VLogType.OTHER
         return None
 
 
@@ -146,6 +148,10 @@ class VPatterns(object):
     TRACEBACK_PATTERN = "^(.*)Traceback \(most recent call last\):\s*$"
     TRACEBACK_STEP_PATTERN = "^\s*File \"(.+\.py)\", line (\d+), in (\w+)\\n\s+(.+)$"
     TRACEBACK_EXCEPTION_PATTERN = "^(\w+): (.*)$"
+
+    # Pattern describing the following
+    # "# History...", "|> ...", "! ..."
+    OTHER_PATTERN = "^[# History|\|>|!].+$"
 
     @classmethod
     def get_std(cls):
@@ -228,3 +234,8 @@ class VPatterns(object):
     @classmethod
     def std_log_types(cls):
         return cls.LOG_TYPES
+
+    @classmethod
+    def get_other(cls):
+        """Return the regex ``str`` used for identifying misc. logs."""
+        return cls.OTHER_PATTERN

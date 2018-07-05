@@ -11,7 +11,7 @@ from colorama import Fore, Back, Style
 class VFormatter(LogFormatter):
 
     DISPLAY_LOG_TYPES = [
-        # VLogType.DEBUG,
+        VLogType.DEBUG,
         VLogType.INFO,
         VLogType.NOTICE,
         VLogType.WARNING,
@@ -24,6 +24,7 @@ class VFormatter(LogFormatter):
         VLogType.SUITE_H,
         VLogType.GENERAL_H
     ]
+    CONSOLE_WIDTH = False
 
     def __init__(self):
         self.border_flag = ""
@@ -60,7 +61,8 @@ class VFormatter(LogFormatter):
     def send(self, fmt_logs):
         for log in fmt_logs:
             if isinstance(log, str):  # TODO - Remove when completed with tracebacks
-                print Fore.GREEN + log + Style.RESET_ALL
+                # print Fore.GREEN + log + Style.RESET_ALL
+                print log
             elif log:
                 self.last_line_empty = False
                 print log
@@ -96,6 +98,8 @@ class VFormatter(LogFormatter):
             fmt_log = vlogline.StepHeader(unf_str)
         elif type == VLogType.GENERAL_H:
             fmt_log = vlogline.GeneralHeader(unf_str)
+        elif type == VLogType.OTHER:
+            fmt_log = vlogline.Other(unf_str)
         return fmt_log
 
     def check_border(self, unf_str):
@@ -131,21 +135,21 @@ class VFormatter(LogFormatter):
         """Handle traceback operations."""
         if self.curr_log_type == VLogType.TRACEBACK:
             self.tb_leading_char = re.match(VPatterns.get_traceback(), unf_log).group(1)
-            self._store_log(unf_log[len(self.tb_leading_char):])
+            self._store_log(unf_log)
             self.traceback_flag = True
             return None
         elif not self.traceback_flag:
             return unf_log
         elif re.match(VPatterns.get_traceback_exception(), unf_log[len(self.tb_leading_char):]):
             output = self.stored_logs
-            output.append(unf_log[len(self.tb_leading_char):])
+            output.append(unf_log)
             self.curr_log_type = VLogType.TRACEBACK
             self.stored_logs = []
             self.traceback_flag = False
             self.tb_leading_char = ""
             return output
-        elif not self.curr_log_type and unf_log:
-            self._store_log(unf_log[len(self.tb_leading_char):])
+        elif self.curr_log_type == VLogType.OTHER and unf_log:
+            self._store_log(unf_log)
             return None
 
     def _store_log(self, unf_str):
@@ -158,7 +162,7 @@ class VFormatter(LogFormatter):
 
     def _set_log_len(self):
         console_width = 0
-        if sys.stdin.isatty():
+        if self.CONSOLE_WIDTH and sys.stdin.isatty():
             widths_tuple = os.popen('stty size', 'r').read().split()
             if widths_tuple:
                 _, console_width = widths_tuple

@@ -42,8 +42,8 @@ class TestFieldCreation(unittest.TestCase):
         self.assertEqual(str(details), details_token)
 
     def test_correct_traceback_tokens(self):
-        step_token = 'File "/home/http_utils.py", line 1078, in _call_cluster_api\n' \
-                     '  check_json_rpc_response(json_response, retry_faults, method)'
+        step_token = '  File "/home/http_utils.py", line 1078, in _call_cluster_api\n' \
+                     '    check_json_rpc_response(json_response, retry_faults, method)'
         exp_token = '''ApiCallMethodException: Error calling Method: ''' \
                     '''DoesNotExist. JSON response: {u'id': 63}'''
         step = vlogfield.TracebackStep(step_token)

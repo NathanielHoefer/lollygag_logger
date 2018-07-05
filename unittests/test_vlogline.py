@@ -3,9 +3,23 @@ from datetime import datetime
 
 from vl_logger import vlogline
 from vl_logger.vutils import VLogType
+from vl_logger.vutils import VLogStdFields
 
 
 class TestLogLineCreation(unittest.TestCase):
+
+    def setUp(self):
+        vlogline.Base.COLORIZE = False
+        vlogline.Base.DISPLAY_FIELDS = [
+            VLogStdFields.DATE,
+            VLogStdFields.TIME,
+            VLogStdFields.TYPE,
+            VLogStdFields.SOURCE,
+            VLogStdFields.THREAD,
+            VLogStdFields.DETAILS
+        ]
+        vlogline.Base.CONDENSE_LINE = False
+        vlogline.Base.SHORTEN_TYPE = False
 
     def test_std_log_creation_no_type(self):
         line = "2017-10-30 19:13:32.208116 DEBUG [res.core:636] " \
@@ -32,6 +46,16 @@ class TestLogLineCreation(unittest.TestCase):
                  '  File "/home/testing/http_utils.py", line 1031, in check_json_rpc_response',
                  '    response)',
                  'ApiCallMethodException: DoesNotExist. JSON response: {u\'id\': 63}']
+        trc_log = vlogline.Traceback(lines)
+        self.assertEqual(str(trc_log), "\n".join(lines))
+
+    def test_traceback_creation_leading_chars(self):
+        lines = ['|! Traceback (most recent call last):',
+                 '|!   File "/home/http_utils.py", line 1078, in _call_cluster_api',
+                 '|!     check_json_rpc_response(json_response, retry_faults, method)',
+                 '|!   File "/home/testing/http_utils.py", line 1031, in check_json_rpc_response',
+                 '|!     response)',
+                 '|! ApiCallMethodException: DoesNotExist. JSON response: {u\'id\': 63}']
         trc_log = vlogline.Traceback(lines)
         self.assertEqual(str(trc_log), "\n".join(lines))
 

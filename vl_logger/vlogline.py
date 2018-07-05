@@ -24,17 +24,17 @@ class Base(LogLine):
               vlogfield.Source,
               vlogfield.Thread,
               vlogfield.Details]
-    COLORIZE = True
+    COLORIZE = False
     DISPLAY_FIELDS = [
-        # VLogStdFields.DATE,
+        VLogStdFields.DATE,
         VLogStdFields.TIME,
         VLogStdFields.TYPE,
         VLogStdFields.SOURCE,
-        # VLogStdFields.THREAD,
+        VLogStdFields.THREAD,
         VLogStdFields.DETAILS
     ]
-    CONDENSE_LINE = True
-    SHORTEN_TYPE = True
+    CONDENSE_LINE = False
+    SHORTEN_TYPE = False
 
     @abc.abstractmethod
     def __str__(self):
@@ -160,11 +160,12 @@ class Traceback(Base):
         :param str unf_str: Unformatted VL log line
         :param `vutils.VLogType`_ type: The type of VL log line
         """
+        self.leading_chars = ""
         self.steps, self.exception = self._parse_fields(unf_str_list)
 
     def __str__(self):
         """Formatted string representing VLogLine Traceback log."""
-        header = "Traceback (most recent call last):"
+        header = "{}Traceback (most recent call last):".format(self.leading_chars)
         steps = "\n".join([str(step) for step in self.steps])
         output = "\n".join([header, steps, str(self.exception)])
         return output
@@ -174,15 +175,24 @@ class Traceback(Base):
 
         :param list(str) unf_str_list: Unformatted VL log line
         """
+        unf_header = unf_str_list[0]
         unf_steps = unf_str_list[1:-1]
         unf_exception = unf_str_list[-1]
 
+        self.leading_chars = re.match(VPatterns.get_traceback(), unf_header).group(1)
         fmt_steps = []
         for line1, line2 in zip(unf_steps[0::2], unf_steps[1::2]):
+            line1 = self._remove_leading_chars(line1)
+            line2 = self._remove_leading_chars(line2)
             step = "\n".join([line1, line2])
-            fmt_steps.append(vlogfield.TracebackStep(step))
-        fmt_exception = vlogfield.TracebackException(unf_exception)
+            fmt_steps.append(vlogfield.TracebackStep(step, self.leading_chars))
+        unf_exception = self._remove_leading_chars(unf_exception)
+        fmt_exception = vlogfield.TracebackException(unf_exception, self.leading_chars)
         return fmt_steps, fmt_exception
+
+    def _remove_leading_chars(self, line):
+        """Removes the leading characters from give string."""
+        return line[len(self.leading_chars):]
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -491,3 +501,15 @@ class GeneralHeader(Header):
         """Remove the border char from string."""
         unf_str = unf_str.strip(self.BORDER_CHAR)
         return unf_str
+
+
+class Other(Base):
+
+    def __init__(self, unf_str):
+        self.desc = unf_str
+
+    def __str__(self):
+        return self.desc
+
+    def _parse_fields(self, unf_str):
+        pass

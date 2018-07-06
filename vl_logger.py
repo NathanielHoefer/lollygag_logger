@@ -38,7 +38,7 @@ if __name__ == '__main__':
 
     logger = None
 
-    config = VConfigInterface(use_unformatted=True)
+    config = VConfigInterface(use_unformatted=False)
     vl_console_output = VFormatter()
     try:
         with open(args.read_path, "r") as logfile:

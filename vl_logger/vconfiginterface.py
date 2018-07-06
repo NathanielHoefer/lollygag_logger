@@ -21,7 +21,7 @@ class VConfigInterface:
         :caption: Implementation
 
         # Default option
-        config = VConfigInterface()
+        config = VConfigInterface(use_default=True)
 
         # Manual option
         from vl_logger.vutils import VLogType
@@ -37,12 +37,12 @@ class VConfigInterface:
         config = VConfigInterface(use_unformatted=True)
     """
 
-    def __init__(self, use_unformatted=False):
+    def __init__(self, use_default=False, use_unformatted=False):
         """Initialize the Config Interface."""
-        if use_unformatted:
-            self.use_unformatted()
-        else:
+        if use_default and use_unformatted:
             self.use_default()
+        elif not use_default and use_unformatted:
+            self.use_unformatted()
 
     def use_default(self):
         """Use the default settings as described below.

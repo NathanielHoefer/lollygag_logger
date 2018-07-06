@@ -6,9 +6,24 @@ from vl_logger import vlogline
 from vl_logger.lollygag_logger import LogFormatter
 from vl_logger.vutils import VLogType
 from vl_logger.vutils import VPatterns
+from vl_logger.vconfiginterface import VConfigInterface
 
 
 class VFormatter(LogFormatter):
+    """Handle formatting and displaying of VL Logs as they are passed line by line.
+
+    ``VFormatter`` is to be passed in the ``LollygagLogger`` in order to process each VL log line.
+    This is done by passing each log line as a raw string into ``format()``,
+    which handles the processing of the string.
+    The processed string is then returned and is then passed to ``send()`` via ``LollygagLogger``.
+    It is then evaluated and printed.
+
+    Processing a log line within ``format()`` includes:
+        - Classification (Info log, Suite Header, Traceback, etc.)
+        - Condensing log line to specific length
+        - Colorization of defined log elements.
+
+    """
 
     DISPLAY_LOG_TYPES = [
         VLogType.DEBUG,
@@ -27,6 +42,16 @@ class VFormatter(LogFormatter):
     CONSOLE_WIDTH = False
 
     def __init__(self):
+        """Initializes ``VFormatter``
+
+        :ivar str border_flag: Character type used for the border in the current header.
+        :ivar bool traceback_flag: True if currently processing a traceback, otherwise False.
+        :ivar str tb_leading_char: Leading characters of the current traceback.
+        :ivar bool last_line_empty: Flag indicating if the last log was empty.
+        :ivar [str] stored_logs: Cache of log lines that are waiting to be processed.
+            Used for mutli-line logs such as tracebacks.
+        :ivar VLogType curr_log_type: Stores the current log type
+        """
         self.border_flag = ""
         self.traceback_flag = False
         self.tb_leading_char = ""
@@ -186,4 +211,5 @@ class VFormatter(LogFormatter):
                 _, console_width = widths_tuple
                 console_width = int(console_width)
         if console_width:
-            vlogline.Base.set_max_line_len(console_width)  # TODO - Use interface when created
+            config = VConfigInterface()
+            config.max_line_len(console_width)

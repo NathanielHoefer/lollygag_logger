@@ -39,7 +39,7 @@ class VConfigInterface:
 
     def __init__(self, use_default=False, use_unformatted=False):
         """Initialize the Config Interface."""
-        if use_default and use_unformatted:
+        if use_default and not use_unformatted:
             self.use_default()
         elif not use_default and use_unformatted:
             self.use_unformatted()
@@ -138,7 +138,7 @@ class VConfigInterface:
 
     def condense_line(self, set=True):
         """Condense the ``str`` output of standard logs to the specified max line length."""
-        vlogline.Base.shorten_type(set)
+        vlogline.Base.condense_line(set)
 
     def shorten_type(self, set=True):
         """Printed log types are shortened to 5 characters to ensure consistency between lines."""
@@ -171,3 +171,9 @@ class VConfigInterface:
             VFormatter.set_display_log_types([VLogType.DEBUG, VLogType.INFO])
         """
         vformatter.VFormatter.display_log_types(types)
+
+    def display_test_case(self, name="", number=-1):
+        vformatter.VFormatter.display_test_case(name, number)
+
+    def display_step(self, number=-1):
+        vformatter.VFormatter.display_step(number)

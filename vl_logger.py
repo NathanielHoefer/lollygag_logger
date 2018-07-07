@@ -5,6 +5,7 @@ Formats the logs to be output to the screen.
 """
 
 import argparse
+import re
 
 from vl_logger.vformatter import VFormatter
 from vl_logger.vconfiginterface import VConfigInterface
@@ -25,11 +26,13 @@ def args():
                   "step instance. When formatting logs from the 'vl run' command, the tool will " \
                   "execute the command directly and the output will be in real time."
     read_desc = "Read from log file specified."
+    testcase_desc = ""  # TODO
 
     # Argument setup and parsing
     parser = argparse.ArgumentParser(prog=program, description=description)
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-r", "--read", action="store", dest="read_path", help=read_desc)
+    parser.add_argument("-t", "--testcase", action="store", dest="testcase", help=testcase_desc)
     return parser.parse_args()
 
 
@@ -38,7 +41,19 @@ if __name__ == '__main__':
 
     logger = None
 
-    config = VConfigInterface(use_unformatted=False)
+    config = VConfigInterface(use_default=True, use_unformatted=False)
+
+    # Display specific test cases and steps
+    if args.testcase:
+        m = re.match("^(\d+|Tc\w*)(:(\d+))*$", args.testcase)
+        if m.group(1):
+            if m.group(1).isdigit():
+                config.display_test_case(number=int(m.group(1)))
+            else:
+                config.display_test_case(name=m.group(1))
+        if m.group(3) and m.group(3).isdigit():
+            config.display_step(number=int(m.group(3)))
+
     vl_console_output = VFormatter()
     try:
         with open(args.read_path, "r") as logfile:
@@ -48,10 +63,11 @@ if __name__ == '__main__':
         logger.kill()
         print "Keyboard Interrupt: Exiting Logger"
         exit(0)
-
-    # logger = None
-    # path = "/home/nathaniel/vl_artifacts/TsDriveEncryptionPersistenceAndAccessibility-2018-02-07T16.14.18/test.log"
     #
+    # path = "/home/nathaniel/vl_artifacts/TsDriveEncryptionPersistenceAndAccessibility-2018-02-07T16.14.18/test3.log"
+    #
+    # config = VConfigInterface(use_default=True, use_unformatted=False)
+    # config.display_test_case(number=1)
     # vl_console_output = VFormatter()
     # try:
     #     with open(path, "r") as logfile:

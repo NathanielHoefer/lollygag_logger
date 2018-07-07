@@ -181,13 +181,21 @@ class Traceback(Base):
     def __init__(self, unf_str_list):
         """Initialize the traceback.
 
-        If the log type has already been determined prior to initializing, then
-        the type can be passed in, otherwise it will be determined.
+        Each line is to be its separated as its own element within a list.
+        The lines may be prepended by the same leading characters.
 
-        :param str unf_str: Unformatted VL log line
-        :param `vutils.VLogType`_ type: The type of VL log line
+        .. code-block:: none
+
+            Traceback (most recent call last):
+              File "<file name>", line <line num>, in <func call>
+                <line>
+              ...
+            <exception>: <description>
+
+        :param str unf_str_list: Unformatted VL log line
         """
         self.leading_chars = ""
+        self.type = VLogType.TRACEBACK
         self.steps, self.exception = self._parse_fields(unf_str_list)
 
     def __str__(self):
@@ -198,7 +206,7 @@ class Traceback(Base):
         return output
 
     def _parse_fields(self, unf_str_list):
-        """Parse the string into the various fields.
+        """Parse the list of strings into the header, steps, and exception fields.
 
         :param list(str) unf_str_list: Unformatted VL log line
         """
@@ -218,7 +226,7 @@ class Traceback(Base):
         return fmt_steps, fmt_exception
 
     def _remove_leading_chars(self, line):
-        """Removes the leading characters from give string."""
+        """Removes the leading characters from given string."""
         return line[len(self.leading_chars):]
 
 

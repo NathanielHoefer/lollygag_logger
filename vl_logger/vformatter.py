@@ -6,7 +6,6 @@ from vl_logger import vlogline
 from vl_logger.lollygag_logger import LogFormatter
 from vl_logger.vutils import VLogType
 from vl_logger.vutils import VPatterns
-from vl_logger.vconfiginterface import VConfigInterface
 
 
 class VFormatter(LogFormatter):
@@ -22,7 +21,6 @@ class VFormatter(LogFormatter):
         - Classification (Info log, Suite Header, Traceback, etc.)
         - Condensing log line to specific length
         - Colorization of defined log elements.
-
     """
 
     DISPLAY_LOG_TYPES = [
@@ -40,6 +38,9 @@ class VFormatter(LogFormatter):
         VLogType.GENERAL_H
     ]
     CONSOLE_WIDTH = False
+    DISPLAY_TESTCASE_NAME = ""
+    DISPLAY_TESTCASE_NUM = -1
+    DISPLAY_STEP_NUM = -1
 
     def __init__(self):
         """Initializes ``VFormatter``
@@ -50,7 +51,10 @@ class VFormatter(LogFormatter):
         :ivar bool last_line_empty: Flag indicating if the last log was empty.
         :ivar [str] stored_logs: Cache of log lines that are waiting to be processed.
             Used for mutli-line logs such as tracebacks.
-        :ivar VLogType curr_log_type: Stores the current log type
+        :ivar VLogType curr_log_type: Stores the current log type.
+        :ivar str curr_tc_name: Name of the current test case.
+        :ivar int curr_tc_number: Number of the current test case.
+        :ivar int curr_step_number: Number of the current step within a test case.
         """
         self.border_flag = ""
         self.traceback_flag = False
@@ -58,124 +62,66 @@ class VFormatter(LogFormatter):
         self.last_line_empty = False
         self.stored_logs = []
         self.curr_log_type = None
+
+        self.curr_tc = None
+        self.curr_step = None
+        self.curr_suite = None
+        self.curr_general = None
+
+        self.curr_tc_name = ""
+        self.curr_tc_number = -1
+        self.curr_step_number = -1
+
         self._set_log_len()
 
     def format(self, unf_str):
+        """Convert raw log line to formatted log line objects.
+
+        :param str unf_str: Unformatted raw string
+        :rtype: list(``LogLine``|str|None)
+        :returns: ``LogLine`` object if classified
+        :returns: Empty str if raw log contains only space characters
+        :returns: Non-empty str if raw log not classified.
+        :returns: None if log line is not to be printed.
+        """
         fmt_logs = []
         if unf_str.isspace():
             fmt_logs.append("")  # Print a blank line
             return fmt_logs
 
-        unf_str = self.check_border(unf_str.rstrip("\n"))
+        # Handle multi-line logs: headers and tracebacks
+        unf_str = self._handle_raw_header(unf_str.rstrip("\n"))
         self.curr_log_type = VLogType.get_type(unf_str)
-        unf_str = self.check_traceback(unf_str)
+        unf_str = self._handle_raw_traceback(unf_str)
 
-        # Discard logs that aren't to be displayed
+        # Discard logs based on type that are not to be displayed
         if self.curr_log_type and self.curr_log_type not in self.DISPLAY_LOG_TYPES:
             fmt_logs.append(None)  # Don't print anything
             return fmt_logs
 
-        fmt_log = self.create_log_line(unf_str, self.curr_log_type)
+        # Create LogLine objects
+        fmt_log = self._create_log_line(unf_str, self.curr_log_type)
         if fmt_log:
             fmt_logs.append(fmt_log)  # Print classified log
             return fmt_logs
-        else:
+        elif self._in_specified_testcase():
             fmt_logs.append(unf_str)  # Print unclassified log
             return fmt_logs
+        return fmt_logs
 
     def send(self, fmt_logs):
+        """Prints each of the formatted logs passed.
+
+        :param list(``LogLine``|str|None) fmt_logs: The formatted log lines after ``format()``.
+        """
         for log in fmt_logs:
-            if isinstance(log, str):  # TODO - Remove when completed with tracebacks
-                # print Fore.GREEN + log + Style.RESET_ALL
-                print log
-            elif log:
+            if log:
                 self.last_line_empty = False
                 print log
             elif log == "":
                 if not self.last_line_empty:
                     self.last_line_empty = True
                     print ""
-
-    def create_log_line(self, unf_str, type):
-        """Create the appropriate VLogLine object based on type.
-
-        :param str unf_str: Unformatted VL log line
-        :param VLogType type: Type of VLogLine object to create.
-        :rtype: Base | None
-        :returns: VLogLine if unf_str matches pattern of type, else None
-        """
-        if not type or not unf_str:
-            return unf_str
-
-        fmt_log = None
-        if type in VPatterns.std_log_types():
-            fmt_log = vlogline.Standard(unf_str, type)
-            # if self.is_traceback_log(fmt_log):
-            #     self.stored_logs.append(fmt_log)
-            #     return None
-        elif type == VLogType.TRACEBACK:
-            fmt_log = vlogline.Traceback(unf_str)
-        elif type == VLogType.SUITE_H:
-            fmt_log = vlogline.SuiteHeader(unf_str)
-        elif type == VLogType.TEST_CASE_H:
-            fmt_log = vlogline.TestCaseHeader(unf_str)
-        elif type == VLogType.STEP_H:
-            fmt_log = vlogline.StepHeader(unf_str)
-        elif type == VLogType.GENERAL_H:
-            fmt_log = vlogline.GeneralHeader(unf_str)
-        elif type == VLogType.OTHER:
-            fmt_log = vlogline.Other(unf_str)
-        return fmt_log
-
-    def check_border(self, unf_str):
-        """Handle border operations.
-
-        This method will determine what is to be done with borders
-        :return: None if initial border or
-        """
-        if re.match("=+", unf_str):
-            if self.border_flag == "=":
-                self.border_flag = ""
-                return self._pull_logs()
-            else:
-                self.border_flag = "="
-                return None
-        elif re.match("-+", unf_str):
-            if self.border_flag == "-":
-                self.border_flag = ""
-                return self._pull_logs()
-            else:
-                self.border_flag = "-"
-                return None
-
-        # Header details
-        if self.border_flag:
-            unf_str = self.border_flag + unf_str + self.border_flag
-            self._store_log(unf_str)
-            return None
-        else:
-            return unf_str
-
-    def check_traceback(self, unf_log):
-        """Handle traceback operations."""
-        if self.curr_log_type == VLogType.TRACEBACK:
-            self.tb_leading_char = re.match(VPatterns.get_traceback(), unf_log).group(1)
-            self._store_log(unf_log)
-            self.traceback_flag = True
-            return None
-        elif not self.traceback_flag:
-            return unf_log
-        elif re.match(VPatterns.get_traceback_exception(), unf_log[len(self.tb_leading_char):]):
-            output = self.stored_logs
-            output.append(unf_log)
-            self.curr_log_type = VLogType.TRACEBACK
-            self.stored_logs = []
-            self.traceback_flag = False
-            self.tb_leading_char = ""
-            return output
-        elif self.curr_log_type == VLogType.OTHER and unf_log:
-            self._store_log(unf_log)
-            return None
 
     @classmethod
     def display_log_types(cls, types):
@@ -195,6 +141,18 @@ class VFormatter(LogFormatter):
         """Use the console width as the max line width if available."""
         cls.CONSOLE_WIDTH = set
 
+    @classmethod
+    def display_test_case(cls, name="", number=-1):
+        if name:
+            cls.DISPLAY_TESTCASE_NAME = name
+        if number >= 0:
+            cls.DISPLAY_TESTCASE_NUM = number
+
+    @classmethod
+    def display_step(cls, number=-1):
+        if number >= 0:
+            cls.DISPLAY_STEP_NUM = number
+
     def _store_log(self, unf_str):
         self.stored_logs.append(unf_str)
 
@@ -211,5 +169,200 @@ class VFormatter(LogFormatter):
                 _, console_width = widths_tuple
                 console_width = int(console_width)
         if console_width:
-            config = VConfigInterface()
-            config.max_line_len(console_width)
+            vlogline.Base.set_max_line_len(console_width)
+
+    def _create_log_line(self, unf_str, log_type):
+        """Create the appropriate VLogLine object based on type.
+
+        :param str unf_str: Unformatted VL log line
+        :param VLogType log_type: Type of VLogLine object to create.
+        :rtype: LogLine | None
+        :returns: VLogLine if unf_str matches pattern of type and is in specified test case, else None
+        """
+        if not log_type or not unf_str:
+            return unf_str
+
+        output = None
+        # Standard Log Line
+        if log_type in VPatterns.std_log_types() and self._in_specified_testcase():
+            output = vlogline.Standard(unf_str, log_type)
+        # Traceback Log Lines
+        elif log_type == VLogType.TRACEBACK and self._in_specified_testcase():
+            output = vlogline.Traceback(unf_str)
+        # Step Header
+        elif log_type == VLogType.STEP_H:
+            fmt_log = vlogline.StepHeader(unf_str)
+            output = self._update_current_log(fmt_log)
+        # Test Case Header
+        elif log_type == VLogType.TEST_CASE_H:
+            fmt_log = vlogline.TestCaseHeader(unf_str)
+            output = self._update_current_log(fmt_log)
+        # Suite Header
+        elif log_type == VLogType.SUITE_H:
+            fmt_log = vlogline.SuiteHeader(unf_str)
+            output = self._update_current_log(fmt_log)
+        # General Header
+        elif log_type == VLogType.GENERAL_H:
+            fmt_log = vlogline.GeneralHeader(unf_str)
+            output = self._update_current_log(fmt_log)
+        # Other Log Line
+        elif log_type == VLogType.OTHER and self._in_specified_testcase():
+            output = vlogline.Other(unf_str)
+        return output
+
+    def _handle_raw_header(self, unf_str):
+        """Handle header operations.
+
+        Since headers are contained in multiple lines, the description must be stored.
+        The description is then modified as follows and returned.
+        They are identified as follows and can be ``=`` or ``-``::
+
+            ============================* (First border)
+            <header description>
+            ============================* (Second border)
+
+        Modified Header Description::
+
+            <border char><description><border char>
+            Ex: '=General Header='
+
+        :rtype: str | None
+        :returns: None if unf_str is a border
+        :returns: unf_str if unf_str is not part of a header
+        :returns: modified header description if unf_str is a header description
+        """
+        # Border to test case, suite, or general header.
+        if re.match("=+", unf_str):
+            # Second border
+            if self.border_flag == "=":
+                self.border_flag = ""
+                return self._pull_logs()
+            # First border
+            else:
+                self.border_flag = "="
+                return None
+        # Border to test case steps
+        elif re.match("-+", unf_str):
+            # Second border
+            if self.border_flag == "-":
+                self.border_flag = ""
+                return self._pull_logs()
+            # First border
+            else:
+                self.border_flag = "-"
+                return None
+
+        # Header details surrounded by borders
+        if self.border_flag:
+            unf_str = self.border_flag + unf_str + self.border_flag
+            self._store_log(unf_str)
+            return None
+        else:
+            return unf_str
+
+    def _handle_raw_traceback(self, unf_log):
+        """Handle traceback operations.
+
+        Since tracebacks are contained in multiple lines, the separate elements must be stored.
+        They are identified as follows and can be prepended by the same leading characters::
+
+            Traceback (most recent call last):
+              File "<file name>", line <line num>, in <func call>
+                <line>
+              ...
+            <exception>: <description>
+
+        Leading characters can be ``!``, ``|>``, etc.
+
+        :rtype: str | list(str) | None
+        :returns: unf_str if not part of a traceback
+        :returns: None if unf_log is part of traceback but not exception
+        :returns: list of log lines gathered from traceback if unf_log is the last line.
+        """
+        output = ""
+        # First line of traceback ('Traceback (most recent call last):')
+        if self.curr_log_type == VLogType.TRACEBACK:
+            self.tb_leading_char = re.match(VPatterns.get_traceback(), unf_log).group(1)
+            self._store_log(unf_log)
+            self.traceback_flag = True
+            output = None
+        # Non-traceback log line
+        elif not self.traceback_flag:
+            output = unf_log
+        # Last line of traceback ('<exception>: <description')
+        elif re.match(VPatterns.get_traceback_exception(), unf_log[len(self.tb_leading_char):]):
+            output = self.stored_logs
+            output.append(unf_log)
+            self.curr_log_type = VLogType.TRACEBACK
+            self.stored_logs = []
+            self.traceback_flag = False
+            self.tb_leading_char = ""
+        # Inner traceback element
+        elif self.curr_log_type == VLogType.OTHER and unf_log:
+            self._store_log(unf_log)
+            output = None
+        return output
+
+    def _in_specified_testcase(self):
+        """Determines what logs are to be displayed based on test case and step specified.
+
+        If logs from a specific test case or step is specified
+        (via the ``DISPLAY_TESTCASE_NAME``, ``DISPLAY_TESTCASE_NUM``, and ``DISPLAY_STEP_NUM``),
+        the current test case and step will be matched against the expected values.
+        If the names or numbers don't match, then ``None`` will be returned.
+
+        :return: True if log is in specified test case or step, otherwise False.
+        """
+        display_tc_name = self.DISPLAY_TESTCASE_NAME
+        display_tc_num = self.DISPLAY_TESTCASE_NUM
+        display_step = self.DISPLAY_STEP_NUM
+
+        # No Test Case name or number specified
+        if not display_tc_name and display_tc_num < 0:
+            return True
+
+        display_log = False
+        # Test Case number specified
+        if display_tc_num >= 0 and self.curr_tc:
+            if self.curr_tc.number == display_tc_num:
+                display_log = True
+
+        # Test Case name specified
+        if display_tc_name and self.curr_tc:
+            if self.curr_tc.test_case_name == display_tc_name:
+                display_log = True
+
+        # Test Case Step specified
+        if display_step >= 0 and display_log:
+            if self.curr_step and self.curr_step.number != display_step:
+                display_log = False
+            elif not self.curr_step:
+                display_log = False
+
+        return display_log
+
+    def _update_current_log(self, fmt_log):
+        """Update the values stored in current member variables and check if log is to display.
+
+        :return: Original formatted log if specified to print, otherwise None.
+        """
+        log_type = fmt_log.type
+        if log_type == VLogType.GENERAL_H:
+            self.curr_general = fmt_log
+            self.curr_suite = None
+            self.curr_tc = None
+            self.curr_step = None
+        elif log_type == VLogType.SUITE_H:
+            self.curr_suite = fmt_log
+            self.curr_tc = None
+            self.curr_step = None
+        elif log_type == VLogType.TEST_CASE_H:
+            self.curr_tc = fmt_log
+            self.curr_step = None
+        elif log_type == VLogType.STEP_H:
+            self.curr_step = fmt_log
+
+        output = fmt_log if self._in_specified_testcase() else None
+        return output
+
+

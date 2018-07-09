@@ -129,6 +129,10 @@ class VPatterns(object):
     SOURCE_PATTERN = "\[.*:.*\]"
     THREAD_PATTERN = "\[.*:.*\]"
     DETAIL_PATTERN = ".*"
+    DETAIL_API_PATTERN = "^JSON-RPC-POST( response)*:"
+    DETAIL_REQUEST_PATTERN = "^JSON-RPC-POST: method=(\w+), url=(.*), id=(\d+)$"
+    DETAIL_RESPONSE_PATTERN = "^JSON-RPC-POST response: ({.*})$"
+
 
     # Suite Header Patterns
     SUITE_NAME_PATTERN = "Ts.*"
@@ -188,8 +192,23 @@ class VPatterns(object):
 
     @classmethod
     def get_std_details(cls):
-        """Return the regex ``str`` used for identifying VL thread field."""
+        """Return the regex ``str`` used for identifying VL details field."""
         return cls.DETAIL_PATTERN
+
+    @classmethod
+    def get_std_details_api(cls):
+        """Return the regex ``str`` used for identifying api call in the VL details field."""
+        return cls.DETAIL_API_PATTERN
+
+    @classmethod
+    def get_std_details_request(cls):
+        """Return the regex ``str`` used for identifying request api call in the VL details field."""
+        return cls.DETAIL_REQUEST_PATTERN
+
+    @classmethod
+    def get_std_details_response(cls):
+        """Return the regex ``str`` used for identifying response api call in the VL details field."""
+        return cls.DETAIL_RESPONSE_PATTERN
 
     @classmethod
     def get_traceback(cls):

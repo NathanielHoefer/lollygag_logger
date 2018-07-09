@@ -27,12 +27,15 @@ def args():
                   "execute the command directly and the output will be in real time."
     read_desc = "Read from log file specified."
     testcase_desc = ""  # TODO
+    format_api_desc = ""  # TODO
+
 
     # Argument setup and parsing
     parser = argparse.ArgumentParser(prog=program, description=description)
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-r", "--read", action="store", dest="read_path", help=read_desc)
     parser.add_argument("-t", "--testcase", action="store", dest="testcase", help=testcase_desc)
+    parser.add_argument("-a", "--api", action="store_true", dest="format_api", help=format_api_desc)
     return parser.parse_args()
 
 
@@ -41,39 +44,47 @@ if __name__ == '__main__':
 
     logger = None
 
-    config = VConfigInterface(use_default=True, use_unformatted=False)
+    COMMAND_LINE = True
 
-    # Display specific test cases and steps
-    if args.testcase:
-        m = re.match("^(\d+|Tc\w*)(:(\d+))*$", args.testcase)
-        if m.group(1):
-            if m.group(1).isdigit():
-                config.display_test_case(number=int(m.group(1)))
-            else:
-                config.display_test_case(name=m.group(1))
-        if m.group(3) and m.group(3).isdigit():
-            config.display_step(number=int(m.group(3)))
+    if COMMAND_LINE:
+        config = VConfigInterface(use_default=True, use_unformatted=False)
 
-    vl_console_output = VFormatter()
-    try:
-        with open(args.read_path, "r") as logfile:
-            logger = LollygagLogger(logfile, vl_console_output)
-            logger.run()
-    except KeyboardInterrupt:
-        logger.kill()
-        print "Keyboard Interrupt: Exiting Logger"
-        exit(0)
-    #
-    # path = "/home/nathaniel/vl_artifacts/TsDriveEncryptionPersistenceAndAccessibility-2018-02-07T16.14.18/test3.log"
-    #
-    # config = VConfigInterface(use_default=True, use_unformatted=False)
-    # config.display_test_case(number=1)
-    # vl_console_output = VFormatter()
-    # try:
-    #     with open(path, "r") as logfile:
-    #         logger = LollygagLogger(logfile, vl_console_output)
-    #         logger.run()
-    # except KeyboardInterrupt:
-    #     logger.kill()
-    #     print "Keyboard Interrupt: Exiting Logger"
-    #     exit(0)
+        # Display specific test cases and steps
+        if args.testcase:
+            m = re.match("^(\d+|Tc\w*)(:(\d+))*$", args.testcase)
+            if m.group(1):
+                if m.group(1).isdigit():
+                    config.display_test_case(number=int(m.group(1)))
+                else:
+                    config.display_test_case(name=m.group(1))
+            if m.group(3) and m.group(3).isdigit():
+                config.display_step(number=int(m.group(3)))
+
+        if args.format_api:
+            config.format_api()
+
+        vl_console_output = VFormatter()
+        try:
+            with open(args.read_path, "r") as logfile:
+                logger = LollygagLogger(logfile, vl_console_output)
+                logger.run()
+        except KeyboardInterrupt:
+            logger.kill()
+            print "Keyboard Interrupt: Exiting Logger"
+            exit(0)
+
+    else:
+        path = "/home/nathaniel/vl_artifacts/TsDriveEncryptionPersistenceAndAccessibility-2018-02-07T16.14.18/test3.log"
+
+        config = VConfigInterface(use_default=True, use_unformatted=False)
+        # config.display_test_case(number=1)
+        config.format_api()
+        vl_console_output = VFormatter()
+        try:
+            with open(path, "r") as logfile:
+                logger = LollygagLogger(logfile, vl_console_output)
+                logger.run()
+        except KeyboardInterrupt:
+            logger.kill()
+            print "Keyboard Interrupt: Exiting Logger"
+            exit(0)

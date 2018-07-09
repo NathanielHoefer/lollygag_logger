@@ -125,7 +125,7 @@ class VFormatter(LogFormatter):
 
     @classmethod
     def display_log_types(cls, types):
-        """Print only the ``VLogType``s specified.
+        """Print only the ``vutils.VLogType`` specified.
 
         .. code-block:: python
 

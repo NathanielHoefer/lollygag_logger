@@ -2,6 +2,8 @@
 
 import abc
 import re
+import json
+import pprint
 from datetime import datetime
 from vl_logger.vutils import Colorize
 from vl_logger.vutils import VPatterns
@@ -171,28 +173,62 @@ class Details(LogField):
 
     def __init__(self, details_token):
         """Initialize thread field from ``str`` token."""
+
         self.details = details_token
         self.display = True
+
+        # Only used when format_api_calls() is called.
+        self.request_method = None
+        self.request_url = None
+        self.request_id = None
+        self.response_id = None
+        self.response_result = None
 
     def __str__(self):
         """Convert details field to ``str``."""
         output = ""
         if self.display:
-            output = self.details
+            if self.is_api_request():
+                output = ["\n  JSON-RPC-POST request (id: {})".format(self.request_id)]
+                output.append("    Method: {}".format(self.request_method))
+                output.append("    URL: {}".format(self.request_url))
+                output = "\n".join(output)
+            elif self.is_api_response():
+                output = ["\n  JSON-RPC-POST response (id: {})".format(self.response_id)]
+                result = pprint.pformat(self.response_result)
+                output.append("""    {}""".format(result))
+                output = "\n".join(output)
+            else:
+                output = self.details
         return output
 
+    def format_api_calls(self):
+        """When converted to string, the API requests and responses will be formatted."""
+        m = re.match(VPatterns.get_std_details_api(), self.details)
+        if m:
+            if not m.group(1):
+                request = re.match(VPatterns.get_std_details_request(), self.details)
+                self.request_method = request.group(1)
+                self.request_url = request.group(2)
+                self.request_id = int(request.group(3))
+            else:
+                response = re.match(VPatterns.get_std_details_response(), self.details)
+                string = response.group(1)
+                json_response = json.loads(string)
+                self.response_id = json_response['id']
+                self.response_result = json_response['result']
 
-"""
-TracebackStep
-    File: str
-    LineNum: int
-    Function: str
-    Line: str
+    def is_api_request(self):
+        """Return ``True`` if detail contains an API request."""
+        return bool(self.request_id)
 
-TracebackException
-    Exception: str
-    Desc: str
-"""
+    def is_api_response(self):
+        """Return ``True`` if detail contains an API response."""
+        return bool(self.response_id)
+
+    def is_api_call(self):
+        """Return ``True`` if detail contains an API call."""
+        return self.is_api_request() or self.is_api_response()
 
 
 class TracebackStep(LogField):

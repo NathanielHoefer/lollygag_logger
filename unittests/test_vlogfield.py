@@ -41,6 +41,28 @@ class TestFieldCreation(unittest.TestCase):
         details = vlogfield.Details(details_token)
         self.assertEqual(str(details), details_token)
 
+    def test_api_formatting(self):
+        api_request = "JSON-RPC-POST: method=GetClusterInfo, url=https://1.1.1.1/json-rpc/10.1, id=8"
+        api_response = """JSON-RPC-POST response: {"id": 8, "result": {"clusterInfo": {""" \
+            """"repCount": 2, "encryptionAtRestState": "enabled", "attributes": {}, """ \
+            """"ensemble": ["10.117.208.26", "10.117.208.41"], "NodeID": 3}}}"""
+
+        display_request = "\n  JSON-RPC-POST request (id: 8)\n" \
+                          "    Method: GetClusterInfo\n" \
+                          "    URL: https://1.1.1.1/json-rpc/10.1"
+        display_response = """\n  JSON-RPC-POST response (id: 8)\n""" \
+                           """    {u'clusterInfo': {u'NodeID': 3,\n""" \
+                           """                  u'attributes': {},\n""" \
+                           """                  u'encryptionAtRestState': u'enabled',\n""" \
+                           """                  u'ensemble': [u'10.117.208.26', u'10.117.208.41'],\n""" \
+                           """                  u'repCount': 2}}"""
+        request_log = vlogfield.Details(api_request)
+        request_log.format_api_calls()
+        self.assertEqual(str(request_log), display_request)
+        response_log = vlogfield.Details(api_response)
+        response_log.format_api_calls()
+        self.assertEqual(str(response_log), display_response)
+
     def test_correct_traceback_tokens(self):
         step_token = '  File "/home/http_utils.py", line 1078, in _call_cluster_api\n' \
                      '    check_json_rpc_response(json_response, retry_faults, method)'

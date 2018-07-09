@@ -9,6 +9,10 @@ VL Log Lines
 
     .. automethod:: __init__
 
+ .. autoclass:: Traceback
+    :members:
+    :member-order: bysource
+
  .. autoclass:: SuiteHeader
     :members:
     :member-order: bysource

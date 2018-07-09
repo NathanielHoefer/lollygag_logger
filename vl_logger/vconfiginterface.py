@@ -136,6 +136,12 @@ class VConfigInterface:
         """Use the colored option if available in a ``LogLine`` object."""
         vlogline.Base.colorize(set)
 
+    def format_api(self, set=True):
+        """Format the API requests and responses."""
+        vlogline.Base.format_api(set)
+        if VLogType.DEBUG not in vformatter.VFormatter.DISPLAY_LOG_TYPES:
+            vformatter.VFormatter.DISPLAY_LOG_TYPES.append(VLogType.DEBUG)
+
     def condense_line(self, set=True):
         """Condense the ``str`` output of standard logs to the specified max line length."""
         vlogline.Base.condense_line(set)

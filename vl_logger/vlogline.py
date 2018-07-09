@@ -21,6 +21,7 @@ class Base(LogLine):
     COLORIZE = False
     CONDENSE_LINE = False
     SHORTEN_TYPE = False
+    FORMAT_API = False
     DISPLAY_FIELDS = [
         VLogStdFields.DATE,
         VLogStdFields.TIME,
@@ -70,6 +71,11 @@ class Base(LogLine):
     def colorize(cls, set=True):
         """Use the colored option if available in a ``LogLine`` object."""
         cls.COLORIZE = set
+
+    @classmethod
+    def format_api(cls, set=True):
+        """Format the API requests and responses."""
+        cls.FORMAT_API = set
 
     @classmethod
     def condense_line(cls, set=True):
@@ -132,7 +138,7 @@ class Standard(Base):
         fields.append(str(self.details))
         output = " ".join(x for x in fields if x)
 
-        if self.CONDENSE_LINE:
+        if self.CONDENSE_LINE and not self.details.is_api_call():
             line_len = self.MAX_LINE_LEN
             if self.COLORIZE:
                 line_len += Colorize.esc_len(self.type.get_type())
@@ -167,6 +173,9 @@ class Standard(Base):
         if self.SHORTEN_TYPE:
             self.type.shorten_type = True
 
+        if self.FORMAT_API:
+            self.details.format_api_calls()
+
         # Fields to display
         self.datetime.display_date = True if VLogStdFields.DATE in self.DISPLAY_FIELDS else False
         self.datetime.display_time = True if VLogStdFields.TIME in self.DISPLAY_FIELDS else False
@@ -177,26 +186,31 @@ class Standard(Base):
 
 
 class Traceback(Base):
+    """VL Traceback Log.
+
+    Each line is to be its separated as its own element within a list.
+    The lines may be prepended by the same leading characters.
+    Leading characters can be ``!``, ``|>``, etc.
+
+
+    .. code-block:: none
+
+        Traceback (most recent call last):
+          File "<file name>", line <line num>, in <func call>
+            <line>
+          ...
+        <exception>: <description>
+    """
 
     def __init__(self, unf_str_list):
         """Initialize the traceback.
-
-        Each line is to be its separated as its own element within a list.
-        The lines may be prepended by the same leading characters.
-
-        .. code-block:: none
-
-            Traceback (most recent call last):
-              File "<file name>", line <line num>, in <func call>
-                <line>
-              ...
-            <exception>: <description>
 
         :param str unf_str_list: Unformatted VL log line
         """
         self.leading_chars = ""
         self.type = VLogType.TRACEBACK
         self.steps, self.exception = self._parse_fields(unf_str_list)
+        self._set_config()
 
     def __str__(self):
         """Formatted string representing VLogLine Traceback log."""
@@ -228,6 +242,12 @@ class Traceback(Base):
     def _remove_leading_chars(self, line):
         """Removes the leading characters from given string."""
         return line[len(self.leading_chars):]
+
+    def _set_config(self):
+        """Sets the individual field options such as color and display."""
+        if self.COLORIZE:
+            # self.type.colorize = True
+            pass
 
 
 @six.add_metaclass(abc.ABCMeta)

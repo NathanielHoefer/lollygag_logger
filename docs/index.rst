@@ -14,6 +14,7 @@ Contents:
    vlog
    vlogfield
    vconfiginterface
+   vformatter
 
 
 Indices and tables

@@ -42,18 +42,11 @@ As a user, I want to
 
 
 User Interface:
-
-Read from log file
-vl-logger -r[--read] test.log
-
-Read from log file and view specific test case
-vl-logger -r test.log -t[--testcase] [tc number|tc name]
-
-Read from log file and view specific step from test case
-vl-logger -r test.log -t [tc number|tc name]:[step number]
-
 Read from log file and view API calls and responses
 vl-logger -r test.log -a[--api]
+
+Compute and display header runtime
+vl-logger -r test.log -t[--time]
 
 
 Completed Stories:
@@ -71,5 +64,14 @@ Title: Read Logs from a File
 Type: User Story
 Description: As a user, I want to read the logs in from a file, so that later they can be formatted.
 Acceptance Criteria: Given any state, when the program is executed with a log file as an argument, then each line will be printed to stdout as it was.
+
+Read from log file
+vl-logger -r[--read] test.log
+
+Read from log file and view specific test case
+vl-logger -r test.log -t[--testcase] [tc number|tc name]
+
+Read from log file and view specific step from test case
+vl-logger -r test.log -t [tc number|tc name]:[step number]
 
 - As a user, I want to filter logs by type so that I can more easily triage logs

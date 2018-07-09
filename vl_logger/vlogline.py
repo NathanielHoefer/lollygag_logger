@@ -169,6 +169,7 @@ class Standard(Base):
         """Sets the individual field options such as color and display."""
         if self.COLORIZE:
             self.type.colorize = True
+            self.details.colorize = True
 
         if self.SHORTEN_TYPE:
             self.type.shorten_type = True
@@ -214,7 +215,10 @@ class Traceback(Base):
 
     def __str__(self):
         """Formatted string representing VLogLine Traceback log."""
-        header = "{}Traceback (most recent call last):".format(self.leading_chars)
+        header = "Traceback (most recent call last):"
+        if self.COLORIZE:
+            header = Colorize.apply(header, 'traceback-header')
+        header = "{}{}".format(self.leading_chars, header)
         steps = "\n".join([str(step) for step in self.steps])
         output = "\n".join([header, steps, str(self.exception)])
         return output
@@ -246,9 +250,9 @@ class Traceback(Base):
     def _set_config(self):
         """Sets the individual field options such as color and display."""
         if self.COLORIZE:
-            # self.type.colorize = True
-            pass
-
+            for step in self.steps:
+                step.set_colorize(True)
+            self.exception.colorize = True
 
 @six.add_metaclass(abc.ABCMeta)
 class Header(Base):
@@ -262,6 +266,7 @@ class Header(Base):
         The length of the border is determined by the Max Line Length.
         """
         border = self.BORDER_CHAR * self.get_max_line_len()
+        border = Colorize.type_apply(border, self.type)
         return "\n".join([border, header_str, border])
 
     @classmethod
@@ -320,9 +325,9 @@ class SuiteHeader(Header):
             "Test Suite:",
             self.desc
         ])
-        header_str = self._add_border(header_str)
         if self.COLORIZE:
-            header_str = Colorize.apply(header_str, self.type)
+            header_str = Colorize.apply(header_str, 'header-desc')
+        header_str = self._add_border(header_str)
         return header_str
 
     def _parse_fields(self, unf_str):
@@ -394,9 +399,9 @@ class TestCaseHeader(Header):
         header_str = "".join([
             "Test Case ", str(self.number), ": ", self.desc
         ])
-        header_str = self._add_border(header_str)
         if self.COLORIZE:
-            header_str = Colorize.apply(header_str, self.type)
+            header_str = Colorize.apply(header_str, 'header-desc')
+        header_str = self._add_border(header_str)
         return header_str
 
     def _parse_fields(self, unf_str):
@@ -470,9 +475,9 @@ class StepHeader(Header):
             "Expect: ", self.expected_results
         ])
         header_str = "\n".join([step_str, expected_results_str])
-        header_str = self._add_border(header_str)
         if self.COLORIZE:
-            header_str = Colorize.apply(header_str, self.type)
+            header_str = Colorize.apply(header_str, 'header-desc')
+        header_str = self._add_border(header_str)
         return header_str
 
     def _parse_fields(self, unf_str):
@@ -547,9 +552,10 @@ class GeneralHeader(Header):
 
         This does include the borders surrounding the header string.
         """
-        header_str = self._add_border(self.desc)
+        header_str = self.desc
         if self.COLORIZE:
-            header_str = Colorize.apply(header_str, self.type)
+            header_str = Colorize.apply(header_str, 'header-desc')
+        header_str = self._add_border(header_str)
         return header_str
 
     def _parse_fields(self, unf_str):

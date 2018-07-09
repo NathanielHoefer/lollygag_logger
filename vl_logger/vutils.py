@@ -90,7 +90,7 @@ class VLogStdFields(Enum):
 class Colorize:
     """Provides methods to color logs based on their VLogType."""
 
-    COLORS = {
+    TYPE_COLORS = {
         'DEBUG': Fore.MAGENTA,
         'INFO': Fore.BLUE,
         'NOTICE': Fore.GREEN,
@@ -104,16 +104,42 @@ class Colorize:
         'GENERAL_H': Style.BRIGHT + Fore.GREEN
     }
 
+    COLORS = {
+        'header-desc': "",
+
+        'traceback-header': Style.BRIGHT + Fore.YELLOW,
+        'traceback-exception': Style.BRIGHT + Fore.RED,
+        'traceback-description': Style.BRIGHT + Fore.YELLOW,
+        'traceback-line-num': Fore.RED,
+        'traceback-filename': Fore.RED,
+        'traceback-funct': Fore.RED,
+
+        'json-post': Style.BRIGHT,
+        'api-id': Style.BRIGHT,
+        'api-request': Style.BRIGHT + Back.BLUE + Fore.WHITE,
+        'api-response': Style.BRIGHT + Back.MAGENTA + Fore.WHITE
+    }
+
+
     @classmethod
-    def apply(cls, text, type=VLogType.OTHER):
+    def apply(cls, text, color_str):
+        """Applies the console coloring to the given text based on the given color.
+
+        Note: Colors correspond to strings found in ``COLORS``.
+        """
+        color = cls.COLORS[color_str]
+        return color + text + Style.RESET_ALL
+
+    @classmethod
+    def type_apply(cls, text, type=VLogType.OTHER):
         """Applies the console coloring to the given text based on the given VLogType."""
-        color = cls.COLORS[type.name]
+        color = cls.TYPE_COLORS[type.name]
         return color + text + Style.RESET_ALL
 
     @classmethod
     def esc_len(cls, log_type):
-        """Returns the length of escape characters in a given log line."""
-        return len(cls.COLORS[log_type.name]) + len(Style.RESET_ALL)
+        """Returns the length of escape characters in a given log line if used ``type_apply``."""
+        return len(cls.TYPE_COLORS[log_type.name]) + len(Style.RESET_ALL)
 
 
 class VPatterns(object):

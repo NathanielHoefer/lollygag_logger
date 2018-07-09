@@ -74,11 +74,11 @@ if __name__ == '__main__':
             exit(0)
 
     else:
-        path = "/home/nathaniel/vl_artifacts/TsDriveEncryptionPersistenceAndAccessibility-2018-02-07T16.14.18/test3.log"
+        path = "/home/nathaniel/vl_artifacts/TsDriveEncryptionPersistenceAndAccessibility-2018-02-07T16.14.18/test2.log"
 
         config = VConfigInterface(use_default=True, use_unformatted=False)
         # config.display_test_case(number=1)
-        config.format_api()
+        # config.format_api()
         vl_console_output = VFormatter()
         try:
             with open(path, "r") as logfile:

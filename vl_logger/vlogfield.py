@@ -1,16 +1,17 @@
 """This module defines all of the VL field objects found in standard logs."""
 
 import abc
-import re
 import json
+import os
 import pprint
+import re
 from datetime import datetime
-from vl_logger.vutils import Colorize
-from vl_logger.vutils import VPatterns
 
 import six
 
+from vl_logger.vutils import Colorize
 from vl_logger.vutils import VLogType
+from vl_logger.vutils import VPatterns
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -86,7 +87,7 @@ class Type(LogField):
         if not self.display:
             output = ""
         if self.colorize and output:
-            output = Colorize.apply(output, self.type)
+            output = Colorize.type_apply(output, self.type)
         return output
 
     def get_type(self):
@@ -176,6 +177,7 @@ class Details(LogField):
 
         self.details = details_token
         self.display = True
+        self.colorize = False
 
         # Only used when format_api_calls() is called.
         self.request_method = None
@@ -189,15 +191,9 @@ class Details(LogField):
         output = ""
         if self.display:
             if self.is_api_request():
-                output = ["\n  JSON-RPC-POST request (id: {})".format(self.request_id)]
-                output.append("    Method: {}".format(self.request_method))
-                output.append("    URL: {}".format(self.request_url))
-                output = "\n".join(output)
+                output = self._api_request_str()
             elif self.is_api_response():
-                output = ["\n  JSON-RPC-POST response (id: {})".format(self.response_id)]
-                result = pprint.pformat(self.response_result)
-                output.append("""    {}""".format(result))
-                output = "\n".join(output)
+                output = self._api_response_str()
             else:
                 output = self.details
         return output
@@ -230,12 +226,41 @@ class Details(LogField):
         """Return ``True`` if detail contains an API call."""
         return self.is_api_request() or self.is_api_response()
 
+    def _api_request_str(self):
+        json_post = "JSON-RPC-POST "
+        req = "request"
+        id = "id: {}".format(self.request_id)
+        if self.colorize:
+            json_post = Colorize.apply(json_post, 'json-post')
+            req = Colorize.apply(req, 'api-request')
+            id = Colorize.apply(id, 'api-id')
+
+        output = ["\n  {}{} ({})".format(json_post, req, id)]
+        output.append("    Method: {}".format(self.request_method))
+        output.append("    URL: {}".format(self.request_url))
+        return "\n".join(output)
+
+    def _api_response_str(self):
+        json_post = "JSON-RPC-POST "
+        res = "response"
+        id = "id: {}".format(self.response_id)
+        if self.colorize:
+            json_post = Colorize.apply(json_post, 'json-post')
+            res = Colorize.apply(res, 'api-response')
+            id = Colorize.apply(id, 'api-id')
+
+        output = ["\n  {}{} ({})".format(json_post, res, id)]
+        result = pprint.pformat(self.response_result)
+        output.append("""    {}""".format(result))
+        return "\n".join(output)
+
 
 class TracebackStep(LogField):
     """Represents the traceback step field."""
 
     def __init__(self, step_token, leading_chars=""):
         """Initialize step fields from ``str`` token."""
+        self.colorize = False
         m = re.match(VPatterns.TRACEBACK_STEP_PATTERN, step_token)
         self.leading_chars = leading_chars
         if m:
@@ -251,9 +276,17 @@ class TracebackStep(LogField):
 
     def __str__(self):
         """Convert traceback step field to ``str``."""
+        line_num = self.line_num
+        path, filename = os.path.split(self.file)
+        funct = self.function
+        if self.colorize:
+            line_num = Colorize.apply(str(line_num), 'traceback-line-num')
+            funct = Colorize.apply(funct, 'traceback-funct')
+            filename = Colorize.apply(filename, 'traceback-filename')
+        tb_file = os.path.join(path, filename)
         output = "{0}  File \"{1}\", line {2}, in {3}\n{0}    {4}".format(self.leading_chars,
-                                                                          self.file, self.line_num,
-                                                                          self.function, self.line)
+                                                                          tb_file, line_num,
+                                                                          funct, self.line)
         return output
 
     def get_file(self):
@@ -268,12 +301,16 @@ class TracebackStep(LogField):
     def get_line(self):
         return self.line
 
+    def set_colorize(self, set=True):
+        self.colorize = set
+
 
 class TracebackException(LogField):
     """Represents the traceback exception field."""
 
     def __init__(self, exception_token, leading_chars=""):
         """Initialize exception field from ``str`` token."""
+        self.colorize = False
         m = re.match(VPatterns.TRACEBACK_EXCEPTION_PATTERN, exception_token)
         self.leading_chars = leading_chars
         if m:
@@ -285,7 +322,12 @@ class TracebackException(LogField):
 
     def __str__(self):
         """Convert traceback exception field to ``str``."""
-        output = "{0}{1}: {2}".format(self.leading_chars, self.exception, self.desc)
+        exception = self.exception
+        desc = self.desc
+        if self.colorize:
+            exception = Colorize.apply(exception, 'traceback-exception')
+            desc = Colorize.apply(desc, 'traceback-description')
+        output = "{0}{1}: {2}".format(self.leading_chars, exception, desc)
         return output
 
     def get_exception(self):

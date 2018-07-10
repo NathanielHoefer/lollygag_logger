@@ -98,15 +98,13 @@ class Colorize:
         'ERROR': Style.BRIGHT + Fore.RED,
         'CRITICAL': Style.BRIGHT + Back.RED + Fore.YELLOW,
         'OTHER': Style.RESET_ALL,
-        'STEP_H': Style.BRIGHT + Fore.CYAN,
-        'TEST_CASE_H': Style.BRIGHT + Fore.MAGENTA,
-        'SUITE_H': Style.BRIGHT + Fore.BLUE,
-        'GENERAL_H': Style.BRIGHT + Fore.GREEN
+        'STEP_H': Style.BRIGHT + Fore.GREEN,
+        'TEST_CASE_H': Style.BRIGHT + Fore.CYAN,
+        'SUITE_H': Style.BRIGHT + Fore.YELLOW,
+        'GENERAL_H': Style.BRIGHT + Fore.BLUE
     }
 
     COLORS = {
-        'header-desc': "",
-
         'traceback-header': Style.BRIGHT + Fore.YELLOW,
         'traceback-exception': Style.BRIGHT + Fore.RED,
         'traceback-description': Style.BRIGHT + Fore.YELLOW,

@@ -42,11 +42,8 @@ As a user, I want to
 
 
 User Interface:
-Read from log file and view API calls and responses
-vl-logger -r test.log -a[--api]
-
 Compute and display header runtime
-vl-logger -r test.log -t[--time]
+vl-logger -r test.log -s[--summary]
 
 
 Completed Stories:
@@ -75,3 +72,6 @@ Read from log file and view specific step from test case
 vl-logger -r test.log -t [tc number|tc name]:[step number]
 
 - As a user, I want to filter logs by type so that I can more easily triage logs
+
+Read from log file and view API calls and responses
+vl-logger -r test.log -a[--api]

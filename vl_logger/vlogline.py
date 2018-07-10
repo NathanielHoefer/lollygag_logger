@@ -215,10 +215,10 @@ class Traceback(Base):
 
     def __str__(self):
         """Formatted string representing VLogLine Traceback log."""
-        header = "Traceback (most recent call last):"
+        header = "Traceback"
         if self.COLORIZE:
             header = Colorize.apply(header, 'traceback-header')
-        header = "{}{}".format(self.leading_chars, header)
+        header = "{}{} (most recent call last):".format(self.leading_chars, header)
         steps = "\n".join([str(step) for step in self.steps])
         output = "\n".join([header, steps, str(self.exception)])
         return output
@@ -266,13 +266,26 @@ class Header(Base):
         The length of the border is determined by the Max Line Length.
         """
         border = self.BORDER_CHAR * self.get_max_line_len()
-        border = Colorize.type_apply(border, self.type)
-        return "\n".join([border, header_str, border])
+        header = "\n".join([border, header_str, border])
+        if self.COLORIZE:
+            header = Colorize.type_apply(header, self.type)
+        return header
 
     @classmethod
     def get_border_char(cls):
         """Return the character used for the border."""
         return cls.BORDER_CHAR
+
+    @abc.abstractmethod
+    def get_id(self):
+        """Return string identifying header."""
+        pass
+
+    def set_start_time(self, start_time):
+        self.start_time = start_time
+
+    def set_end_time(self, end_time):
+        self.end_time = end_time
 
 
 class SuiteHeader(Header):
@@ -304,6 +317,11 @@ class SuiteHeader(Header):
 
         Don't include the borders in the unf_str.
         Only the information between the borders.
+
+    .. code-block:: python
+        :caption: Example Input
+
+        '=Test Suite: Starting Setup of TsSuite='
     """
 
     BORDER_CHAR = "="
@@ -314,6 +332,8 @@ class SuiteHeader(Header):
         :param str unf_str: Unformatted VL log line
         """
         self.type = VLogType.SUITE_H
+        self.start_time = None
+        self.end_time = None
         self.suite_name, self.desc = self._parse_fields(unf_str)
 
     def __str__(self):
@@ -325,10 +345,13 @@ class SuiteHeader(Header):
             "Test Suite:",
             self.desc
         ])
-        if self.COLORIZE:
-            header_str = Colorize.apply(header_str, 'header-desc')
         header_str = self._add_border(header_str)
         return header_str
+
+    def get_id(self):
+        """Return string identifying suite header."""
+        return "{}: {}".format(self.suite_name, self.desc)
+
 
     def _parse_fields(self, unf_str):
         """Parse the string into the suite header fields.
@@ -378,6 +401,11 @@ class TestCaseHeader(Header):
 
         Don't include the borders in the unf_str.
         Only the information between the borders.
+
+    .. code-block:: python
+        :caption: Example Input
+
+        '=Test Case 0: Starting Test of TcTest='
     """
 
     BORDER_CHAR = "="
@@ -388,6 +416,8 @@ class TestCaseHeader(Header):
         :param str unf_str: Unformatted VL log line
         """
         self.type = VLogType.TEST_CASE_H
+        self.start_time = None
+        self.end_time = None
         self.test_case_name, self.number, \
             self.desc = self._parse_fields(unf_str)
 
@@ -399,10 +429,12 @@ class TestCaseHeader(Header):
         header_str = "".join([
             "Test Case ", str(self.number), ": ", self.desc
         ])
-        if self.COLORIZE:
-            header_str = Colorize.apply(header_str, 'header-desc')
         header_str = self._add_border(header_str)
         return header_str
+
+    def get_id(self):
+        """Return string identifying test case header."""
+        return "{} ({}): {}".format(self.test_case_name, self.number, self.desc)
 
     def _parse_fields(self, unf_str):
         """Parse the string into the test case header fields.
@@ -449,6 +481,11 @@ class StepHeader(Header):
         Don't include the borders in the unf_str.
         Only the information between the borders as a single string with
         a newline character separating the two lines.
+
+    .. code-block:: python
+        :caption: Example Input
+
+        '-Starting Step 5 for TcTest: Verify Something\nExpect: Something Verified Successfully-'
     """
 
     BORDER_CHAR = "-"
@@ -459,6 +496,8 @@ class StepHeader(Header):
         :param str unf_str: Unformatted VL log line
         """
         self.type = VLogType.STEP_H
+        self.start_time = None
+        self.end_time = None
         self.test_case_name, self.number, self.action, \
             self.expected_results = self._parse_fields(unf_str)
 
@@ -475,10 +514,12 @@ class StepHeader(Header):
             "Expect: ", self.expected_results
         ])
         header_str = "\n".join([step_str, expected_results_str])
-        if self.COLORIZE:
-            header_str = Colorize.apply(header_str, 'header-desc')
         header_str = self._add_border(header_str)
         return header_str
+
+    def get_id(self):
+        """Return string identifying step header."""
+        return "Step ({}): {}".format(self.number, self.action)
 
     def _parse_fields(self, unf_str):
         """Parse the string into the step header fields.
@@ -535,6 +576,11 @@ class GeneralHeader(Header):
 
         Don't include the borders in the unf_str.
         Only the information between the borders.
+
+    .. code-block:: python
+        :caption: Example Input
+
+        '=Final Report='
     """
 
     BORDER_CHAR = "="
@@ -545,6 +591,8 @@ class GeneralHeader(Header):
         :param str unf_str: Unformatted VL log line
         """
         self.type = VLogType.GENERAL_H
+        self.start_time = None
+        self.end_time = None
         self.desc = self._parse_fields(unf_str)
 
     def __str__(self):
@@ -553,10 +601,12 @@ class GeneralHeader(Header):
         This does include the borders surrounding the header string.
         """
         header_str = self.desc
-        if self.COLORIZE:
-            header_str = Colorize.apply(header_str, 'header-desc')
         header_str = self._add_border(header_str)
         return header_str
+
+    def get_id(self):
+        """Return string identifying step header."""
+        return "General: {}".format(self.desc)
 
     def _parse_fields(self, unf_str):
         """Remove the border char from string."""

@@ -6,6 +6,8 @@ from vl_logger import vlogline
 from vl_logger.lollygag_logger import LogFormatter
 from vl_logger.vutils import VLogType
 from vl_logger.vutils import VPatterns
+from vl_logger import vlogfield
+from vl_logger.vheadermanager import HeaderManager
 
 
 class VFormatter(LogFormatter):
@@ -41,6 +43,7 @@ class VFormatter(LogFormatter):
     DISPLAY_TESTCASE_NAME = ""
     DISPLAY_TESTCASE_NUM = -1
     DISPLAY_STEP_NUM = -1
+    SUMMARY = False
 
     def __init__(self):
         """Initializes ``VFormatter``
@@ -63,10 +66,10 @@ class VFormatter(LogFormatter):
         self.stored_logs = []
         self.curr_log_type = None
 
-        self.curr_tc = None
-        self.curr_step = None
-        self.curr_suite = None
-        self.curr_general = None
+        self.header_man = HeaderManager(tc_name=self.DISPLAY_TESTCASE_NAME,
+                                        tc_num=self.DISPLAY_TESTCASE_NUM,
+                                        step=self.DISPLAY_STEP_NUM)
+        self.curr_datetime = None
 
         self.curr_tc_name = ""
         self.curr_tc_number = -1
@@ -104,7 +107,7 @@ class VFormatter(LogFormatter):
         if fmt_log:
             fmt_logs.append(fmt_log)  # Print classified log
             return fmt_logs
-        elif self._in_specified_testcase():
+        elif self.header_man.in_specified_testcase():
             fmt_logs.append(unf_str)  # Print unclassified log
             return fmt_logs
         return fmt_logs
@@ -184,29 +187,29 @@ class VFormatter(LogFormatter):
 
         output = None
         # Standard Log Line
-        if log_type in VPatterns.std_log_types() and self._in_specified_testcase():
+        if log_type in VPatterns.std_log_types() and self.header_man.in_specified_testcase():
             output = vlogline.Standard(unf_str, log_type)
         # Traceback Log Lines
-        elif log_type == VLogType.TRACEBACK and self._in_specified_testcase():
+        elif log_type == VLogType.TRACEBACK and self.header_man.in_specified_testcase():
             output = vlogline.Traceback(unf_str)
         # Step Header
         elif log_type == VLogType.STEP_H:
             fmt_log = vlogline.StepHeader(unf_str)
-            output = self._update_current_log(fmt_log)
+            output = self.header_man.update_current_log(fmt_log)
         # Test Case Header
         elif log_type == VLogType.TEST_CASE_H:
             fmt_log = vlogline.TestCaseHeader(unf_str)
-            output = self._update_current_log(fmt_log)
+            output = self.header_man.update_current_log(fmt_log)
         # Suite Header
         elif log_type == VLogType.SUITE_H:
             fmt_log = vlogline.SuiteHeader(unf_str)
-            output = self._update_current_log(fmt_log)
+            output = self.header_man.update_current_log(fmt_log)
         # General Header
         elif log_type == VLogType.GENERAL_H:
             fmt_log = vlogline.GeneralHeader(unf_str)
-            output = self._update_current_log(fmt_log)
+            output = self.header_man.update_current_log(fmt_log)
         # Other Log Line
-        elif log_type == VLogType.OTHER and self._in_specified_testcase():
+        elif log_type == VLogType.OTHER and self.header_man.in_specified_testcase():
             output = vlogline.Other(unf_str)
         return output
 
@@ -303,66 +306,10 @@ class VFormatter(LogFormatter):
             output = None
         return output
 
-    def _in_specified_testcase(self):
-        """Determines what logs are to be displayed based on test case and step specified.
-
-        If logs from a specific test case or step is specified
-        (via the ``DISPLAY_TESTCASE_NAME``, ``DISPLAY_TESTCASE_NUM``, and ``DISPLAY_STEP_NUM``),
-        the current test case and step will be matched against the expected values.
-        If the names or numbers don't match, then ``None`` will be returned.
-
-        :return: True if log is in specified test case or step, otherwise False.
-        """
-        display_tc_name = self.DISPLAY_TESTCASE_NAME
-        display_tc_num = self.DISPLAY_TESTCASE_NUM
-        display_step = self.DISPLAY_STEP_NUM
-
-        # No Test Case name or number specified
-        if not display_tc_name and display_tc_num < 0:
-            return True
-
-        display_log = False
-        # Test Case number specified
-        if display_tc_num >= 0 and self.curr_tc:
-            if self.curr_tc.number == display_tc_num:
-                display_log = True
-
-        # Test Case name specified
-        if display_tc_name and self.curr_tc:
-            if self.curr_tc.test_case_name == display_tc_name:
-                display_log = True
-
-        # Test Case Step specified
-        if display_step >= 0 and display_log:
-            if self.curr_step and self.curr_step.number != display_step:
-                display_log = False
-            elif not self.curr_step:
-                display_log = False
-
-        return display_log
-
-    def _update_current_log(self, fmt_log):
-        """Update the values stored in current member variables and check if log is to display.
-
-        :return: Original formatted log if specified to print, otherwise None.
-        """
-        log_type = fmt_log.type
-        if log_type == VLogType.GENERAL_H:
-            self.curr_general = fmt_log
-            self.curr_suite = None
-            self.curr_tc = None
-            self.curr_step = None
-        elif log_type == VLogType.SUITE_H:
-            self.curr_suite = fmt_log
-            self.curr_tc = None
-            self.curr_step = None
-        elif log_type == VLogType.TEST_CASE_H:
-            self.curr_tc = fmt_log
-            self.curr_step = None
-        elif log_type == VLogType.STEP_H:
-            self.curr_step = fmt_log
-
-        output = fmt_log if self._in_specified_testcase() else None
-        return output
-
-
+    def _store_curr_time(self, unf_log):
+        """Store the datetime object of the time from the current log or None if no time available."""
+        if self.SUMMARY:
+            pattern = "^(" + VPatterns.get_std_datetime() + ")"
+            m = re.match(pattern, unf_log)
+            if m.group(1):
+                self.curr_datetime = vlogfield.Datetime(m.group(1)).get_datetime()

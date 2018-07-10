@@ -45,7 +45,7 @@ if __name__ == '__main__':
 
     logger = None
 
-    COMMAND_LINE = False
+    COMMAND_LINE = True
 
     if COMMAND_LINE:
         config = VConfigInterface(use_default=True, use_unformatted=False)
@@ -72,6 +72,9 @@ if __name__ == '__main__':
             with open(args.read_path, "r") as logfile:
                 logger = LollygagLogger(logfile, vl_console_output)
                 logger.run()
+
+                if args.summary:
+                    vl_console_output.print_summary()
         except KeyboardInterrupt:
             logger.kill()
             print "Keyboard Interrupt: Exiting Logger"

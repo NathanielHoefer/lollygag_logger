@@ -185,6 +185,7 @@ class Details(LogField):
         self.request_id = None
         self.response_id = None
         self.response_result = None
+        self.response_type = None
 
     def __str__(self):
         """Convert details field to ``str``."""
@@ -212,7 +213,13 @@ class Details(LogField):
                 string = response.group(1)
                 json_response = json.loads(string)
                 self.response_id = json_response['id']
-                self.response_result = json_response['result']
+                # self.response_result = json_response
+                if 'result' in json_response:
+                    self.response_result = json_response['result']
+                    self.response_type = 'Result'
+                elif 'error' in json_response:
+                    self.response_result = json_response['error']
+                    self.response_type = 'Error'
 
     def is_api_request(self):
         """Return ``True`` if detail contains an API request."""
@@ -249,8 +256,8 @@ class Details(LogField):
             res = Colorize.apply(res, 'api-response')
             id = Colorize.apply(id, 'api-id')
 
-        output = ["\n  {}{} ({})".format(json_post, res, id)]
-        result = pprint.pformat(self.response_result)
+        output = ["\n  {}{} ({}): {}".format(json_post, res, id, self.response_type)]
+        result = pprint.pformat(self.response_result) if self.response_result else None
         output.append("""    {}""".format(result))
         return "\n".join(output)
 

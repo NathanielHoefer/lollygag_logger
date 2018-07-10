@@ -68,7 +68,7 @@ class HeaderManager:
         """Return the previous ``VHeader`` object."""
         return self._header_tree[-2].name
 
-    def calc_end_time(self):
+    # def calc_end_time(self):
 
 
     def _add_node(self, header, parent):

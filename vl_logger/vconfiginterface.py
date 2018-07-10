@@ -183,3 +183,6 @@ class VConfigInterface:
 
     def display_step(self, number=-1):
         vformatter.VFormatter.display_step(number)
+
+    def display_summary(self, set=True):
+        vformatter.VFormatter.display_summary(set)

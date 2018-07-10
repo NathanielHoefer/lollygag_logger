@@ -254,6 +254,7 @@ class Traceback(Base):
                 step.set_colorize(True)
             self.exception.colorize = True
 
+
 @six.add_metaclass(abc.ABCMeta)
 class Header(Base):
     """Abstract base class for all other header log line elements."""
@@ -281,11 +282,21 @@ class Header(Base):
         """Return string identifying header."""
         pass
 
-    def set_start_time(self, start_time):
-        self.start_time = start_time
+    @property
+    def start_time(self):
+        return self._start_time
 
+    @start_time.setter
+    def start_time(self, start_time):
+        self._start_time = start_time
+
+    @property
+    def end_time(self):
+        return self._end_time
+
+    @end_time.setter
     def set_end_time(self, end_time):
-        self.end_time = end_time
+        self._end_time = end_time
 
 
 class SuiteHeader(Header):
@@ -332,8 +343,8 @@ class SuiteHeader(Header):
         :param str unf_str: Unformatted VL log line
         """
         self.type = VLogType.SUITE_H
-        self.start_time = None
-        self.end_time = None
+        self._start_time = None
+        self._end_time = None
         self.suite_name, self.desc = self._parse_fields(unf_str)
 
     def __str__(self):
@@ -416,8 +427,8 @@ class TestCaseHeader(Header):
         :param str unf_str: Unformatted VL log line
         """
         self.type = VLogType.TEST_CASE_H
-        self.start_time = None
-        self.end_time = None
+        self._start_time = None
+        self._end_time = None
         self.test_case_name, self.number, \
             self.desc = self._parse_fields(unf_str)
 
@@ -496,8 +507,8 @@ class StepHeader(Header):
         :param str unf_str: Unformatted VL log line
         """
         self.type = VLogType.STEP_H
-        self.start_time = None
-        self.end_time = None
+        self._start_time = None
+        self._end_time = None
         self.test_case_name, self.number, self.action, \
             self.expected_results = self._parse_fields(unf_str)
 
@@ -591,8 +602,8 @@ class GeneralHeader(Header):
         :param str unf_str: Unformatted VL log line
         """
         self.type = VLogType.GENERAL_H
-        self.start_time = None
-        self.end_time = None
+        self._start_time = None
+        self._end_time = None
         self.desc = self._parse_fields(unf_str)
 
     def __str__(self):

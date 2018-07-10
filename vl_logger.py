@@ -28,7 +28,7 @@ def args():
     read_desc = "Read from log file specified."
     testcase_desc = ""  # TODO
     format_api_desc = ""  # TODO
-
+    summary_desc = ""  # TODO
 
     # Argument setup and parsing
     parser = argparse.ArgumentParser(prog=program, description=description)
@@ -36,6 +36,7 @@ def args():
     group.add_argument("-r", "--read", action="store", dest="read_path", help=read_desc)
     parser.add_argument("-t", "--testcase", action="store", dest="testcase", help=testcase_desc)
     parser.add_argument("-a", "--api", action="store_true", dest="format_api", help=format_api_desc)
+    parser.add_argument("-s", "--summary", action="store_true", dest="summary", help=summary_desc)
     return parser.parse_args()
 
 
@@ -44,7 +45,7 @@ if __name__ == '__main__':
 
     logger = None
 
-    COMMAND_LINE = True
+    COMMAND_LINE = False
 
     if COMMAND_LINE:
         config = VConfigInterface(use_default=True, use_unformatted=False)
@@ -63,6 +64,9 @@ if __name__ == '__main__':
         if args.format_api:
             config.format_api()
 
+        if args.summary:
+            config.display_summary()
+
         vl_console_output = VFormatter()
         try:
             with open(args.read_path, "r") as logfile:
@@ -74,16 +78,25 @@ if __name__ == '__main__':
             exit(0)
 
     else:
-        path = "/home/nathaniel/vl_artifacts/TsDriveEncryptionPersistenceAndAccessibility-2018-02-07T16.14.18/test2.log"
+        path = "/home/nathaniel/vl_artifacts/TsDriveEncryptionPersistenceAndAccessibility-2018-02-07T16.14.18/test.log"
 
         config = VConfigInterface(use_default=True, use_unformatted=False)
         # config.display_test_case(number=1)
         # config.format_api()
+
+        DISPLAY_SUMMARY = True
+
+        if DISPLAY_SUMMARY:
+            config.display_summary()
         vl_console_output = VFormatter()
         try:
             with open(path, "r") as logfile:
                 logger = LollygagLogger(logfile, vl_console_output)
                 logger.run()
+
+                if DISPLAY_SUMMARY:
+                    vl_console_output.print_summary()
+
         except KeyboardInterrupt:
             logger.kill()
             print "Keyboard Interrupt: Exiting Logger"

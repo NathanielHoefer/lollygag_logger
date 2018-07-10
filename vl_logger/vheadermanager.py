@@ -15,19 +15,21 @@ class HeaderManager:
         self._curr_suite = None
         self._curr_testcase = None
         self._curr_step = None
-        self._header_tree = [Node("Root")]
+        self._header_tree = [Node("Summary")]
         self._store_tc_name = tc_name
         self._store_tc_num = tc_num
         self._store_step = step
 
     def __str__(self):
+        str_format = "%H:%M:%S.%f"
+
         output = []
         for pre, fill, node in RenderTree(self._header_tree[0]):
-            if node.name == "Root":
-                output.append("Root")
+            if node.name == "Summary":
+                output.append("Summary")
             else:
                 output.append("%s%s" % (pre, node.name.get_id()))
-                output.append("%s%s" % (fill, "  Time: 0"))
+                output.append("%s%s" % (fill, "  Start Time: %s" % (node.name.start_time.strftime(str_format))))
         return "\n".join(output).encode('utf-8')
 
     def add_general(self, header):
@@ -51,12 +53,12 @@ class HeaderManager:
     def start_time(self, start_time):
         """Set the start time of the current ``VHeader`` object."""
         header = self.current_header()
-        header.set_start_time(start_time)
+        header.start_time = start_time
 
     def end_time(self, end_time):
         """Set the end time of the current ``VHeader`` object."""
         header = self.current_header()
-        header.set_end_time(end_time)
+        header.end_time = end_time
 
     def current_header(self):
         """Return the current ``VHeader`` object."""
@@ -65,6 +67,9 @@ class HeaderManager:
     def previous_header(self):
         """Return the previous ``VHeader`` object."""
         return self._header_tree[-2].name
+
+    def calc_end_time(self):
+
 
     def _add_node(self, header, parent):
         """Add header node to tree and return index."""

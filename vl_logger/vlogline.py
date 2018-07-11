@@ -142,7 +142,8 @@ class Standard(Base):
             line_len = self.MAX_LINE_LEN
             if self.COLORIZE:
                 line_len += Colorize.esc_len(self.type.get_type())
-            output = output[:line_len]
+            if len(output) > line_len:
+                output = "".join([output[:line_len - 3], "..."])
 
         if self.additional_logs:
             output = "\n".join([output].extend(self.additional_logs))
@@ -172,7 +173,7 @@ class Standard(Base):
             self.details.colorize = True
 
         if self.SHORTEN_FIELDS:
-            self.type.shorten_fields = True
+            self.type.shorten_type = True
             self.source.shorten_amount = self.SHORTEN_FIELDS
             self.thread.shorten_amount = self.SHORTEN_FIELDS
 

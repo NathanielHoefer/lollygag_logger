@@ -117,8 +117,8 @@ class Colorize:
         'api-request': Style.BRIGHT + Back.BLUE + Fore.WHITE,
         'api-response': Style.BRIGHT + Back.MAGENTA + Fore.WHITE,
 
-        'passed-status': Style.BRIGHT + Fore.GREEN,
-        'failed-status': Style.BRIGHT + Fore.RED
+        'passed-status': Fore.GREEN,
+        'failed-status': Fore.RED
     }
 
 

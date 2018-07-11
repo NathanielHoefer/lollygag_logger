@@ -46,7 +46,6 @@ class TestHeaderManager(unittest.TestCase):
                                       "Expect: Something else-")
         headman.add_step(step_h1)
         headman.start_time(datetime.strptime("2018-05-08 18:33:22.984875", format))
-
         step_h2 = vlogline.StepHeader("-Starting Step 1 for TcTest: Verify Something else\n"
                                       "Expect: Something else-")
         headman.add_step(step_h2)
@@ -60,7 +59,10 @@ class TestHeaderManager(unittest.TestCase):
         headman.add_general(gen_h2)
         headman.start_time(datetime.strptime("2018-05-08 21:33:22.984875", format))
 
+        headman.compute_endtime(headman._header_tree[0])
+
         print(str(headman))
+
 
 
 

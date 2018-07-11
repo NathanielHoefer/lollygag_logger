@@ -1,6 +1,7 @@
 from anytree import Node, RenderTree
 from vl_logger.vutils import VLogType
-
+from vl_logger import vlogline
+from datetime import datetime
 
 class HeaderManager:
 
@@ -15,7 +16,14 @@ class HeaderManager:
         self._curr_suite = None
         self._curr_testcase = None
         self._curr_step = None
-        self._header_tree = [Node("Summary")]
+
+        root = vlogline.GeneralHeader("=Preconditions=")
+        self._header_tree = [Node(root)]
+        # Temp
+        format = " ".join(["%Y-%m-%d", "%H:%M:%S.%f"])
+        root.start_time = datetime.strptime("2018-05-08 13:33:22.984875", format)
+        root.end_time = datetime.strptime("2018-05-08 22:33:22.984875", format)
+
         self._store_tc_name = tc_name
         self._store_tc_num = tc_num
         self._store_step = step
@@ -25,11 +33,12 @@ class HeaderManager:
 
         output = []
         for pre, fill, node in RenderTree(self._header_tree[0]):
-            if node.name == "Summary":
+            if node.is_root:
                 output.append("Summary")
             else:
                 output.append("%s%s" % (pre, node.name.get_id()))
                 output.append("%s%s" % (fill, "  Start Time: %s" % (node.name.start_time.strftime(str_format))))
+                output.append("%s%s" % (fill, "  End Time: %s" % (node.name.end_time.strftime(str_format))))
         return "\n".join(output).encode('utf-8')
 
     def add_general(self, header):
@@ -136,3 +145,53 @@ class HeaderManager:
 
         output = fmt_log if self.in_specified_testcase() else None
         return output
+
+    # Endtime Functions
+    #####################################################################################################
+
+    def compute_endtime(self, node):
+        # Node is root
+        if node.is_root:
+            for child in node.children[::-1]:
+                self.compute_endtime(child)
+            return
+
+        # Node is last sibling
+        if self.is_last_sibling(node):
+            node.name.end_time = self.get_last_sibling_starttime(node)
+
+        # Node is not last sibling
+        else:
+            node.name.end_time = self.get_next_sibling_starttime(node)
+
+        # Base case
+        if node.is_leaf:
+            return
+        else:
+            for child in node.children[::-1]:
+                self.compute_endtime(child)
+
+    def is_last_sibling(self, node):
+        children = node.parent.children
+        return True if node == children[-1] else False
+
+    def get_next_sibling_starttime(self, node):
+        children = node.parent.children
+        index = children.index(node)
+        start_time = children[index + 1].name.start_time
+        return start_time
+
+    def get_last_sibling_starttime(self, node):
+        # Parent is root
+        parent = node.parent
+        if parent.is_root:
+            return parent.name.end_time
+
+        # Parent is last sibling
+        if self.is_last_sibling(parent):
+            return self.get_last_sibling_starttime(parent)
+
+        # Parent is not last sibling
+        else:
+            return self.get_next_sibling_starttime(parent)
+

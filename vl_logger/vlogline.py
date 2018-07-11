@@ -295,7 +295,7 @@ class Header(Base):
         return self._end_time
 
     @end_time.setter
-    def set_end_time(self, end_time):
+    def end_time(self, end_time):
         self._end_time = end_time
 
 

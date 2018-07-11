@@ -36,8 +36,8 @@ class HeaderManager:
             #     output.append(node.name.get_id())
             # else:
             output.append("%s%s" % (pre, node.name.get_id()))
-            output.append("%s%s" % (fill, "  Start Time: %s" % (node.name.start_time.strftime(str_format))))
-            output.append("%s%s" % (fill, "  End Time: %s" % (node.name.end_time.strftime(str_format))))
+            # output.append("%s%s" % (fill, "  Start Time: %s" % (node.name.start_time.strftime(str_format))))
+            # output.append("%s%s" % (fill, "  End Time: %s" % (node.name.end_time.strftime(str_format))))
             runtime = node.name.end_time - node.name.start_time
             output.append("%s%s" % (fill, "  Runtime: %s" % runtime))
         return "\n".join(output).encode('utf-8')

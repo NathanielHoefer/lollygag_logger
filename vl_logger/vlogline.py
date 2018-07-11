@@ -361,7 +361,11 @@ class SuiteHeader(Header):
 
     def get_id(self):
         """Return string identifying suite header."""
-        return "{}: {}".format(self.suite_name, self.desc)
+        suite_name = self.suite_name
+        if self.COLORIZE:
+            suite_name = Colorize.type_apply(suite_name, self.type)
+        header_id = "{}: {}".format(suite_name, self.desc)
+        return header_id
 
 
     def _parse_fields(self, unf_str):
@@ -445,7 +449,11 @@ class TestCaseHeader(Header):
 
     def get_id(self):
         """Return string identifying test case header."""
-        return "{} ({}): {}".format(self.test_case_name, self.number, self.desc)
+        test_case_id = "Test Case {}".format(self.number)
+        if self.COLORIZE:
+            test_case_id = Colorize.type_apply(test_case_id, self.type)
+        header_id = "{}: {}".format(test_case_id, self.desc)
+        return header_id
 
     def _parse_fields(self, unf_str):
         """Parse the string into the test case header fields.
@@ -530,7 +538,11 @@ class StepHeader(Header):
 
     def get_id(self):
         """Return string identifying step header."""
-        return "Step ({}): {}".format(self.number, self.action)
+        step_id = "Step {}".format(self.number)
+        if self.COLORIZE:
+            step_id = Colorize.type_apply(step_id, self.type)
+        header_id = "{}: {}".format(step_id, self.action)
+        return header_id
 
     def _parse_fields(self, unf_str):
         """Parse the string into the step header fields.
@@ -617,7 +629,10 @@ class GeneralHeader(Header):
 
     def get_id(self):
         """Return string identifying step header."""
-        return "General: {}".format(self.desc)
+        header_id = "{}".format(self.desc)
+        if self.COLORIZE:
+            header_id = Colorize.type_apply(header_id, self.type)
+        return header_id
 
     def _parse_fields(self, unf_str):
         """Remove the border char from string."""

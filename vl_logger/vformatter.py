@@ -130,8 +130,14 @@ class VFormatter(LogFormatter):
         """Prints summary if requested."""
 
         if self.SUMMARY:
-            self.header_man.end_time(self.curr_time, root=True)
-            print(self.header_man.generate_summary())
+
+            try:
+                self.header_man.end_time(self.curr_time, root=True)
+                summary = self.header_man.generate_summary()
+                print
+                print summary
+            except AttributeError:
+                print("Error generating summary. Log may be incomplete.")
 
     @property
     def curr_time(self):

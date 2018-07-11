@@ -191,6 +191,7 @@ class Details(LogField):
         self.request_method = None
         self.request_url = None
         self.request_id = None
+        self.request_params = None
         self.response_id = None
         self.response_result = None
         self.response_type = None
@@ -211,17 +212,19 @@ class Details(LogField):
         """When converted to string, the API requests and responses will be formatted."""
         m = re.match(VPatterns.get_std_details_api(), self.details)
         if m:
-            if not m.group(1):
+            if m.group(1):
                 request = re.match(VPatterns.get_std_details_request(), self.details)
-                self.request_method = request.group(1)
-                self.request_url = request.group(2)
-                self.request_id = int(request.group(3))
+                if request.group(2) != 'None':
+                    request_json = json.loads(request.group(2))
+                    self.request_url = request.group(1)
+                    self.request_id = int(request_json['id'])
+                    self.request_method = request_json['method']
+                    self.request_params = request_json['params']
             else:
                 response = re.match(VPatterns.get_std_details_response(), self.details)
                 string = response.group(1)
                 json_response = json.loads(string)
                 self.response_id = json_response['id']
-                # self.response_result = json_response
                 if 'result' in json_response:
                     self.response_result = json_response['result']
                     self.response_type = 'Result'
@@ -253,6 +256,8 @@ class Details(LogField):
         output = ["\n  {}{} ({})".format(json_post, req, id)]
         output.append("    Method: {}".format(self.request_method))
         output.append("    URL: {}".format(self.request_url))
+        params = pprint.pformat(self.request_params) if self.request_params else None
+        output.append("""    Params: {}""".format(params))
         return "\n".join(output)
 
     def _api_response_str(self):

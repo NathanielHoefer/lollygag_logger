@@ -156,8 +156,8 @@ class VPatterns(object):
     SOURCE_PATTERN = "\[.*:.*\]"
     THREAD_PATTERN = "\[.*:.*\]"
     DETAIL_PATTERN = ".*"
-    DETAIL_API_PATTERN = "^JSON-RPC-POST( response)*:"
-    DETAIL_REQUEST_PATTERN = "^JSON-RPC-POST: method=(\w+), url=(.*), id=(\d+)$"
+    DETAIL_API_PATTERN = "^JSON-RPC-POST response|(^Sending HTTP POST request).*"
+    DETAIL_REQUEST_PATTERN = "^Sending HTTP POST request to server_url: (.*); ({.*}|None).$"
     DETAIL_RESPONSE_PATTERN = "^JSON-RPC-POST response: ({.*})$"
 
 

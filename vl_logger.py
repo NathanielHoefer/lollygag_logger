@@ -81,10 +81,11 @@ if __name__ == '__main__':
         path = "/home/nathaniel/vl_artifacts/TsDriveEncryptionPersistenceAndAccessibility-2018-02-07T16.14.18/test.log"
 
         config = VConfigInterface(use_default=True, use_unformatted=False)
-        # config.display_test_case(number=1)
-        # config.format_api()
+        config.display_test_case(number=0)
+        config.display_step(number=1)
+        config.format_api()
 
-        DISPLAY_SUMMARY = True
+        DISPLAY_SUMMARY = False
 
         if DISPLAY_SUMMARY:
             config.display_summary()

@@ -42,15 +42,18 @@ class TestFieldCreation(unittest.TestCase):
         self.assertEqual(str(details), details_token)
 
     def test_api_formatting(self):
-        api_request = "JSON-RPC-POST: method=GetClusterInfo, url=https://1.1.1.1/json-rpc/10.1, id=8"
+        api_request = """Sending HTTP POST request to server_url: """ \
+                      """https://10.10.10.10:80/json-rpc/10.1; {"params": {"cluster": {"cluster": """ \
+                      """"Cluster1"}, "force": false}, "method": "SetClusterConfig", "id": 8}."""
         api_response = """JSON-RPC-POST response: {"id": 8, "result": {"clusterInfo": {""" \
             """"repCount": 2, "encryptionAtRestState": "enabled", "attributes": {}, """ \
             """"ensemble": ["10.117.208.26", "10.117.208.41"], "NodeID": 3}}}"""
 
-        display_request = "\n  JSON-RPC-POST request (id: 8)\n" \
-                          "    Method: GetClusterInfo\n" \
-                          "    URL: https://1.1.1.1/json-rpc/10.1"
-        display_response = """\n  JSON-RPC-POST response (id: 8)\n""" \
+        display_request = """\n  JSON-RPC-POST request (id: 8)\n""" \
+                          """    Method: SetClusterConfig\n""" \
+                          """    URL: https://10.10.10.10:80/json-rpc/10.1\n""" \
+                          """    Params: {u'cluster': {u'cluster': u'Cluster1'}, u'force': False}"""
+        display_response = """\n  JSON-RPC-POST response (id: 8): Result\n""" \
                            """    {u'clusterInfo': {u'NodeID': 3,\n""" \
                            """                  u'attributes': {},\n""" \
                            """                  u'encryptionAtRestState': u'enabled',\n""" \

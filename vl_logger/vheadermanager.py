@@ -3,6 +3,7 @@ from vl_logger.vutils import VLogType
 from vl_logger import vlogline
 from datetime import datetime
 
+
 class HeaderManager:
 
     def __init__(self, tc_name=None, tc_num=None, step=None):
@@ -32,14 +33,28 @@ class HeaderManager:
 
         output = []
         for pre, fill, node in RenderTree(self.root):
-            # if node.is_root:
-            #     output.append(node.name.get_id())
-            # else:
+            # Title
             output.append("%s%s" % (pre, node.name.get_id()))
-            # output.append("%s%s" % (fill, "  Start Time: %s" % (node.name.start_time.strftime(str_format))))
-            # output.append("%s%s" % (fill, "  End Time: %s" % (node.name.end_time.strftime(str_format))))
+
+            # Runtime
             runtime = node.name.end_time - node.name.start_time
             output.append("%s%s" % (fill, "  Runtime: %s" % runtime))
+
+            # Status and Errors
+            status = node.name.status
+            errors = node.name.errors
+            if errors:
+                error_str = []
+                for error in errors:
+                    error_time = error.datetime.get_datetime().strftime(str_format)
+                    error_str.append(error_time)
+                error_times = ", ".join(error_str)
+                status = " ".join([status, "at", error_times])
+            output.append("%s%s" % (fill, "  Status: %s" % status))
+
+            # Separator
+            output.append("%s%s" % (fill, "_" * (75 - len(fill))))
+
         return "\n".join(output).encode('utf-8')
 
     def add_general(self, header):
@@ -89,6 +104,17 @@ class HeaderManager:
     def previous_header(self):
         """Return the previous ``VHeader`` object."""
         return self._header_tree[-2].name
+
+    def add_error(self, error):
+        """Associate an error with a header."""
+        curr_node = self._header_tree[-1]
+        curr_node.name.add_error(error)
+        self._update_tree_status(curr_node, "Failed")
+
+    def _update_tree_status(self, node, status):
+        node.name.status = status
+        if not node.is_root:
+            self._update_tree_status(node.parent, status)
 
     def calc_end_time(self):
         """Calulates the end time for each header."""

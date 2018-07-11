@@ -113,6 +113,7 @@ class Source(LogField):
             msg = "The source token '" + source_token + "' is not valid."
             raise ValueError(msg)
         self.module = module
+        self.shorten_amount = 0
         self.line_number = int(line_number)
         self.display = True
 
@@ -120,7 +121,10 @@ class Source(LogField):
         """Convert source field to ``str``."""
         output = ""
         if self.display:
-            output = "".join(["[", self.module, ":", str(self.line_number), "]"])
+            output = "".join([self.module, ":", str(self.line_number)])
+            if self.shorten_amount and len(output) > self.shorten_amount - 2:
+                output = "".join([output[:self.shorten_amount - 3], "..."])
+            output = "".join(["[", output, "]"])
         return output
 
     def get_module(self):
@@ -149,6 +153,7 @@ class Thread(LogField):
         except ValueError:
             msg = "The thread token '" + thread_token + "' is not valid."
             raise ValueError(msg)
+        self.shorten_amount = 0
         self.process = process
         self.thread = thread
         self.display = True
@@ -157,7 +162,10 @@ class Thread(LogField):
         """Convert thread field to ``str``."""
         output = ""
         if self.display:
-            output = "".join(["[", self.process, ":", self.thread, "]"])
+            output = "".join([self.process, ":", self.thread])
+            if self.shorten_amount and len(output) > self.shorten_amount - 2:
+                output = "".join([output[:self.shorten_amount - 3], "..."])
+            output = "".join(["[", output, "]"])
         return output
 
     def get_process(self):

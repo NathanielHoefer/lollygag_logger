@@ -71,7 +71,7 @@ class VConfigInterface:
         """
         self.colorize()
         self.condense_line()
-        self.shorten_type()
+        self.shorten_fields()
         self.use_console_width()
         self.display_fields([
             VLogStdFields.TIME,
@@ -98,7 +98,7 @@ class VConfigInterface:
         self.max_line_len(105)
         self.colorize(False)
         self.condense_line(False)
-        self.shorten_type(False)
+        self.shorten_fields(0)
         self.use_console_width(False)
         self.display_fields([
             VLogStdFields.DATE,
@@ -146,9 +146,9 @@ class VConfigInterface:
         """Condense the ``str`` output of standard logs to the specified max line length."""
         vlogline.Base.condense_line(set)
 
-    def shorten_type(self, set=True):
+    def shorten_fields(self, value=30):
         """Printed log types are shortened to 5 characters to ensure consistency between lines."""
-        vlogline.Base.shorten_type(set)
+        vlogline.Base.shorten_fields(value)
 
     def use_console_width(self, set=True):
         """Use the console width as the max line width if available."""

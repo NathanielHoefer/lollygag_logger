@@ -20,7 +20,7 @@ class Base(LogLine):
     MAX_LINE_LEN = 105
     COLORIZE = False
     CONDENSE_LINE = False
-    SHORTEN_TYPE = False
+    SHORTEN_FIELDS = False
     FORMAT_API = False
     DISPLAY_FIELDS = [
         VLogStdFields.DATE,
@@ -83,9 +83,9 @@ class Base(LogLine):
         cls.CONDENSE_LINE = set
 
     @classmethod
-    def shorten_type(cls, set=True):
-        """Printed log types are shortened to 5 characters to ensure consistency between lines."""
-        cls.SHORTEN_TYPE = set
+    def shorten_fields(cls, value=10):
+        """Printed log fields are shortened to specified lengthto ensure consistency between lines."""
+        cls.SHORTEN_FIELDS = value
 
     @classmethod
     def display_fields(cls, fields):
@@ -171,8 +171,10 @@ class Standard(Base):
             self.type.colorize = True
             self.details.colorize = True
 
-        if self.SHORTEN_TYPE:
-            self.type.shorten_type = True
+        if self.SHORTEN_FIELDS:
+            self.type.shorten_fields = True
+            self.source.shorten_amount = self.SHORTEN_FIELDS
+            self.thread.shorten_amount = self.SHORTEN_FIELDS
 
         if self.FORMAT_API:
             self.details.format_api_calls()
@@ -298,6 +300,25 @@ class Header(Base):
     def end_time(self, end_time):
         self._end_time = end_time
 
+    @property
+    def errors(self):
+        return self._errors
+
+    @property
+    def status(self):
+        status = self._status
+        if self.COLORIZE:
+            color_name = 'passed-status' if status == 'Passed' else 'failed-status'
+            status = Colorize.apply(status, color_name)
+        return status
+
+    @status.setter
+    def status(self, status):
+        self._status = status
+
+    def add_error(self, error):
+        self._errors.append(error)
+
 
 class SuiteHeader(Header):
     """Suite Header VL Log Line.
@@ -345,6 +366,8 @@ class SuiteHeader(Header):
         self.type = VLogType.SUITE_H
         self._start_time = None
         self._end_time = None
+        self._errors = []
+        self._status = "Passed"
         self.suite_name, self.desc = self._parse_fields(unf_str)
 
     def __str__(self):
@@ -433,6 +456,8 @@ class TestCaseHeader(Header):
         self.type = VLogType.TEST_CASE_H
         self._start_time = None
         self._end_time = None
+        self._errors = []
+        self._status = "Passed"
         self.test_case_name, self.number, \
             self.desc = self._parse_fields(unf_str)
 
@@ -517,6 +542,8 @@ class StepHeader(Header):
         self.type = VLogType.STEP_H
         self._start_time = None
         self._end_time = None
+        self._errors = []
+        self._status = "Passed"
         self.test_case_name, self.number, self.action, \
             self.expected_results = self._parse_fields(unf_str)
 
@@ -616,6 +643,8 @@ class GeneralHeader(Header):
         self.type = VLogType.GENERAL_H
         self._start_time = None
         self._end_time = None
+        self._errors = []
+        self._status = "Passed"
         self.desc = self._parse_fields(unf_str)
 
     def __str__(self):

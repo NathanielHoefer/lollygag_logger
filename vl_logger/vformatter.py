@@ -217,6 +217,10 @@ class VFormatter(LogFormatter):
 
             # Store Start time
             self._store_curr_time(output)
+
+            # Associate Error with Header
+            if self.SUMMARY and output and output.type.get_type() == VLogType.ERROR:
+                self.header_man.add_error(output)
         # Traceback Log Lines
         elif log_type == VLogType.TRACEBACK and self.header_man.in_specified_testcase():
             output = vlogline.Traceback(unf_str)

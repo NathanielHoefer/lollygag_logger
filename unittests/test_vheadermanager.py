@@ -20,7 +20,7 @@ class TestHeaderManager(unittest.TestCase):
             VLogStdFields.DETAILS
         ]
         vlogline.Base.CONDENSE_LINE = False
-        vlogline.Base.SHORTEN_TYPE = False
+        vlogline.Base.SHORTEN_FIELDS = False
 
 
     def test_add_headers(self):

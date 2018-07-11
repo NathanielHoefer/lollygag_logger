@@ -98,10 +98,10 @@ class Colorize:
         'ERROR': Style.BRIGHT + Fore.RED,
         'CRITICAL': Style.BRIGHT + Back.RED + Fore.YELLOW,
         'OTHER': Style.RESET_ALL,
-        'STEP_H': Style.BRIGHT + Fore.GREEN,
+        'STEP_H': Style.BRIGHT + Fore.MAGENTA,
         'TEST_CASE_H': Style.BRIGHT + Fore.CYAN,
         'SUITE_H': Style.BRIGHT + Fore.YELLOW,
-        'GENERAL_H': Style.BRIGHT + Fore.BLUE
+        'GENERAL_H': Style.BRIGHT + Fore.GREEN
     }
 
     COLORS = {
@@ -115,7 +115,10 @@ class Colorize:
         'json-post': Style.BRIGHT,
         'api-id': Style.BRIGHT,
         'api-request': Style.BRIGHT + Back.BLUE + Fore.WHITE,
-        'api-response': Style.BRIGHT + Back.MAGENTA + Fore.WHITE
+        'api-response': Style.BRIGHT + Back.MAGENTA + Fore.WHITE,
+
+        'passed-status': Style.BRIGHT + Fore.GREEN,
+        'failed-status': Style.BRIGHT + Fore.RED
     }
 
 

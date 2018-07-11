@@ -19,7 +19,7 @@ class TestLogLineCreation(unittest.TestCase):
             VLogStdFields.DETAILS
         ]
         vlogline.Base.CONDENSE_LINE = False
-        vlogline.Base.SHORTEN_TYPE = False
+        vlogline.Base.SHORTEN_FIELDS = False
 
     def test_std_log_creation_no_type(self):
         line = "2017-10-30 19:13:32.208116 DEBUG [res.core:636] " \

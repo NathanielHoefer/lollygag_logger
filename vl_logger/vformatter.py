@@ -69,8 +69,8 @@ class VFormatter(LogFormatter):
         self.header_man = HeaderManager(tc_name=self.DISPLAY_TESTCASE_NAME,
                                         tc_num=self.DISPLAY_TESTCASE_NUM,
                                         step=self.DISPLAY_STEP_NUM)
-        self.curr_datetime = None
         self.prev_fmt_log = None
+        self._curr_time = None
 
         self._set_log_len()
 
@@ -126,8 +126,20 @@ class VFormatter(LogFormatter):
                     self.last_line_empty = True
                     print ""
 
-    def print_summary(self):
-        print(str(self.header_man))
+    def complete(self):
+        """Prints summary if requested."""
+
+        if self.SUMMARY:
+            self.header_man.end_time(self.curr_time, root=True)
+            print(self.header_man.generate_summary())
+
+    @property
+    def curr_time(self):
+        return self._curr_time
+
+    @curr_time.setter
+    def curr_time(self, curr_datetime):
+        self._curr_time = curr_datetime
 
     @classmethod
     def display_log_types(cls, types):
@@ -322,11 +334,18 @@ class VFormatter(LogFormatter):
 
     def _store_curr_time(self, log):
         """Store the datetime object of the time from the current log or None if no time available."""
-        if self.SUMMARY and isinstance(self.prev_fmt_log, vlogline.Header):
+        if self.SUMMARY:
+            set_root = False
+            if not self.header_man.is_test_start_time_added():
+                set_root = True
+
             if isinstance(log, str):
                 pattern = "^(" + VPatterns.get_std_datetime() + ")"
                 m = re.match(pattern, log)
                 if m.group(1):
-                    self.header_man.start_time(vlogfield.Datetime(m.group(1)).get_datetime())
+                    self._curr_time = vlogfield.Datetime(m.group(1)).get_datetime()
             else:
-                self.header_man.start_time(log.datetime.get_datetime())
+                self._curr_time = log.datetime.get_datetime()
+
+            if isinstance(self.prev_fmt_log, vlogline.Header) or set_root:
+                self.header_man.start_time(self._curr_time, root=set_root)

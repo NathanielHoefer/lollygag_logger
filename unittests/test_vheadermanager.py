@@ -26,6 +26,9 @@ class TestHeaderManager(unittest.TestCase):
     def test_add_headers(self):
         format = " ".join(["%Y-%m-%d", "%H:%M:%S.%f"])
         headman = HeaderManager()
+        headman.start_time(datetime.strptime("2018-05-08 13:33:22.984875", format), root=True)
+        headman.end_time(datetime.strptime("2018-05-09 22:34:22.984875", format), root=True)
+
         gen_h1 = vlogline.GeneralHeader("=Preconditions=")
         headman.add_general(gen_h1)
         headman.start_time(datetime.strptime("2018-05-08 14:33:22.984875", format))
@@ -59,9 +62,7 @@ class TestHeaderManager(unittest.TestCase):
         headman.add_general(gen_h2)
         headman.start_time(datetime.strptime("2018-05-08 21:33:22.984875", format))
 
-        headman.compute_endtime(headman._header_tree[0])
-
-        print(str(headman))
+        print("\n\n" + headman.generate_summary())
 
 
 

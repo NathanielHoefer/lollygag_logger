@@ -72,9 +72,6 @@ if __name__ == '__main__':
             with open(args.read_path, "r") as logfile:
                 logger = LollygagLogger(logfile, vl_console_output)
                 logger.run()
-
-                if args.summary:
-                    vl_console_output.print_summary()
         except KeyboardInterrupt:
             logger.kill()
             print "Keyboard Interrupt: Exiting Logger"
@@ -96,10 +93,6 @@ if __name__ == '__main__':
             with open(path, "r") as logfile:
                 logger = LollygagLogger(logfile, vl_console_output)
                 logger.run()
-
-                if DISPLAY_SUMMARY:
-                    vl_console_output.print_summary()
-
         except KeyboardInterrupt:
             logger.kill()
             print "Keyboard Interrupt: Exiting Logger"

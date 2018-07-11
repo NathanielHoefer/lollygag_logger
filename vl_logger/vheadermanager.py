@@ -17,32 +17,33 @@ class HeaderManager:
         self._curr_testcase = None
         self._curr_step = None
 
-        root = vlogline.GeneralHeader("=Preconditions=")
-        self._header_tree = [Node(root)]
-        # Temp
-        format = " ".join(["%Y-%m-%d", "%H:%M:%S.%f"])
-        root.start_time = datetime.strptime("2018-05-08 13:33:22.984875", format)
-        root.end_time = datetime.strptime("2018-05-08 22:33:22.984875", format)
+        self.root = Node(vlogline.GeneralHeader("=Test Summary="))
+        self._header_tree = [self.root]
 
         self._store_tc_name = tc_name
         self._store_tc_num = tc_num
         self._store_step = step
 
-    def __str__(self):
+    def generate_summary(self):
+        """Return a string containing a summary of all the headers."""
         str_format = "%H:%M:%S.%f"
 
+        self.calc_end_time()
+
         output = []
-        for pre, fill, node in RenderTree(self._header_tree[0]):
-            if node.is_root:
-                output.append("Summary")
-            else:
-                output.append("%s%s" % (pre, node.name.get_id()))
-                output.append("%s%s" % (fill, "  Start Time: %s" % (node.name.start_time.strftime(str_format))))
-                output.append("%s%s" % (fill, "  End Time: %s" % (node.name.end_time.strftime(str_format))))
+        for pre, fill, node in RenderTree(self.root):
+            # if node.is_root:
+            #     output.append(node.name.get_id())
+            # else:
+            output.append("%s%s" % (pre, node.name.get_id()))
+            output.append("%s%s" % (fill, "  Start Time: %s" % (node.name.start_time.strftime(str_format))))
+            output.append("%s%s" % (fill, "  End Time: %s" % (node.name.end_time.strftime(str_format))))
+            runtime = node.name.end_time - node.name.start_time
+            output.append("%s%s" % (fill, "  Runtime: %s" % runtime))
         return "\n".join(output).encode('utf-8')
 
     def add_general(self, header):
-        self._curr_general = self._add_node(header, self._header_tree[0])
+        self._curr_general = self._add_node(header, self.root)
         self._curr_suite = None
         self._curr_testcase = None
         self._curr_step = None
@@ -59,15 +60,27 @@ class HeaderManager:
     def add_step(self, header):
         self._curr_step = self._add_node(header, self._header_tree[self._curr_testcase])
 
-    def start_time(self, start_time):
+    def start_time(self, start_time, root=False):
         """Set the start time of the current ``VHeader`` object."""
-        header = self.current_header()
-        header.start_time = start_time
+        if root:
+            root_header = self.root.name
+            root_header.start_time = start_time
+        else:
+            header = self.current_header()
+            header.start_time = start_time
 
-    def end_time(self, end_time):
+    def is_test_start_time_added(self):
+        """Return False if the initial test start time hasn't been specified."""
+        return bool(self.root.name.start_time)
+
+    def end_time(self, end_time, root=False):
         """Set the end time of the current ``VHeader`` object."""
-        header = self.current_header()
-        header.end_time = end_time
+        if root:
+            root_header = self.root.name
+            root_header.end_time = end_time
+        else:
+            header = self.current_header()
+            header.end_time = end_time
 
     def current_header(self):
         """Return the current ``VHeader`` object."""
@@ -77,8 +90,9 @@ class HeaderManager:
         """Return the previous ``VHeader`` object."""
         return self._header_tree[-2].name
 
-    # def calc_end_time(self):
-
+    def calc_end_time(self):
+        """Calulates the end time for each header."""
+        self._recursive_calc_end_time(self.root)
 
     def _add_node(self, header, parent):
         """Add header node to tree and return index."""
@@ -149,49 +163,49 @@ class HeaderManager:
     # Endtime Functions
     #####################################################################################################
 
-    def compute_endtime(self, node):
+    def _recursive_calc_end_time(self, node):
         # Node is root
         if node.is_root:
             for child in node.children[::-1]:
-                self.compute_endtime(child)
+                self._recursive_calc_end_time(child)
             return
 
         # Node is last sibling
-        if self.is_last_sibling(node):
-            node.name.end_time = self.get_last_sibling_starttime(node)
+        if self._is_last_sibling(node):
+            node.name.end_time = self._get_last_sibling_starttime(node)
 
         # Node is not last sibling
         else:
-            node.name.end_time = self.get_next_sibling_starttime(node)
+            node.name.end_time = self._get_next_sibling_starttime(node)
 
         # Base case
         if node.is_leaf:
             return
         else:
             for child in node.children[::-1]:
-                self.compute_endtime(child)
+                self._recursive_calc_end_time(child)
 
-    def is_last_sibling(self, node):
+    def _is_last_sibling(self, node):
         children = node.parent.children
         return True if node == children[-1] else False
 
-    def get_next_sibling_starttime(self, node):
+    def _get_next_sibling_starttime(self, node):
         children = node.parent.children
         index = children.index(node)
         start_time = children[index + 1].name.start_time
         return start_time
 
-    def get_last_sibling_starttime(self, node):
+    def _get_last_sibling_starttime(self, node):
         # Parent is root
         parent = node.parent
         if parent.is_root:
             return parent.name.end_time
 
         # Parent is last sibling
-        if self.is_last_sibling(parent):
-            return self.get_last_sibling_starttime(parent)
+        if self._is_last_sibling(parent):
+            return self._get_last_sibling_starttime(parent)
 
         # Parent is not last sibling
         else:
-            return self.get_next_sibling_starttime(parent)
+            return self._get_next_sibling_starttime(parent)
 

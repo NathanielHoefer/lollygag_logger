@@ -42,6 +42,7 @@ class LollygagLogger:
             thread.start()
         for thread in threads:
             thread.join()
+        self.log_formatter.complete()
 
     def read(self):
         """Continuously reads logs line by line from the stream_handle and
@@ -93,6 +94,11 @@ class LogFormatter:
     @abc.abstractmethod
     def send(self, log_line):
         """Subclasses must handle a formatted log line object."""
+        pass
+
+    @abc.abstractmethod
+    def complete(self):
+        """Subclasses must include a completion step for any finalization steps."""
         pass
 
 

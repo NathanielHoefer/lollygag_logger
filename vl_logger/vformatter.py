@@ -69,7 +69,7 @@ class VFormatter(LogFormatter):
         self.header_man = HeaderManager(tc_name=self.DISPLAY_TESTCASE_NAME,
                                         tc_num=self.DISPLAY_TESTCASE_NUM,
                                         step=self.DISPLAY_STEP_NUM)
-        self.prev_fmt_log = None
+        self._prev_fmt_log = None
         self._curr_time = None
 
         self._set_log_len()
@@ -98,7 +98,7 @@ class VFormatter(LogFormatter):
         if self.curr_log_type and self.curr_log_type not in self.DISPLAY_LOG_TYPES:
             # Store Start time
             self._store_curr_time(unf_str)
-            self.prev_fmt_log = None
+            self._prev_fmt_log = None
             fmt_logs.append(None)  # Don't print anything
             return fmt_logs
 
@@ -128,9 +128,7 @@ class VFormatter(LogFormatter):
 
     def complete(self):
         """Prints summary if requested."""
-
         if self.SUMMARY:
-
             try:
                 self.header_man.end_time(self.curr_time, root=True)
                 summary = self.header_man.generate_summary()
@@ -161,9 +159,9 @@ class VFormatter(LogFormatter):
         cls.DISPLAY_LOG_TYPES = types
 
     @classmethod
-    def use_console_width(cls, set=True):
+    def use_console_width(cls, value=True):
         """Use the console width as the max line width if available."""
-        cls.CONSOLE_WIDTH = set
+        cls.CONSOLE_WIDTH = value
 
     @classmethod
     def display_test_case(cls, name="", number=-1):
@@ -178,8 +176,8 @@ class VFormatter(LogFormatter):
             cls.DISPLAY_STEP_NUM = number
 
     @classmethod
-    def display_summary(cls, set=True):
-        cls.SUMMARY = set
+    def display_summary(cls, value=True):
+        cls.SUMMARY = value
 
     def _store_log(self, unf_str):
         self.stored_logs.append(unf_str)
@@ -219,7 +217,7 @@ class VFormatter(LogFormatter):
             self._store_curr_time(output)
 
             # Associate Error with Header
-            if self.SUMMARY and output and output.type.get_type() == VLogType.ERROR:
+            if self.SUMMARY and output and output.logtype == VLogType.ERROR:
                 self.header_man.add_error(output)
         # Traceback Log Lines
         elif log_type == VLogType.TRACEBACK and self.header_man.in_specified_testcase():
@@ -245,7 +243,7 @@ class VFormatter(LogFormatter):
             output = vlogline.Other(unf_str)
 
         if output:
-            self.prev_fmt_log = output
+            self._prev_fmt_log = output
 
         return output
 
@@ -353,9 +351,9 @@ class VFormatter(LogFormatter):
                 pattern = "^(" + VPatterns.get_std_datetime() + ")"
                 m = re.match(pattern, log)
                 if m.group(1):
-                    self._curr_time = vlogfield.Datetime(m.group(1)).get_datetime()
+                    self._curr_time = vlogfield.Datetime(m.group(1)).datetime
             else:
-                self._curr_time = log.datetime.get_datetime()
+                self._curr_time = log.datetime
 
-            if isinstance(self.prev_fmt_log, vlogline.Header) or set_root:
+            if isinstance(self._prev_fmt_log, vlogline.Header) or set_root:
                 self.header_man.start_time(self._curr_time, root=set_root)

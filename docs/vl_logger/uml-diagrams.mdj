@@ -3810,7 +3810,7 @@
 											"height": 13,
 											"autoResize": false,
 											"underline": false,
-											"text": "+get_type(): VLogType",
+											"text": "+type(): VLogType",
 											"horizontalAlignment": 0,
 											"verticalAlignment": 5,
 											"wordWrap": false
@@ -12293,7 +12293,7 @@
 											"height": 13,
 											"autoResize": false,
 											"underline": false,
-											"text": "+get_type(unf_str: str): VLogType",
+											"text": "+type(unf_str: str): VLogType",
 											"horizontalAlignment": 0,
 											"verticalAlignment": 5,
 											"wordWrap": false
@@ -16708,7 +16708,7 @@
 							"_parent": {
 								"$ref": "AAAAAAFjRRPPTYqtZYw="
 							},
-							"name": "get_type",
+							"name": "type",
 							"visibility": "public",
 							"isStatic": false,
 							"isLeaf": false,
@@ -18409,7 +18409,7 @@
 							"_parent": {
 								"$ref": "AAAAAAFjaZVVQiYI20o="
 							},
-							"name": "get_type",
+							"name": "type",
 							"visibility": "public",
 							"isStatic": false,
 							"isLeaf": false,

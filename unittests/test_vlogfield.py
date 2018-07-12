@@ -25,7 +25,7 @@ class TestFieldCreation(unittest.TestCase):
         self.assertEqual(str(datetime), "2018-05-08 14:33:22.984875")
 
         type = vlogfield.Type(type_token)
-        self.assertEqual(type.get_type(), VLogType.DEBUG)
+        self.assertEqual(type.type(), VLogType.DEBUG)
         self.assertEqual(str(type), "DEBUG")
 
         source = vlogfield.Source(source_token)

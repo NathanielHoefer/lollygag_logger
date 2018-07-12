@@ -123,30 +123,30 @@ class Standard(Base):
         :param str unf_str: Unformatted VL log line
         :param `vutils.VLogType`_ type: The type of VL log line
         """
-        self.datetime, self.type, self.source, self.thread, \
-            self.details = self._parse_fields(unf_str, type)
-        self.additional_logs = []
+        self._datetime, self._type, self._source, self._thread, \
+            self._details = self._parse_fields(unf_str, type)
+        self._additional_logs = []
         self._set_config()
 
     def __str__(self):
         """Formatted string representing Standard VLogLine."""
         fields = []
         fields.append(str(self.datetime))
-        fields.append(str(self.type))
-        fields.append(str(self.source))
-        fields.append(str(self.thread))
-        fields.append(str(self.details))
+        fields.append(str(self._type))
+        fields.append(str(self._source))
+        fields.append(str(self._thread))
+        fields.append(str(self._details))
         output = " ".join(x for x in fields if x)
 
-        if self.CONDENSE_LINE and not self.details.is_api_call():
+        if self.CONDENSE_LINE and not self._details._is_api_call():
             line_len = self.MAX_LINE_LEN
             if self.COLORIZE:
-                line_len += Colorize.esc_len(self.type.get_type())
+                line_len += Colorize.esc_len(self._type.logtype)
             if len(output) > line_len:
                 output = "".join([output[:line_len - 3], "..."])
 
-        if self.additional_logs:
-            output = "\n".join([output].extend(self.additional_logs))
+        if self._additional_logs:
+            output = "\n".join([output].extend(self._additional_logs))
         return output
 
     def _parse_fields(self, unf_str, type=None):
@@ -169,24 +169,32 @@ class Standard(Base):
     def _set_config(self):
         """Sets the individual field options such as color and display."""
         if self.COLORIZE:
-            self.type.colorize = True
-            self.details.colorize = True
+            self._type.colorize = True
+            self._details.colorize = True
 
         if self.SHORTEN_FIELDS:
-            self.type.shorten_type = True
-            self.source.shorten_amount = self.SHORTEN_FIELDS
-            self.thread.shorten_amount = self.SHORTEN_FIELDS
+            self._type.shorten_type = True
+            self._source.shorten_amount = self.SHORTEN_FIELDS
+            self._thread.shorten_amount = self.SHORTEN_FIELDS
 
         if self.FORMAT_API:
-            self.details.format_api_calls()
+            self._details.format_api_calls()
 
         # Fields to display
-        self.datetime.display_date = True if VLogStdFields.DATE in self.DISPLAY_FIELDS else False
-        self.datetime.display_time = True if VLogStdFields.TIME in self.DISPLAY_FIELDS else False
-        self.type.display = True if VLogStdFields.TYPE in self.DISPLAY_FIELDS else False
-        self.source.display = True if VLogStdFields.SOURCE in self.DISPLAY_FIELDS else False
-        self.thread.display = True if VLogStdFields.THREAD in self.DISPLAY_FIELDS else False
-        self.details.display = True if VLogStdFields.DETAILS in self.DISPLAY_FIELDS else False
+        self._datetime.display_date = True if VLogStdFields.DATE in self.DISPLAY_FIELDS else False
+        self._datetime.display_time = True if VLogStdFields.TIME in self.DISPLAY_FIELDS else False
+        self._type.display = True if VLogStdFields.TYPE in self.DISPLAY_FIELDS else False
+        self._source.display = True if VLogStdFields.SOURCE in self.DISPLAY_FIELDS else False
+        self._thread.display = True if VLogStdFields.THREAD in self.DISPLAY_FIELDS else False
+        self._details.display = True if VLogStdFields.DETAILS in self.DISPLAY_FIELDS else False
+
+    @property
+    def logtype(self):
+        return self._type.logtype
+
+    @property
+    def datetime(self):
+        return self._datetime.datetime
 
 
 class Traceback(Base):
@@ -212,7 +220,7 @@ class Traceback(Base):
         :param str unf_str_list: Unformatted VL log line
         """
         self.leading_chars = ""
-        self.type = VLogType.TRACEBACK
+        self._type = VLogType.TRACEBACK
         self.steps, self.exception = self._parse_fields(unf_str_list)
         self._set_config()
 
@@ -254,8 +262,12 @@ class Traceback(Base):
         """Sets the individual field options such as color and display."""
         if self.COLORIZE:
             for step in self.steps:
-                step.set_colorize(True)
-            self.exception.colorize = True
+                step.colorize = True
+            self.exception._colorize = True
+
+    @property
+    def logtype(self):
+        return self._type.logtype
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -263,6 +275,13 @@ class Header(Base):
     """Abstract base class for all other header log line elements."""
 
     BORDER_CHAR = "="
+
+    def __init__(self):
+        self._type = None
+        self._start_time = None
+        self._end_time = None
+        self._errors = []
+        self._status = "Passed"
 
     def _add_border(self, header_str):
         """Return the header string with borders.
@@ -272,13 +291,16 @@ class Header(Base):
         border = self.BORDER_CHAR * self.get_max_line_len()
         header = "\n".join([border, header_str, border])
         if self.COLORIZE:
-            header = Colorize.type_apply(header, self.type)
+            header = Colorize.type_apply(header, self._type)
         return header
 
     @classmethod
     def get_border_char(cls):
         """Return the character used for the border."""
         return cls.BORDER_CHAR
+
+    def add_error(self, error):
+        self._errors.append(error)
 
     @abc.abstractmethod
     def get_id(self):
@@ -317,8 +339,9 @@ class Header(Base):
     def status(self, status):
         self._status = status
 
-    def add_error(self, error):
-        self._errors.append(error)
+    @property
+    def logtype(self):
+        return self._type
 
 
 class SuiteHeader(Header):
@@ -364,11 +387,8 @@ class SuiteHeader(Header):
 
         :param str unf_str: Unformatted VL log line
         """
-        self.type = VLogType.SUITE_H
-        self._start_time = None
-        self._end_time = None
-        self._errors = []
-        self._status = "Passed"
+        super(SuiteHeader, self).__init__()
+        self._type = VLogType.SUITE_H
         self.suite_name, self.desc = self._parse_fields(unf_str)
 
     def __str__(self):
@@ -387,10 +407,9 @@ class SuiteHeader(Header):
         """Return string identifying suite header."""
         suite_name = self.suite_name
         if self.COLORIZE:
-            suite_name = Colorize.type_apply(suite_name, self.type)
+            suite_name = Colorize.type_apply(suite_name, self._type)
         header_id = "{}: {}".format(suite_name, self.desc)
         return header_id
-
 
     def _parse_fields(self, unf_str):
         """Parse the string into the suite header fields.
@@ -454,11 +473,8 @@ class TestCaseHeader(Header):
 
         :param str unf_str: Unformatted VL log line
         """
-        self.type = VLogType.TEST_CASE_H
-        self._start_time = None
-        self._end_time = None
-        self._errors = []
-        self._status = "Passed"
+        super(TestCaseHeader, self).__init__()
+        self._type = VLogType.TEST_CASE_H
         self.test_case_name, self.number, \
             self.desc = self._parse_fields(unf_str)
 
@@ -477,7 +493,7 @@ class TestCaseHeader(Header):
         """Return string identifying test case header."""
         test_case_id = "Test Case {}".format(self.number)
         if self.COLORIZE:
-            test_case_id = Colorize.type_apply(test_case_id, self.type)
+            test_case_id = Colorize.type_apply(test_case_id, self._type)
         header_id = "{}: {}".format(test_case_id, self.desc)
         return header_id
 
@@ -540,11 +556,8 @@ class StepHeader(Header):
 
         :param str unf_str: Unformatted VL log line
         """
-        self.type = VLogType.STEP_H
-        self._start_time = None
-        self._end_time = None
-        self._errors = []
-        self._status = "Passed"
+        super(StepHeader, self).__init__()
+        self._type = VLogType.STEP_H
         self.test_case_name, self.number, self.action, \
             self.expected_results = self._parse_fields(unf_str)
 
@@ -568,7 +581,7 @@ class StepHeader(Header):
         """Return string identifying step header."""
         step_id = "Step {}".format(self.number)
         if self.COLORIZE:
-            step_id = Colorize.type_apply(step_id, self.type)
+            step_id = Colorize.type_apply(step_id, self._type)
         header_id = "{}: {}".format(step_id, self.action)
         return header_id
 
@@ -641,11 +654,8 @@ class GeneralHeader(Header):
 
         :param str unf_str: Unformatted VL log line
         """
-        self.type = VLogType.GENERAL_H
-        self._start_time = None
-        self._end_time = None
-        self._errors = []
-        self._status = "Passed"
+        super(GeneralHeader, self).__init__()
+        self._type = VLogType.GENERAL_H
         self.desc = self._parse_fields(unf_str)
 
     def __str__(self):
@@ -661,7 +671,7 @@ class GeneralHeader(Header):
         """Return string identifying step header."""
         header_id = "{}".format(self.desc)
         if self.COLORIZE:
-            header_id = Colorize.type_apply(header_id, self.type)
+            header_id = Colorize.type_apply(header_id, self._type)
         return header_id
 
     def _parse_fields(self, unf_str):

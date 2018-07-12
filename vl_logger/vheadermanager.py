@@ -18,8 +18,8 @@ class HeaderManager:
         self._curr_testcase = None
         self._curr_step = None
 
-        self.root = Node(vlogline.GeneralHeader("=Test Summary="))
-        self._header_tree = [self.root]
+        self._root = Node(vlogline.GeneralHeader("=Test Summary="))
+        self._header_tree = [self._root]
 
         self._store_tc_name = tc_name
         self._store_tc_num = tc_num
@@ -29,10 +29,10 @@ class HeaderManager:
         """Return a string containing a summary of all the headers."""
         str_format = "%H:%M:%S.%f"
 
-        self.calc_end_time()
+        self._calc_end_time()
 
         output = []
-        for pre, fill, node in RenderTree(self.root):
+        for pre, fill, node in RenderTree(self._root):
             # Title
             output.append("%s%s" % (pre, node.name.get_id()))
 
@@ -46,7 +46,7 @@ class HeaderManager:
             if errors:
                 error_str = []
                 for error in errors:
-                    error_time = error.datetime.get_datetime().strftime(str_format)
+                    error_time = error.datetime.strftime(str_format)
                     error_str.append(error_time)
                 error_times = ", ".join(error_str)
                 status = " ".join([status, "at", error_times])
@@ -58,7 +58,7 @@ class HeaderManager:
         return "\n".join(output).encode('utf-8')
 
     def add_general(self, header):
-        self._curr_general = self._add_node(header, self.root)
+        self._curr_general = self._add_node(header, self._root)
         self._curr_suite = None
         self._curr_testcase = None
         self._curr_step = None
@@ -75,27 +75,20 @@ class HeaderManager:
     def add_step(self, header):
         self._curr_step = self._add_node(header, self._header_tree[self._curr_testcase])
 
+    def add_error(self, error):
+        """Associate an error with a header."""
+        curr_node = self._header_tree[-1]
+        curr_node.name.add_error(error)
+        self._update_tree_status(curr_node, "Failed")
+
     def start_time(self, start_time, root=False):
         """Set the start time of the current ``VHeader`` object."""
         if root:
-            root_header = self.root.name
+            root_header = self._root.name
             root_header.start_time = start_time
         else:
             header = self.current_header()
             header.start_time = start_time
-
-    def is_test_start_time_added(self):
-        """Return False if the initial test start time hasn't been specified."""
-        return bool(self.root.name.start_time)
-
-    def end_time(self, end_time, root=False):
-        """Set the end time of the current ``VHeader`` object."""
-        if root:
-            root_header = self.root.name
-            root_header.end_time = end_time
-        else:
-            header = self.current_header()
-            header.end_time = end_time
 
     def current_header(self):
         """Return the current ``VHeader`` object."""
@@ -104,31 +97,6 @@ class HeaderManager:
     def previous_header(self):
         """Return the previous ``VHeader`` object."""
         return self._header_tree[-2].name
-
-    def add_error(self, error):
-        """Associate an error with a header."""
-        curr_node = self._header_tree[-1]
-        curr_node.name.add_error(error)
-        self._update_tree_status(curr_node, "Failed")
-
-    def _update_tree_status(self, node, status):
-        node.name.status = status
-        if not node.is_root:
-            self._update_tree_status(node.parent, status)
-
-    def calc_end_time(self):
-        """Calulates the end time for each header."""
-        self._recursive_calc_end_time(self.root)
-
-    def _add_node(self, header, parent):
-        """Add header node to tree and return index."""
-        node = Node(header, parent=parent)
-        self._header_tree.append(node)
-        return len(self._header_tree) - 1
-
-    def _get_header(self, index):
-        """Return the ``VHeader`` object at the specified index."""
-        return self._header_tree[index].name
 
     def in_specified_testcase(self):
         """Determines what logs are to be displayed based on test case and step specified.
@@ -173,7 +141,7 @@ class HeaderManager:
 
         :return: Original formatted log if specified to print, otherwise None.
         """
-        log_type = fmt_log.type
+        log_type = fmt_log.logtype
         if log_type == VLogType.GENERAL_H:
             self.add_general(fmt_log)
         elif log_type == VLogType.SUITE_H:
@@ -185,6 +153,38 @@ class HeaderManager:
 
         output = fmt_log if self.in_specified_testcase() else None
         return output
+
+    def is_test_start_time_added(self):
+        """Return False if the initial test start time hasn't been specified."""
+        return bool(self._root.name.start_time)
+
+    def end_time(self, end_time, root=False):
+        """Set the end time of the current ``VHeader`` object."""
+        if root:
+            root_header = self._root.name
+            root_header.end_time = end_time
+        else:
+            header = self.current_header()
+            header.end_time = end_time
+
+    def _update_tree_status(self, node, status):
+        node.name.status = status
+        if not node.is_root:
+            self._update_tree_status(node.parent, status)
+
+    def _calc_end_time(self):
+        """Calulates the end time for each header."""
+        self._recursive_calc_end_time(self._root)
+
+    def _add_node(self, header, parent):
+        """Add header node to tree and return index."""
+        node = Node(header, parent=parent)
+        self._header_tree.append(node)
+        return len(self._header_tree) - 1
+
+    def _get_header(self, index):
+        """Return the ``VHeader`` object at the specified index."""
+        return self._header_tree[index].name
 
     # Endtime Functions
     #####################################################################################################

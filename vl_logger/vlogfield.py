@@ -18,16 +18,39 @@ from vl_logger.vutils import VPatterns
 class LogField(object):
     """Abstract base class used for representing fields in log lines."""
 
+    def __init__(self):
+        """Initialize base class."""
+        self._display = True
+        self._colorize = False
+
     @abc.abstractmethod
     def __str__(self):
         """Abstract method for returning ``str`` of field."""
+
+    @property
+    def display(self):
+        return self._display
+
+    @display.setter
+    def display(self, value=True):
+        if isinstance(value, bool):
+            self._display = value
+
+    @property
+    def colorize(self):
+        return self._colorize
+
+    @colorize.setter
+    def colorize(self, value=True):
+        if isinstance(value, bool):
+            self._colorize = value
 
 
 class Datetime(LogField):
     """Represents both date and time field."""
 
-    DATE_FORMAT = "%Y-%m-%d"
-    TIME_FORMAT = "%H:%M:%S.%f"
+    _DATE_FORMAT = "%Y-%m-%d"
+    _TIME_FORMAT = "%H:%M:%S.%f"
 
     def __init__(self, datetime_token):
         """Initialize datetime field from ``str`` token.
@@ -35,30 +58,53 @@ class Datetime(LogField):
         :param str datetime_token: Date and time token from VL log field
         :raise ValueError: On value that doesn't follow date and time format
         """
+        super(Datetime, self).__init__()
         try:
-            format = " ".join([self.DATE_FORMAT, self.TIME_FORMAT])
-            self.datetime = datetime.strptime(datetime_token, format)
-            self.display_date = True
-            self.display_time = True
+            format = " ".join([self._DATE_FORMAT, self._TIME_FORMAT])
+            self._datetime = datetime.strptime(datetime_token, format)
+            self._display_date = True
+            self._display_time = True
         except ValueError:
             msg = "The datetime token '" + datetime_token + "' is not vaild."
             raise ValueError(msg)
 
     def __str__(self):
         """Convert date and time fields to ``str`` following vl formatting."""
-        if self.display_date and self.display_time:
-            str_format = " ".join([self.DATE_FORMAT, self.TIME_FORMAT])
-        elif self.display_time:
-            str_format = self.TIME_FORMAT
-        elif self.display_date:
-            str_format = self.DATE_FORMAT
+        if self._display:
+            if self._display_date and self._display_time:
+                str_format = " ".join([self._DATE_FORMAT, self._TIME_FORMAT])
+            elif self._display_time:
+                str_format = self._TIME_FORMAT
+            elif self._display_date:
+                str_format = self._DATE_FORMAT
+            else:
+                return ""
+            return self._datetime.strftime(str_format)
         else:
             return ""
-        return self.datetime.strftime(str_format)
 
-    def get_datetime(self):
+    @property
+    def datetime(self):
         """Return the ``datetime`` object of the field."""
-        return self.datetime
+        return self._datetime
+
+    @property
+    def display_date(self):
+        return self._display_date
+
+    @display_date.setter
+    def display_date(self, value=True):
+        if isinstance(value, bool):
+            self._display_date = value
+
+    @property
+    def display_time(self):
+        return self._display_time
+
+    @display_time.setter
+    def display_time(self, value=True):
+        if isinstance(value, bool):
+            self._display_time = value
 
 
 class Type(LogField):
@@ -70,29 +116,37 @@ class Type(LogField):
         :param VLogType type: Type of log
         :raise ValueError: On types not in ``VLogType``
         """
-        self.colorize = False
-        self.display = True
-        self.shorten_type = False
+        super(Type, self).__init__()
+        self._shorten_type = False
         if type in list(VLogType):
-            self.type = type
+            self._type = type
         else:
             raise ValueError("Invalid type '" + type + "'")
 
     def __str__(self):
         """Convert type field to ``str``."""
-        if self.shorten_type:
-            output = self.type.value
+        if self._shorten_type:
+            output = self._type.value
         else:
-            output = self.type.name
-        if not self.display:
+            output = self._type.name
+        if not self._display:
             output = ""
-        if self.colorize and output:
-            output = Colorize.type_apply(output, self.type)
+        if self._colorize and output:
+            output = Colorize.type_apply(output, self._type)
         return output
 
-    def get_type(self):
-        """Return the ``VLogType`` of the field."""
-        return self.type
+    @property
+    def logtype(self):
+        return self._type
+
+    @property
+    def shorten_type(self):
+        return self._shorten_type
+
+    @shorten_type.setter
+    def shorten_type(self, value=True):
+        if isinstance(value, bool):
+            self._shorten_type = value
 
 
 class Source(LogField):
@@ -104,6 +158,7 @@ class Source(LogField):
         :param str source_token: Source token from VL log
         :raise ValueError: On value that doesn't follow source format
         """
+        super(Source, self).__init__()
         try:
             source_token = source_token.strip("[]")
             module, _, line_number = source_token.partition(":")
@@ -112,28 +167,36 @@ class Source(LogField):
         except ValueError:
             msg = "The source token '" + source_token + "' is not valid."
             raise ValueError(msg)
-        self.module = module
-        self.shorten_amount = 0
-        self.line_number = int(line_number)
-        self.display = True
+        self._module = module
+        self._line_number = int(line_number)
+        self._shorten_amount = 0
 
     def __str__(self):
         """Convert source field to ``str``."""
         output = ""
-        if self.display:
-            output = "".join([self.module, ":", str(self.line_number)])
-            if self.shorten_amount and len(output) > self.shorten_amount - 2:
-                output = "".join([output[:self.shorten_amount - 3], "..."])
+        if self._display:
+            output = "".join([self._module, ":", str(self._line_number)])
+            if self._shorten_amount and len(output) > self._shorten_amount - 2:
+                output = "".join([output[:self._shorten_amount - 3], "..."])
             output = "".join(["[", output, "]"])
         return output
 
-    def get_module(self):
-        """Return the ``str`` module of the field."""
-        return self.module
+    @property
+    def module(self):
+        return self._module
 
-    def get_line_number(self):
-        """Return the ``int`` line number of the field."""
-        return self.line_number
+    @property
+    def line_number(self):
+        return self._line_number
+
+    @property
+    def shorten_amount(self):
+        return self._shorten_amount
+
+    @shorten_amount.setter
+    def shorten_amount(self, value=0):
+        if isinstance(value, int):
+            self._shorten_amount = value
 
 
 class Thread(LogField):
@@ -145,6 +208,7 @@ class Thread(LogField):
         :param str thread_token: Thread token from VL log
         :raise ValueError: On value that doesn't follow thread format
         """
+        super(Thread, self).__init__()
         try:
             thread_token = thread_token.strip("[]")
             process, _, thread = thread_token.partition(":")
@@ -153,28 +217,36 @@ class Thread(LogField):
         except ValueError:
             msg = "The thread token '" + thread_token + "' is not valid."
             raise ValueError(msg)
-        self.shorten_amount = 0
-        self.process = process
-        self.thread = thread
-        self.display = True
+        self._process = process
+        self._thread = thread
+        self._shorten_amount = 0
 
     def __str__(self):
         """Convert thread field to ``str``."""
         output = ""
-        if self.display:
-            output = "".join([self.process, ":", self.thread])
-            if self.shorten_amount and len(output) > self.shorten_amount - 2:
-                output = "".join([output[:self.shorten_amount - 3], "..."])
+        if self._display:
+            output = "".join([self._process, ":", self._thread])
+            if self._shorten_amount and len(output) > self._shorten_amount - 2:
+                output = "".join([output[:self._shorten_amount - 3], "..."])
             output = "".join(["[", output, "]"])
         return output
 
-    def get_process(self):
-        """Return the ``str`` process of the field."""
-        return self.process
+    @property
+    def process(self):
+        return self._process
 
-    def get_thread(self):
-        """Return the ``str`` thread of the field."""
-        return self.thread
+    @property
+    def thread(self):
+        return self._thread
+
+    @property
+    def shorten_amount(self):
+        return self._shorten_amount
+
+    @shorten_amount.setter
+    def shorten_amount(self, value=0):
+        if isinstance(value, int):
+            self._shorten_amount = value
 
 
 class Details(LogField):
@@ -182,95 +254,96 @@ class Details(LogField):
 
     def __init__(self, details_token):
         """Initialize thread field from ``str`` token."""
+        super(Details, self).__init__()
 
-        self.details = details_token
-        self.display = True
-        self.colorize = False
+        self._details = details_token
 
         # Only used when format_api_calls() is called.
-        self.request_method = None
-        self.request_url = None
-        self.request_id = None
-        self.request_params = None
-        self.response_id = None
-        self.response_result = None
-        self.response_type = None
+        self._request_method = None
+        self._request_url = None
+        self._request_id = None
+        self._request_params = None
+        self._response_id = None
+        self._response_result = None
+        self._response_type = None
 
     def __str__(self):
         """Convert details field to ``str``."""
         output = ""
-        if self.display:
-            if self.is_api_request():
+        if self._display:
+            if self._is_api_request():
                 output = self._api_request_str()
-            elif self.is_api_response():
+            elif self._is_api_response():
                 output = self._api_response_str()
             else:
-                output = self.details
+                output = self._details
         return output
 
     def format_api_calls(self):
         """When converted to string, the API requests and responses will be formatted."""
-        m = re.match(VPatterns.get_std_details_api(), self.details)
+        m = re.match(VPatterns.get_std_details_api(), self._details)
         if m:
             if m.group(1):
-                request = re.match(VPatterns.get_std_details_request(), self.details)
+                request = re.match(VPatterns.get_std_details_request(), self._details)
                 if request.group(2) != 'None':
                     request_json = json.loads(request.group(2))
-                    self.request_url = request.group(1)
-                    self.request_id = int(request_json['id'])
-                    self.request_method = request_json['method']
-                    self.request_params = request_json['params']
+                    self._request_url = request.group(1)
+                    self._request_id = int(request_json['id'])
+                    self._request_method = request_json['method']
+                    self._request_params = request_json['params']
             else:
-                response = re.match(VPatterns.get_std_details_response(), self.details)
+                response = re.match(VPatterns.get_std_details_response(), self._details)
                 string = response.group(1)
                 json_response = json.loads(string)
-                self.response_id = json_response['id']
+                self._response_id = json_response['id']
                 if 'result' in json_response:
-                    self.response_result = json_response['result']
-                    self.response_type = 'Result'
+                    self._response_result = json_response['result']
+                    self._response_type = 'Result'
                 elif 'error' in json_response:
-                    self.response_result = json_response['error']
-                    self.response_type = 'Error'
+                    self._response_result = json_response['error']
+                    self._response_type = 'Error'
 
-    def is_api_request(self):
+    def _is_api_request(self):
         """Return ``True`` if detail contains an API request."""
-        return bool(self.request_id)
+        return bool(self._request_id)
 
-    def is_api_response(self):
+    def _is_api_response(self):
         """Return ``True`` if detail contains an API response."""
-        return bool(self.response_id)
+        return bool(self._response_id)
 
-    def is_api_call(self):
+    def _is_api_call(self):
         """Return ``True`` if detail contains an API call."""
-        return self.is_api_request() or self.is_api_response()
+        return self._is_api_request() or self._is_api_response()
 
     def _api_request_str(self):
+        """Return API request in as a formatted string."""
         json_post = "JSON-RPC-POST "
         req = "request"
-        id = "id: {}".format(self.request_id)
-        if self.colorize:
+        id = "id: {}".format(self._request_id)
+        if self._colorize:
             json_post = Colorize.apply(json_post, 'json-post')
             req = Colorize.apply(req, 'api-request')
             id = Colorize.apply(id, 'api-id')
 
         output = ["\n  {}{} ({})".format(json_post, req, id)]
-        output.append("    Method: {}".format(self.request_method))
-        output.append("    URL: {}".format(self.request_url))
-        params = pprint.pformat(self.request_params) if self.request_params else None
+        output.append("    Method: {}".format(self._request_method))
+        output.append("    URL: {}".format(self._request_url))
+        params = pprint.pformat(self._request_params) if self._request_params else None
         output.append("""    Params: {}""".format(params))
         return "\n".join(output)
 
     def _api_response_str(self):
+        """Return API response in as a formatted string."""
         json_post = "JSON-RPC-POST "
         res = "response"
-        id = "id: {}".format(self.response_id)
-        if self.colorize:
+        id = "id: {}".format(self._response_id)
+        if self._colorize:
             json_post = Colorize.apply(json_post, 'json-post')
             res = Colorize.apply(res, 'api-response')
             id = Colorize.apply(id, 'api-id')
 
-        output = ["\n  {}{} ({}): {}".format(json_post, res, id, self.response_type)]
-        result = pprint.pformat(self.response_result) if self.response_result else None
+        output = ["\n  {}{} ({}): {}".format(json_post, res, id, self._response_type)]
+        result = pprint.pformat(self._response_result) if self._response_result else None
         output.append("""    {}""".format(result))
         return "\n".join(output)
 
@@ -280,49 +353,50 @@ class TracebackStep(LogField):
 
     def __init__(self, step_token, leading_chars=""):
         """Initialize step fields from ``str`` token."""
-        self.colorize = False
+        super(TracebackStep, self).__init__()
         m = re.match(VPatterns.TRACEBACK_STEP_PATTERN, step_token)
-        self.leading_chars = leading_chars
+        self._leading_chars = leading_chars
         if m:
-            self.file = m.group(1)
-            self.line_num = int(m.group(2))
-            self.function = m.group(3)
-            self.line = m.group(4)
+            self._file = m.group(1)
+            self._line_num = int(m.group(2))
+            self._function = m.group(3)
+            self._line = m.group(4)
         else:
-            self.file = ""
-            self.line_num = 0
-            self.function = ""
-            self.line = ""
+            self._file = ""
+            self._line_num = 0
+            self._function = ""
+            self._line = ""
 
     def __str__(self):
         """Convert traceback step field to ``str``."""
-        line_num = self.line_num
-        path, filename = os.path.split(self.file)
-        funct = self.function
-        if self.colorize:
+        line_num = self._line_num
+        path, filename = os.path.split(self._file)
+        funct = self._function
+        if self._colorize:
             line_num = Colorize.apply(str(line_num), 'traceback-line-num')
             funct = Colorize.apply(funct, 'traceback-funct')
             filename = Colorize.apply(filename, 'traceback-filename')
         tb_file = os.path.join(path, filename)
-        output = "{0}  File \"{1}\", line {2}, in {3}\n{0}    {4}".format(self.leading_chars,
+        output = "{0}  File \"{1}\", line {2}, in {3}\n{0}    {4}".format(self._leading_chars,
                                                                           tb_file, line_num,
-                                                                          funct, self.line)
+                                                                          funct, self._line)
         return output
 
-    def get_file(self):
-        return self.file
+    @property
+    def file(self):
+        return self._file
 
-    def get_line_num(self):
-        return self.line_num
+    @property
+    def line_num(self):
+        return self._line_num
 
-    def get_function(self):
-        return self.function
+    @property
+    def function(self):
+        return self._function
 
-    def get_line(self):
-        return self.line
-
-    def set_colorize(self, set=True):
-        self.colorize = set
+    @property
+    def line(self):
+        return self._line
 
 
 class TracebackException(LogField):
@@ -330,28 +404,32 @@ class TracebackException(LogField):
 
     def __init__(self, exception_token, leading_chars=""):
         """Initialize exception field from ``str`` token."""
-        self.colorize = False
+        super(TracebackException, self).__init__()
+        self._colorize = False
         m = re.match(VPatterns.TRACEBACK_EXCEPTION_PATTERN, exception_token)
-        self.leading_chars = leading_chars
+        self._leading_chars = leading_chars
         if m:
-            self.exception = m.group(1)
-            self.desc = m.group(2)
+            self._exception = m.group(1)
+            self._desc = m.group(2)
         else:
-            self.exception = ""
-            self.desc = ""
+            self._exception = ""
+            self._desc = ""
 
     def __str__(self):
         """Convert traceback exception field to ``str``."""
-        exception = self.exception
-        desc = self.desc
-        if self.colorize:
+        exception = self._exception
+        desc = self._desc
+        if self._colorize:
             exception = Colorize.apply(exception, 'traceback-exception')
             desc = Colorize.apply(desc, 'traceback-description')
-        output = "{0}{1}: {2}".format(self.leading_chars, exception, desc)
+        output = "{0}{1}: {2}".format(self._leading_chars, exception, desc)
         return output
 
-    def get_exception(self):
-        return self.exception
+    @property
+    def exception(self):
+        return self._exception
 
-    def get_desc(self):
-        return self.desc
+    @property
+    def desc(self):
+        return self._desc
+

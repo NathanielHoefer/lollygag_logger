@@ -131,7 +131,7 @@ class Standard(Base):
     def __str__(self):
         """Formatted string representing Standard VLogLine."""
         fields = []
-        fields.append(str(self.datetime))
+        fields.append(str(self._datetime))
         fields.append(str(self._type))
         fields.append(str(self._source))
         fields.append(str(self._thread))
@@ -146,7 +146,8 @@ class Standard(Base):
                 output = "".join([output[:line_len - 3], "..."])
 
         if self._additional_logs:
-            output = "\n".join([output].extend(self._additional_logs))
+            additional_str = [str(log) for log in self._additional_logs]
+            output = "\n".join([output] + additional_str)
         return output
 
     def _parse_fields(self, unf_str, type=None):
@@ -196,6 +197,8 @@ class Standard(Base):
     def datetime(self):
         return self._datetime.datetime
 
+    def add_additional_logs(self, logs):
+        self._additional_logs.append(logs)
 
 class Traceback(Base):
     """VL Traceback Log.
@@ -267,7 +270,7 @@ class Traceback(Base):
 
     @property
     def logtype(self):
-        return self._type.logtype
+        return self._type
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -684,9 +687,14 @@ class Other(Base):
 
     def __init__(self, unf_str):
         self.desc = unf_str
+        self._type = VLogType.OTHER
 
     def __str__(self):
         return self.desc
 
     def _parse_fields(self, unf_str):
         pass
+
+    @property
+    def logtype(self):
+        return self._type

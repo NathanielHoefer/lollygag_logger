@@ -9,7 +9,7 @@ KILL_SIGNAL = "Stop command issued. Reading and Formatting Logs Interrupted " \
               "and Stopped."
 
 
-class LollygagLogger:
+class LollygagLogger(object):
     """Primary class that reads log lines individually from a stream handle
     and handles formatting those lines based on the LogLine class and
     LogFormatter used.
@@ -79,7 +79,7 @@ class LollygagLogger:
 
 
 @six.add_metaclass(abc.ABCMeta)
-class LogFormatter:
+class LogFormatter(object):
     """Abstract base class\used in the LollygagLogger to format incoming
     LogLine objects.
     """
@@ -103,7 +103,7 @@ class LogFormatter:
 
 
 @six.add_metaclass(abc.ABCMeta)
-class LogLine:
+class LogLine(object):
     """Abstract base class used in the LollygagLogger to tokenize a single
     log.
     """

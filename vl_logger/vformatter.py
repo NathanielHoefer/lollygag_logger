@@ -7,7 +7,7 @@ from vl_logger.lollygag_logger import LogFormatter
 from vl_logger.vutils import VLogType
 from vl_logger.vutils import VPatterns
 from vl_logger import vlogfield
-from vl_logger.vheadermanager import HeaderManager
+from vl_logger.vmanagers import HeaderManager, LogManager
 
 
 class VFormatter(LogFormatter):
@@ -55,20 +55,24 @@ class VFormatter(LogFormatter):
         :ivar [str] stored_logs: Cache of log lines that are waiting to be processed.
             Used for mutli-line logs such as tracebacks.
         :ivar VLogType curr_log_type: Stores the current log type.
+
         :ivar str curr_tc_name: Name of the current test case.
         :ivar int curr_tc_number: Number of the current test case.
         :ivar int curr_step_number: Number of the current step within a test case.
         """
+        self.last_line_empty = False
+
+        # Traceback and Header member variables
+        self.stored_logs = []  # Temp location for header and traceback lines
         self.border_flag = ""
         self.traceback_flag = False
         self.tb_leading_char = ""
-        self.last_line_empty = False
-        self.stored_logs = []
-        self.curr_log_type = None
 
-        self.header_man = HeaderManager(tc_name=self.DISPLAY_TESTCASE_NAME,
-                                        tc_num=self.DISPLAY_TESTCASE_NUM,
-                                        step=self.DISPLAY_STEP_NUM)
+        self._hm = HeaderManager(tc_name=self.DISPLAY_TESTCASE_NAME,
+                                 tc_num=self.DISPLAY_TESTCASE_NUM,
+                                 step=self.DISPLAY_STEP_NUM)
+        self._lm = LogManager(display_log_types=self.DISPLAY_LOG_TYPES)
+
         self._prev_fmt_log = None
         self._curr_time = None
 
@@ -84,33 +88,26 @@ class VFormatter(LogFormatter):
         :returns: Non-empty str if raw log not classified.
         :returns: None if log line is not to be printed.
         """
-        fmt_logs = []
         if unf_str.isspace():
-            fmt_logs.append("")  # Print a blank line
-            return fmt_logs
+            self._lm.enqueue_log("")  # Print a blank line
+            return self._lm.flush_logs()
 
         # Handle multi-line logs: headers and tracebacks
         unf_str = self._handle_raw_header(unf_str.rstrip("\n"))
-        self.curr_log_type = VLogType.get_type(unf_str)
+        self._lm.calc_log_type(unf_str)
         unf_str = self._handle_raw_traceback(unf_str)
 
         # Discard logs based on type that are not to be displayed
-        if self.curr_log_type and self.curr_log_type not in self.DISPLAY_LOG_TYPES:
-            # Store Start time
-            self._store_curr_time(unf_str)
-            self._prev_fmt_log = None
-            fmt_logs.append(None)  # Don't print anything
-            return fmt_logs
+        if not self._display_log(unf_str):
+            return []  # Don't print anything
 
         # Create LogLine objects
-        fmt_log = self._create_log_line(unf_str, self.curr_log_type)
+        fmt_log = self._create_log_line(unf_str, self._lm.curr_log_type)
         if fmt_log:
-            fmt_logs.append(fmt_log)  # Print classified log
-            return fmt_logs
-        elif self.header_man.in_specified_testcase():
-            fmt_logs.append(unf_str)  # Print unclassified log
-            return fmt_logs
-        return fmt_logs
+            self._lm.enqueue_log(fmt_log)  # Print classified log
+        elif self._hm.in_specified_testcase():
+            self._lm.enqueue_log(unf_str)  # Print unclassified log
+        return self._lm.dequeue_logs()
 
     def send(self, fmt_logs):
         """Prints each of the formatted logs passed.
@@ -128,10 +125,14 @@ class VFormatter(LogFormatter):
 
     def complete(self):
         """Prints summary if requested."""
+
+        # Print any remaining logs
+        self.send(self._lm.flush_logs())
+
         if self.SUMMARY:
             try:
-                self.header_man.end_time(self.curr_time, root=True)
-                summary = self.header_man.generate_summary()
+                self._hm.end_time(self.curr_time, root=True)
+                summary = self._hm.generate_summary()
                 print
                 print summary
             except AttributeError:
@@ -187,6 +188,15 @@ class VFormatter(LogFormatter):
         self.stored_logs = []
         return logs
 
+    def _display_log(self, unf_str):
+        """Return True if the log is specified to be displayed, else False."""
+        if not self._lm.display_current_log():
+            self._store_curr_time(unf_str)
+            self._prev_fmt_log = None
+            return False
+        else:
+            return True
+
     def _set_log_len(self):
         console_width = 0
         if self.CONSOLE_WIDTH and sys.stdin.isatty():
@@ -210,7 +220,7 @@ class VFormatter(LogFormatter):
 
         output = None
         # Standard Log Line
-        if log_type in VPatterns.std_log_types() and self.header_man.in_specified_testcase():
+        if log_type in VPatterns.std_log_types() and self._hm.in_specified_testcase():
             output = vlogline.Standard(unf_str, log_type)
 
             # Store Start time
@@ -218,28 +228,28 @@ class VFormatter(LogFormatter):
 
             # Associate Error with Header
             if self.SUMMARY and output and output.logtype == VLogType.ERROR:
-                self.header_man.add_error(output)
+                self._hm.add_error(output)
         # Traceback Log Lines
-        elif log_type == VLogType.TRACEBACK and self.header_man.in_specified_testcase():
+        elif log_type == VLogType.TRACEBACK and self._hm.in_specified_testcase():
             output = vlogline.Traceback(unf_str)
         # Step Header
         elif log_type == VLogType.STEP_H:
             fmt_log = vlogline.StepHeader(unf_str)
-            output = self.header_man.update_current_log(fmt_log)
+            output = self._hm.update_current_log(fmt_log)
         # Test Case Header
         elif log_type == VLogType.TEST_CASE_H:
             fmt_log = vlogline.TestCaseHeader(unf_str)
-            output = self.header_man.update_current_log(fmt_log)
+            output = self._hm.update_current_log(fmt_log)
         # Suite Header
         elif log_type == VLogType.SUITE_H:
             fmt_log = vlogline.SuiteHeader(unf_str)
-            output = self.header_man.update_current_log(fmt_log)
+            output = self._hm.update_current_log(fmt_log)
         # General Header
         elif log_type == VLogType.GENERAL_H:
             fmt_log = vlogline.GeneralHeader(unf_str)
-            output = self.header_man.update_current_log(fmt_log)
+            output = self._hm.update_current_log(fmt_log)
         # Other Log Line
-        elif log_type == VLogType.OTHER and self.header_man.in_specified_testcase():
+        elif log_type == VLogType.OTHER and self._hm.in_specified_testcase():
             output = vlogline.Other(unf_str)
 
         if output:
@@ -318,7 +328,8 @@ class VFormatter(LogFormatter):
         """
         output = ""
         # First line of traceback ('Traceback (most recent call last):')
-        if self.curr_log_type == VLogType.TRACEBACK:
+        if self._lm.curr_log_type == VLogType.TRACEBACK:
+            self._lm.hold = True
             self.tb_leading_char = re.match(VPatterns.get_traceback(), unf_log).group(1)
             self._store_log(unf_log)
             self.traceback_flag = True
@@ -330,12 +341,13 @@ class VFormatter(LogFormatter):
         elif re.match(VPatterns.get_traceback_exception(), unf_log[len(self.tb_leading_char):]):
             output = self.stored_logs
             output.append(unf_log)
-            self.curr_log_type = VLogType.TRACEBACK
+            self._lm.curr_log_type = VLogType.TRACEBACK
             self.stored_logs = []
             self.traceback_flag = False
             self.tb_leading_char = ""
+            self._lm.hold = False
         # Inner traceback element
-        elif self.curr_log_type == VLogType.OTHER and unf_log:
+        elif self._lm.curr_log_type == VLogType.OTHER and unf_log:
             self._store_log(unf_log)
             output = None
         return output
@@ -344,16 +356,16 @@ class VFormatter(LogFormatter):
         """Store the datetime object of the time from the current log or None if no time available."""
         if self.SUMMARY:
             set_root = False
-            if not self.header_man.is_test_start_time_added():
+            if not self._hm.is_test_start_time_added():
                 set_root = True
 
             if isinstance(log, str):
                 pattern = "^(" + VPatterns.get_std_datetime() + ")"
                 m = re.match(pattern, log)
-                if m.group(1):
+                if m and m.group(1):
                     self._curr_time = vlogfield.Datetime(m.group(1)).datetime
             else:
                 self._curr_time = log.datetime
 
             if isinstance(self._prev_fmt_log, vlogline.Header) or set_root:
-                self.header_man.start_time(self._curr_time, root=set_root)
+                self._hm.start_time(self._curr_time, root=set_root)

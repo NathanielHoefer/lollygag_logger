@@ -4,7 +4,7 @@ from datetime import datetime
 from vl_logger import vlogline
 from vl_logger.vutils import VLogType
 from vl_logger.vutils import VLogStdFields
-from vl_logger.vheadermanager import HeaderManager
+from vl_logger.vmanagers import HeaderManager
 
 
 class TestHeaderManager(unittest.TestCase):

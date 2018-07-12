@@ -1,10 +1,9 @@
 from anytree import Node, RenderTree
 from vl_logger.vutils import VLogType
 from vl_logger import vlogline
-from datetime import datetime
 
 
-class HeaderManager:
+class HeaderManager(object):
 
     def __init__(self, tc_name=None, tc_num=None, step=None):
         """Intialize the HeaderManager.
@@ -235,3 +234,104 @@ class HeaderManager:
         else:
             return self._get_next_sibling_starttime(parent)
 
+
+class LogManager(object):
+    """Provides log management functionality.
+
+    1. Two-step process for releasing logs.
+
+    This is to capture log lines that may be associated with a specific log,
+    but occur on a separate line directly following that log.
+
+    When a log is first enqueued, it is stored as the current log.
+    Dequeue will return an empty list at this point as it returns all logs but the latest one.
+    If another log is enqueued, the original log will be stored to be dequeued.
+    The latest log is then stored as the current log.
+
+    2. Determine which logs are to be displayed based on the list supplied on initialization.
+
+    3. Calculates log type from a given string.
+
+    """
+
+    def __init__(self, display_log_types=None):
+        self._display_log_types = display_log_types
+        self._log_queue = []
+        self._curr_log = None
+        self._curr_log_type = None
+        self._prev_log_type = None
+        self._hold = False
+
+    @property
+    def curr_log_type(self):
+        return self._curr_log_type
+
+    @curr_log_type.setter
+    def curr_log_type(self, logtype):
+        self._curr_log_type = logtype
+
+    @property
+    def hold(self):
+        return self._hold
+
+    @hold.setter
+    def hold(self, value=False):
+        """If True, no logs will be released upon dequeue."""
+        self._hold = value
+
+    def enqueue_log(self, log):
+        """Queue the entered log.
+
+        Note: if the log is a Traceback, it will be attempted to added to a previous Error
+        or Warning log if available.
+        """
+        if self._curr_log:
+            self._log_queue.append(self._curr_log)
+        elif log and log.logtype == VLogType.TRACEBACK:
+            prev_log = self._log_queue[-1]
+            if prev_log.logtype == VLogType.ERROR or prev_log.logtype == VLogType.WARNING:
+                prev_log.add_additional_logs(log)
+                return
+        self._curr_log = log
+
+    def dequeue_logs(self):
+        """Return all logs but current if not on hold."""
+        if self._hold:
+            return []
+        else:
+            logs = self._log_queue
+            self._log_queue = []
+            return logs
+
+    def flush_logs(self):
+        """Return all logs currently stored and reset all members."""
+        logs = self.dequeue_logs()
+        logs.append(self._curr_log)
+        self._curr_log = None
+        self._prev_log_type = None
+        self._curr_log_type = None
+        self._hold = False
+        return logs
+
+    def calc_log_type(self, unf_str):
+        """Return the log type of the given string, None if not a VL log."""
+        if self._curr_log_type:
+            self._prev_log_type = self._curr_log_type
+        self._curr_log_type = VLogType.get_type(unf_str)
+
+    def display_current_log(self):
+        """Return True if current log is to be displayed.
+
+        This takes into account the current log type and the previous log type.
+        """
+        output = True
+        # Current log type is not in list to be displayed.
+        if self._curr_log_type and self._curr_log_type not in self._display_log_types:
+            output = False
+
+        # Last formatted log type is not in list ot be displayed.
+        # This could be an unclassified log that follows a DEBUG log
+        elif not self._curr_log_type and self._prev_log_type \
+                and self._prev_log_type not in self._display_log_types:
+            output = False
+        return output

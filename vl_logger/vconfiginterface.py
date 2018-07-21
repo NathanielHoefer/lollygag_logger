@@ -3,6 +3,20 @@ from vl_logger import vformatter
 from vl_logger.vutils import VLogStdFields
 from vl_logger.vutils import VLogType
 
+from collections import OrderedDict
+import configparser
+import os
+
+DEFAULT_CONFIG_DIR = os.path.expanduser("~")
+FORMAT_CONFIG_FILE_NAME = ".vl_logger.ini"
+DEFAULT_CONFIG_PATH = DEFAULT_CONFIG_DIR + "/" + FORMAT_CONFIG_FILE_NAME
+
+# Section names
+AT2_TASKINSTANCE_CREDENTIALS = "AT2 LOG CREDENTIALS"
+DISPLAY_LOG_TYPES_SECT = "DISPLAY LOG TYPES"
+DISPLAY_FIELDS_SECT = "DISPLAY FIELDS"
+GENERAL = "GENERAL"
+
 
 class VConfigInterface:
     """An interface for specifying VFormatter configuration options.
@@ -43,6 +57,70 @@ class VConfigInterface:
             self.use_default()
         elif not use_default and use_unformatted:
             self.use_unformatted()
+        self._format_config = None
+
+    def create_config_file(self, file_directory=""):
+        """Creates a config parser file within the current working directory containing the options for
+        formatting log lines.
+
+        :param str file_directory: File directory to store format config file. If not specified, then will
+            store in the user's home directory.
+        """
+
+        config_fields = OrderedDict()
+
+        # Username and password for grabbing AT2 logs from a task instance ID.
+        config_fields[AT2_TASKINSTANCE_CREDENTIALS] = [
+            ("username", ""),
+            ("password", ""),
+            ("at2_url", "https://")]
+
+        # Log lines identified by the following types to be printed or ignored
+        config_fields[DISPLAY_LOG_TYPES_SECT] = [
+            ("debug", "False"),
+            ("info", "True"),
+            ("notice", "True"),
+            ("step", "True"),
+            ("title", "True"),
+            ("warning", "True"),
+            ("error", "True"),
+            ("other", "True")]
+
+        # Elements within each log line to be printed or ignored
+        config_fields[DISPLAY_FIELDS_SECT] = [
+            ("date", "False"),
+            ("time", "True"),
+            ("type", "True"),
+            ("source", "True"),
+            ("thread", "False"),
+            ("details", "True")]
+
+        config_fields[GENERAL] = [
+            ("use_colors", "True"),
+            ("format api", "False"),
+            ("condense line", "True"),
+            ("shorten fields", "True"),
+            ("display summary", "True"),
+            ("use_console_len", "True"),  # Use console width for max log line length
+            ("max_line_len", "200")]  # Max length to be printed if console width is not selected
+
+        # Create and add sections and options to configparser object
+        self._format_config = configparser.ConfigParser()
+        if file_directory:
+            config_path = file_directory + "/" + FORMAT_CONFIG_FILE_NAME
+        else:
+            config_path = DEFAULT_CONFIG_DIR + "/" + FORMAT_CONFIG_FILE_NAME
+
+        # If format config file doesn't already exist, create and write, otherwise read from existing file.
+        if not os.path.isfile(config_path):
+            for section, options in config_fields.items():
+                self._format_config.add_section(section)
+                for option in options:
+                    self._format_config.set(section, option[0], option[1])
+            with open(config_path, "wb") as configfile:
+                self._format_config.write(configfile)
+        else:
+            self._format_config.read(config_path)
 
     def use_default(self):
         """Use the default settings as described below.

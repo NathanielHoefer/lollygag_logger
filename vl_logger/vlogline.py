@@ -200,6 +200,9 @@ class Standard(Base):
     def add_additional_logs(self, logs):
         self._additional_logs.append(logs)
 
+    def get_additional_logs(self):
+        return self._additional_logs
+
 class Traceback(Base):
     """VL Traceback Log.
 

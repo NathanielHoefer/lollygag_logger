@@ -32,26 +32,34 @@ class HeaderManager(object):
 
         output = []
         for pre, fill, node in RenderTree(self._root):
-            # Title
+            # Add Title
             output.append("%s%s" % (pre, node.name.get_id()))
 
-            # Runtime
+            # Add Runtime
+            if not node.name.start_time:  # May not result in accurate time
+                node.name.start_time = self._root.name.start_time
             runtime = node.name.end_time - node.name.start_time
             output.append("%s%s" % (fill, "  Runtime: %s" % runtime))
 
-            # Status and Errors
+            # Add Status and Errors
             status = node.name.status
             errors = node.name.errors
             if errors:
                 error_str = []
+                error_exceptions = []
                 for error in errors:
+                    tracebacks = error.get_additional_logs()
+                    if tracebacks:
+                        error_exceptions.append(str(tracebacks[0].exception))
                     error_time = error.datetime.strftime(str_format)
                     error_str.append(error_time)
                 error_times = ", ".join(error_str)
                 status = " ".join([status, "at", error_times])
+                if error_exceptions:
+                    status = ("\n" + fill + "   ").join([status] + error_exceptions)
             output.append("%s%s" % (fill, "  Status: %s" % status))
 
-            # Separator
+            # Add Separator
             output.append("%s%s" % (fill, "_" * (75 - len(fill))))
 
         return "\n".join(output).encode('utf-8')
@@ -63,16 +71,25 @@ class HeaderManager(object):
         self._curr_step = None
 
     def add_suite(self, header):
-        self._curr_suite = self._add_node(header, self._header_tree[self._curr_general])
-        self._curr_testcase = None
-        self._curr_step = None
+        if self._curr_general:
+            self._curr_suite = self._add_node(header, self._header_tree[self._curr_general])
+            self._curr_testcase = None
+            self._curr_step = None
+        else:
+            self._curr_suite = self._add_node(header, self._root)
 
     def add_testcase(self, header):
-        self._curr_testcase = self._add_node(header, self._header_tree[self._curr_suite])
-        self._curr_step = None
+        if self._curr_suite:
+            self._curr_testcase = self._add_node(header, self._header_tree[self._curr_suite])
+            self._curr_step = None
+        else:
+            self._curr_testcase = self._add_node(header, self._root)
 
     def add_step(self, header):
-        self._curr_step = self._add_node(header, self._header_tree[self._curr_testcase])
+        if self._curr_testcase:
+            self._curr_step = self._add_node(header, self._header_tree[self._curr_testcase])
+        else:
+            self._curr_step = self._add_node(header, self._root)
 
     def add_error(self, error):
         """Associate an error with a header."""

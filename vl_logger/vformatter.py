@@ -45,7 +45,7 @@ class VFormatter(LogFormatter):
     DISPLAY_STEP_NUM = -1
     SUMMARY = False
 
-    def __init__(self):
+    def __init__(self, config_interface):
         """Initializes ``VFormatter``
 
         :ivar str border_flag: Character type used for the border in the current header.
@@ -72,6 +72,7 @@ class VFormatter(LogFormatter):
                                  tc_num=self.DISPLAY_TESTCASE_NUM,
                                  step=self.DISPLAY_STEP_NUM)
         self._lm = LogManager(display_log_types=self.DISPLAY_LOG_TYPES)
+        self._config_interface = config_interface
 
         self._prev_fmt_log = None
         self._curr_time = None
@@ -141,6 +142,14 @@ class VFormatter(LogFormatter):
     @property
     def curr_time(self):
         return self._curr_time
+
+    @property
+    def config_interface(self):
+        return self._config_interface
+
+    @config_interface.setter
+    def config_interface(self, config):
+        self._config_interface = config
 
     @curr_time.setter
     def curr_time(self, curr_datetime):

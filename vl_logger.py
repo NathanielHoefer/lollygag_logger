@@ -48,7 +48,8 @@ if __name__ == '__main__':
     COMMAND_LINE = True
 
     if COMMAND_LINE:
-        config = VConfigInterface(use_default=True, use_unformatted=False)
+        config = VConfigInterface()
+        vl_console_output = VFormatter(config)
 
         # Display specific test cases and steps
         if args.testcase:
@@ -67,7 +68,6 @@ if __name__ == '__main__':
         if args.summary:
             config.display_summary()
 
-        vl_console_output = VFormatter()
         try:
             with open(args.read_path, "r") as logfile:
                 logger = LollygagLogger(logfile, vl_console_output)
@@ -78,18 +78,10 @@ if __name__ == '__main__':
             exit(0)
 
     else:
-        path = "/home/nathaniel/vl_artifacts/testing/general_only.log"
+        path = "/home/nathaniel/vl_artifacts/TsDriveEncryptionPersistenceAndAccessibility-2018-02-07T16.14.18/test.log"
 
-        config = VConfigInterface(use_default=True, use_unformatted=False)
-        # config.display_test_case(number=0)
-        # config.display_step(number=1)
-        # config.format_api()
-
-        DISPLAY_SUMMARY = True
-
-        if DISPLAY_SUMMARY:
-            config.display_summary()
-        vl_console_output = VFormatter()
+        config = VConfigInterface()
+        vl_console_output = VFormatter(config)
         try:
             with open(path, "r") as logfile:
                 logger = LollygagLogger(logfile, vl_console_output)

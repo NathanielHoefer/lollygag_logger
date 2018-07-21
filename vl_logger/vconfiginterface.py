@@ -10,6 +10,8 @@ import os
 DEFAULT_CONFIG_DIR = os.path.expanduser("~")
 FORMAT_CONFIG_FILE_NAME = ".vl_logger.ini"
 DEFAULT_CONFIG_PATH = DEFAULT_CONFIG_DIR + "/" + FORMAT_CONFIG_FILE_NAME
+# Valid values from ConfigParser that result in True
+VALID_TRUE_INPUT = ("true", "yes", "t", "y", "1")
 
 # Section names
 AT2_TASKINSTANCE_CREDENTIALS = "AT2 LOG CREDENTIALS"
@@ -51,13 +53,22 @@ class VConfigInterface:
         config = VConfigInterface(use_unformatted=True)
     """
 
-    def __init__(self, use_default=False, use_unformatted=False):
+    def __init__(self, file_directory=""):
         """Initialize the Config Interface."""
-        if use_default and not use_unformatted:
-            self.use_default()
-        elif not use_default and use_unformatted:
-            self.use_unformatted()
         self._format_config = None
+        self._config_ini_mod_time = None
+        self_file_directory = file_directory
+        self.create_config_file(self_file_directory)
+        self.load_config_file(self_file_directory)
+
+        use_defaults = self._str_to_bool(self._format_config[GENERAL]["use_defaults"])
+        use_unformatted = self._str_to_bool(self._format_config[GENERAL]["use_unformatted"])
+
+        if use_defaults and not use_unformatted:
+            self.use_default()
+        elif not use_defaults and use_unformatted:
+            self.use_unformatted()
+
 
     def create_config_file(self, file_directory=""):
         """Creates a config parser file within the current working directory containing the options for
@@ -80,11 +91,15 @@ class VConfigInterface:
             ("debug", "False"),
             ("info", "True"),
             ("notice", "True"),
-            ("step", "True"),
-            ("title", "True"),
             ("warning", "True"),
             ("error", "True"),
-            ("other", "True")]
+            ("critical", "True"),
+            ("traceback", "True"),
+            ("other", "True"),
+            ("step_headers", "True"),
+            ("test_case_headers", "True"),
+            ("suite_headers", "True"),
+            ("general_headers", "True")]
 
         # Elements within each log line to be printed or ignored
         config_fields[DISPLAY_FIELDS_SECT] = [
@@ -96,11 +111,13 @@ class VConfigInterface:
             ("details", "True")]
 
         config_fields[GENERAL] = [
+            ("use_defaults", "False"),
+            ("use_unformatted", "False"),
             ("use_colors", "True"),
-            ("format api", "False"),
-            ("condense line", "True"),
-            ("shorten fields", "True"),
-            ("display summary", "True"),
+            ("format_api", "False"),
+            ("condense_line", "True"),
+            ("shorten_fields", "True"),
+            ("display_summary", "True"),
             ("use_console_len", "True"),  # Use console width for max log line length
             ("max_line_len", "200")]  # Max length to be printed if console width is not selected
 
@@ -119,8 +136,17 @@ class VConfigInterface:
                     self._format_config.set(section, option[0], option[1])
             with open(config_path, "wb") as configfile:
                 self._format_config.write(configfile)
+
+    def load_config_file(self, file_directory=""):
+        if file_directory:
+            config_path = file_directory + "/" + FORMAT_CONFIG_FILE_NAME
         else:
-            self._format_config.read(config_path)
+            config_path = DEFAULT_CONFIG_DIR + "/" + FORMAT_CONFIG_FILE_NAME
+        self._format_config.read(config_path)
+        self._config_ini_mod_time = os.path.getmtime(config_path)
+        self._load_config_file_log_types()
+        self._load_config_file_fields()
+        self._load_config_file_general()
 
     def use_default(self):
         """Use the default settings as described below.
@@ -147,7 +173,9 @@ class VConfigInterface:
             - Suite Header
             - General Header
         """
+        self.display_summary()
         self.colorize()
+        self.format_api(False)
         self.condense_line()
         self.shorten_fields()
         self.use_console_width()
@@ -174,6 +202,7 @@ class VConfigInterface:
     def use_unformatted(self):
         """Don't use any formatting at all."""
         self.max_line_len(105)
+        self.display_summary(False)
         self.colorize(False)
         self.condense_line(False)
         self.shorten_fields(0)
@@ -217,7 +246,7 @@ class VConfigInterface:
     def format_api(self, set=True):
         """Format the API requests and responses."""
         vlogline.Base.format_api(set)
-        if VLogType.DEBUG not in vformatter.VFormatter.DISPLAY_LOG_TYPES:
+        if set and VLogType.DEBUG not in vformatter.VFormatter.DISPLAY_LOG_TYPES:
             vformatter.VFormatter.DISPLAY_LOG_TYPES.append(VLogType.DEBUG)
 
     def condense_line(self, set=True):
@@ -264,3 +293,77 @@ class VConfigInterface:
 
     def display_summary(self, set=True):
         vformatter.VFormatter.display_summary(set)
+
+    def _str_to_bool(self, str_bool_val):
+        """Evaluates bool value of string input based on VALID_TRUE_INPUT.
+
+        :param str str_bool_val: bool value as string
+        :rtype: bool
+        """
+        return str_bool_val.lower() in VALID_TRUE_INPUT
+
+    def _load_config_file_log_types(self):
+        """Updates the display log types from the loaded config file."""
+        types_dict = {}
+        for key, val in self._format_config[DISPLAY_LOG_TYPES_SECT].items():
+            types_dict[key] = self._str_to_bool(val)
+
+        log_types = []
+        if types_dict["debug"]:
+            log_types.append(VLogType.DEBUG)
+        if types_dict["info"]:
+            log_types.append(VLogType.INFO)
+        if types_dict["notice"]:
+            log_types.append(VLogType.NOTICE)
+        if types_dict["warning"]:
+            log_types.append(VLogType.WARNING)
+        if types_dict["error"]:
+            log_types.append(VLogType.ERROR)
+        if types_dict["critical"]:
+            log_types.append(VLogType.CRITICAL)
+        if types_dict["traceback"]:
+            log_types.append(VLogType.TRACEBACK)
+        if types_dict["other"]:
+            log_types.append(VLogType.OTHER)
+        if types_dict["step_headers"]:
+            log_types.append(VLogType.STEP_H)
+        if types_dict["test_case_headers"]:
+            log_types.append(VLogType.TEST_CASE_H)
+        if types_dict["suite_headers"]:
+            log_types.append(VLogType.SUITE_H)
+        if types_dict["general_headers"]:
+            log_types.append(VLogType.GENERAL_H)
+        self.display_log_types(log_types)
+
+    def _load_config_file_fields(self):
+        fields_dict = {}
+        for key, val in self._format_config[DISPLAY_FIELDS_SECT].items():
+            fields_dict[key] = self._str_to_bool(val)
+
+        fields = []
+        if fields_dict["date"]:
+            fields.append(VLogStdFields.DATE)
+        if fields_dict["time"]:
+            fields.append(VLogStdFields.TIME)
+        if fields_dict["type"]:
+            fields.append(VLogStdFields.TYPE)
+        if fields_dict["source"]:
+            fields.append(VLogStdFields.SOURCE)
+        if fields_dict["thread"]:
+            fields.append(VLogStdFields.THREAD)
+        if fields_dict["details"]:
+            fields.append(VLogStdFields.DETAILS)
+        self.display_fields(fields)
+
+    def _load_config_file_general(self):
+        general_dict = {}
+        for key, val in self._format_config[GENERAL].items():
+            general_dict[key] = self._str_to_bool(val)
+
+        self.colorize(general_dict["use_colors"])
+        self.format_api(general_dict["format_api"])
+        self.condense_line(general_dict["condense_line"])
+        self.shorten_fields(general_dict["shorten_fields"])
+        self.display_summary(general_dict["display_summary"])
+        self.use_console_width(general_dict["use_console_len"])
+        self.max_line_len(int(self._format_config[GENERAL]["max_line_len"]))

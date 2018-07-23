@@ -106,7 +106,7 @@ class VFormatter(LogFormatter):
         fmt_log = self._create_log_line(unf_str, self._lm.curr_log_type)
         if fmt_log:
             self._lm.enqueue_log(fmt_log)  # Print classified log
-        elif self._hm.in_specified_testcase():
+        elif self._hm.std_log_in_specified_testcase():
             self._lm.enqueue_log(unf_str)  # Print unclassified log
         return self._lm.dequeue_logs()
 
@@ -229,7 +229,7 @@ class VFormatter(LogFormatter):
 
         output = None
         # Standard Log Line
-        if log_type in VPatterns.std_log_types() and self._hm.in_specified_testcase():
+        if log_type in VPatterns.std_log_types() and self._hm.std_log_in_specified_testcase():
             output = vlogline.Standard(unf_str, log_type)
 
             # Store Start time
@@ -239,7 +239,7 @@ class VFormatter(LogFormatter):
             if self.SUMMARY and output and output.logtype == VLogType.ERROR:
                 self._hm.add_error(output)
         # Traceback Log Lines
-        elif log_type == VLogType.TRACEBACK and self._hm.in_specified_testcase():
+        elif log_type == VLogType.TRACEBACK and self._hm.std_log_in_specified_testcase():
             output = vlogline.Traceback(unf_str)
         # Step Header
         elif log_type == VLogType.STEP_H:
@@ -258,7 +258,7 @@ class VFormatter(LogFormatter):
             fmt_log = vlogline.GeneralHeader(unf_str)
             output = self._hm.update_current_log(fmt_log)
         # Other Log Line
-        elif log_type == VLogType.OTHER and self._hm.in_specified_testcase():
+        elif log_type == VLogType.OTHER and self._hm.std_log_in_specified_testcase():
             output = vlogline.Other(unf_str)
 
         if output:

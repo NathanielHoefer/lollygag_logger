@@ -42,8 +42,7 @@ As a user, I want to
 
 
 User Interface:
-Compute and display header runtime
-vl-logger -r test.log -s[--summary]
+
 
 
 Completed Stories:
@@ -75,3 +74,6 @@ vl-logger -r test.log -t [tc number|tc name]:[step number]
 
 Read from log file and view API calls and responses
 vl-logger -r test.log -a[--api]
+
+Compute and display header runtime
+vl-logger -r test.log -s[--summary]

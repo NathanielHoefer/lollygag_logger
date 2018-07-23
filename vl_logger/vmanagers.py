@@ -20,6 +20,8 @@ class HeaderManager(object):
         self._root = Node(vlogline.GeneralHeader("=Test Summary="))
         self._header_tree = [self._root]
 
+        self._specified_tc = True if tc_name or tc_num >= 0 else False
+        self._specified_step = True if step >= 0 else False
         self._store_tc_name = tc_name
         self._store_tc_num = tc_num
         self._store_step = step
@@ -65,10 +67,14 @@ class HeaderManager(object):
         return "\n".join(output).encode('utf-8')
 
     def add_general(self, header):
+
         self._curr_general = self._add_node(header, self._root)
         self._curr_suite = None
         self._curr_testcase = None
         self._curr_step = None
+        if self._specified_tc:
+            return None
+        return header
 
     def add_suite(self, header):
         if self._curr_general:
@@ -77,6 +83,9 @@ class HeaderManager(object):
             self._curr_step = None
         else:
             self._curr_suite = self._add_node(header, self._root)
+        if self._specified_tc:
+            return None
+        return header
 
     def add_testcase(self, header):
         if self._curr_suite:
@@ -85,11 +94,20 @@ class HeaderManager(object):
         else:
             self._curr_testcase = self._add_node(header, self._root)
 
+        # testcase_specified = self.header_in_specified_testcase(header)
+        # if self._specified_tc and
+        if self._specified_step or not self.header_in_specified_testcase(header):
+            return None
+        return header
+
     def add_step(self, header):
         if self._curr_testcase:
             self._curr_step = self._add_node(header, self._header_tree[self._curr_testcase])
         else:
             self._curr_step = self._add_node(header, self._root)
+        if (self._specified_step or self._specified_tc) and not self.header_in_specified_testcase(header):
+            return None
+        return header
 
     def add_error(self, error):
         """Associate an error with a header."""
@@ -114,7 +132,7 @@ class HeaderManager(object):
         """Return the previous ``VHeader`` object."""
         return self._header_tree[-2].name
 
-    def in_specified_testcase(self):
+    def std_log_in_specified_testcase(self):
         """Determines what logs are to be displayed based on test case and step specified.
 
         If logs from a specific test case or step is specified
@@ -124,13 +142,14 @@ class HeaderManager(object):
 
         :return: True if log is in specified test case or step, otherwise False.
         """
+
+        # No Test Case name or number specified
+        if not self._specified_tc:
+            return True
+
         display_tc_name = self._store_tc_name
         display_tc_num = self._store_tc_num
         display_step = self._store_step
-
-        # No Test Case name or number specified
-        if not display_tc_name and display_tc_num < 0:
-            return True
 
         display_log = False
         # Test Case number specified
@@ -144,10 +163,43 @@ class HeaderManager(object):
                 display_log = True
 
         # Test Case Step specified
-        if display_step >= 0 and display_log:
+        if self._specified_step and display_log:
             if self._curr_step and self._get_header(self._curr_step).number != display_step:
                 display_log = False
             elif not self._curr_step:
+                display_log = False
+
+        return display_log
+
+    def header_in_specified_testcase(self, header):
+        # No Test Case name or number specified
+        if not self._specified_tc:
+            return True
+
+        display_tc_name = self._store_tc_name
+        display_tc_num = self._store_tc_num
+        display_step = self._store_step
+
+        testcase = header if header.logtype == VLogType.TEST_CASE_H else None
+        step = None
+        if header.logtype == VLogType.STEP_H:
+            testcase = self._get_header(self._curr_testcase)
+            step = header
+
+        # Test Case number specified
+        display_log = False
+        if display_tc_num >= 0 and testcase:
+            if testcase.number == display_tc_num:
+                display_log = True
+
+        # Test Case name specified
+        if display_tc_name and testcase:
+            if testcase.test_case_name == display_tc_name:
+                display_log = True
+
+        # Test Case Step specified
+        if display_step >= 0 and display_log:
+            if step and step.number != display_step:
                 display_log = False
 
         return display_log
@@ -157,17 +209,19 @@ class HeaderManager(object):
 
         :return: Original formatted log if specified to print, otherwise None.
         """
+        # output = fmt_log if self.std_log_in_specified_testcase(header=fmt_log) else None
+        # if not self.header_in_specified_testcase(fmt_log):
+        #     return None
         log_type = fmt_log.logtype
+        output = fmt_log
         if log_type == VLogType.GENERAL_H:
-            self.add_general(fmt_log)
+            output = self.add_general(fmt_log)
         elif log_type == VLogType.SUITE_H:
-            self.add_suite(fmt_log)
+            output = self.add_suite(fmt_log)
         elif log_type == VLogType.TEST_CASE_H:
-            self.add_testcase(fmt_log)
+            output = self.add_testcase(fmt_log)
         elif log_type == VLogType.STEP_H:
-            self.add_step(fmt_log)
-
-        output = fmt_log if self.in_specified_testcase() else None
+            output = self.add_step(fmt_log)
         return output
 
     def is_test_start_time_added(self):
@@ -304,7 +358,7 @@ class LogManager(object):
         """
         if self._curr_log:
             self._log_queue.append(self._curr_log)
-        elif log and log.logtype == VLogType.TRACEBACK:
+        elif log and isinstance(log, vlogline.Traceback) and log.logtype == VLogType.TRACEBACK:
             prev_log = self._log_queue[-1]
             if prev_log.logtype == VLogType.ERROR or prev_log.logtype == VLogType.WARNING:
                 prev_log.add_additional_logs(log)

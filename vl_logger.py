@@ -49,10 +49,16 @@ if __name__ == '__main__':
 
     if COMMAND_LINE:
         config = VConfigInterface()
-        vl_console_output = VFormatter(config)
+
+        if args.format_api:
+            config.format_api()
+
+        if args.summary:
+            config.display_summary()
 
         # Display specific test cases and steps
         if args.testcase:
+            config.display_summary(False)
             m = re.match("^(\d+|Tc\w*)(:(\d+))*$", args.testcase)
             if m.group(1):
                 if m.group(1).isdigit():
@@ -62,12 +68,7 @@ if __name__ == '__main__':
             if m.group(3) and m.group(3).isdigit():
                 config.display_step(number=int(m.group(3)))
 
-        if args.format_api:
-            config.format_api()
-
-        if args.summary:
-            config.display_summary()
-
+        vl_console_output = VFormatter(config)
         try:
             with open(args.read_path, "r") as logfile:
                 logger = LollygagLogger(logfile, vl_console_output)
@@ -81,6 +82,11 @@ if __name__ == '__main__':
         path = "/home/nathaniel/vl_artifacts/TsDriveEncryptionPersistenceAndAccessibility-2018-02-07T16.14.18/test.log"
 
         config = VConfigInterface()
+
+        config.display_test_case(number=1)
+        # config.display_step(number=1)
+        config.display_summary(False)
+
         vl_console_output = VFormatter(config)
         try:
             with open(path, "r") as logfile:

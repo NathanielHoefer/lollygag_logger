@@ -48,6 +48,26 @@ if __name__ == '__main__':
     COMMAND_LINE = True
 
     if COMMAND_LINE:
+        logfile = args.read_path
+
+        # Display specific test cases and steps
+        if args.testcase:
+            tmp_config = VConfigInterface()
+            tmp_config.use_unformatted()
+            tmp_formatter = VFormatter(tmp_config)
+            m = re.match("^(\d+|Tc\w*)(:(\d+))*$", args.testcase)
+            # Test case specified
+            if m.group(1):
+                if m.group(1).isdigit():
+                    # config.display_test_case(number=int(m.group(1)))
+                    logfile = tmp_formatter.parse_test_case(logfile, tc_num=int(m.group(1)))
+                else:
+                    # config.display_test_case(name=m.group(1))
+                    logfile = tmp_formatter.parse_test_case(logfile, tc_name=m.group(1))
+            # Step specified
+            # if m.group(3) and m.group(3).isdigit():
+            #     config.display_step(number=int(m.group(3)))
+
         config = VConfigInterface()
 
         if args.format_api:
@@ -56,21 +76,9 @@ if __name__ == '__main__':
         if args.summary:
             config.display_summary()
 
-        # Display specific test cases and steps
-        if args.testcase:
-            config.display_summary(False)
-            m = re.match("^(\d+|Tc\w*)(:(\d+))*$", args.testcase)
-            if m.group(1):
-                if m.group(1).isdigit():
-                    config.display_test_case(number=int(m.group(1)))
-                else:
-                    config.display_test_case(name=m.group(1))
-            if m.group(3) and m.group(3).isdigit():
-                config.display_step(number=int(m.group(3)))
-
         vl_console_output = VFormatter(config)
         try:
-            with open(args.read_path, "r") as logfile:
+            with open(logfile, "r") as logfile:
                 logger = LollygagLogger(logfile, vl_console_output)
                 logger.run()
         except KeyboardInterrupt:
@@ -79,7 +87,8 @@ if __name__ == '__main__':
             exit(0)
 
     else:
-        path = "/home/nathaniel/vl_artifacts/TsDriveEncryptionPersistenceAndAccessibility-2018-02-07T16.14.18/test.log"
+        # path = "/home/nathaniel/vl_artifacts/TsDriveEncryptionPersistenceAndAccessibility-2018-02-07T16.14.18/test.log"
+        path = "/home/nathaniel/vl_artifacts/testing/test.log"
 
         config = VConfigInterface()
 
@@ -87,7 +96,11 @@ if __name__ == '__main__':
         # config.display_step(number=1)
         config.display_summary(False)
 
+        config.use_unformatted()
+
         vl_console_output = VFormatter(config)
+        vl_console_output.parse_test_case(path, tc_num=0)
+        exit(0)
         try:
             with open(path, "r") as logfile:
                 logger = LollygagLogger(logfile, vl_console_output)

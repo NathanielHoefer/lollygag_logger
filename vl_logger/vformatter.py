@@ -136,8 +136,9 @@ class VFormatter(LogFormatter):
                 summary = self._hm.generate_summary()
                 print
                 print summary
-            except AttributeError:
-                print("Error generating summary. Log may be incomplete.")
+            # except AttributeError:
+            except:
+                print "Error generating summary. Log may be incomplete."
 
     @property
     def curr_time(self):
@@ -378,3 +379,89 @@ class VFormatter(LogFormatter):
 
             if isinstance(self._prev_fmt_log, vlogline.Header) or set_root:
                 self._hm.start_time(self._curr_time, root=set_root)
+
+    def parse_test_case(self, log_file, tc_name=None, tc_num=None):
+        """Parses test case logs from a log file.
+
+        The specified test case logs are placed into a file labelled with the tc info,
+        and the file will be located in a directory labelled test_cases in the same directory as the
+        log file.
+        If the file already exists, the method will return.
+
+        Example::
+
+            parse_test_case("~/logs/test.log", tc_name="TcExample")
+
+            # File location
+            ~/logs/tc_logs/TcExample.log
+
+        :param str log_file: Filepath of log file to be parsed.
+        :param str tc_name: Name of test case to be parsed, will supercede tc_num if specified
+        :param int tc_num: Number of test case to be parsed.
+        """
+
+        dir = os.path.dirname(log_file)
+        tc_dir = os.path.join(dir, "tc_logs")
+        if not os.path.exists(tc_dir):
+            os.mkdir(tc_dir)
+        tc_filename = "%s.log" % (tc_name) if tc_name else ("Tc-%d.log" % (tc_num))
+        tc_file = os.path.join(tc_dir, tc_filename)
+        if os.path.exists(tc_file):
+            return tc_file
+        else:
+            open(tc_file, "w").close()
+
+        step_regex = VPatterns.get_step_header()
+        tc_regex = VPatterns.get_test_case_header()
+        suite_regex = VPatterns.get_suite_header()
+        general_regex = VPatterns.get_general_header()
+        in_specified_tc = False
+        completed_specified_tc = False
+
+        with open(log_file) as original_file:
+            for line in original_file:
+                line = self._handle_raw_header(line.rstrip("\n"))
+                if line is None:
+                    continue
+
+                tc_match = re.match(tc_regex, line)
+                step_match = re.match(step_regex, line)
+                header_match = re.match("".join([suite_regex, "|", general_regex]), line)
+
+                # Line is test case
+                if tc_match:
+                    tc = vlogline.TestCaseHeader(line)
+
+                    # TC name matches current line
+                    if tc_name and tc_name == tc.test_case_name:
+                        in_specified_tc = True
+                    # TC number matches current line
+                    elif tc_num >= 0 and tc_num == tc.number:
+                        in_specified_tc = True
+                    # New TC is reached
+                    elif in_specified_tc:
+                        completed_specified_tc = True
+                        in_specified_tc = False
+
+                    if in_specified_tc:
+                        with open(tc_file, "a") as f:
+                            f.write(str(tc) + "\n")
+
+                # Line is a step header
+                elif step_match and in_specified_tc:
+                    step = vlogline.StepHeader(line)
+                    with open(tc_file, "a") as f:
+                        f.write(str(step) + "\n")
+
+                # New General or Suite header found to signal end of specified test case
+                elif header_match and in_specified_tc:
+                    completed_specified_tc = True
+
+                # Logs in specified test case
+                elif in_specified_tc:
+                    with open(tc_file, "a") as f:
+                        f.write(str(line) + "\n")
+
+                if completed_specified_tc:
+                    return tc_file
+        return tc_file

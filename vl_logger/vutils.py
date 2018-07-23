@@ -162,19 +162,19 @@ class VPatterns(object):
 
 
     # Suite Header Patterns
-    SUITE_NAME_PATTERN = "Ts.*"
-    SUITE_HEADER_PATTERN = "=Test Suite: .*" + SUITE_NAME_PATTERN + "="
+    SUITE_NAME_PATTERN = "(Ts.*)"
+    SUITE_HEADER_PATTERN = "^=Test Suite: .*" + SUITE_NAME_PATTERN + "=$"
 
     # Test Case Patterns
-    CASE_NAME_PATTERN = "Tc.*"
-    CASE_HEADER_PATTERN = "=Test Case \d+: .*" + CASE_NAME_PATTERN + "="
+    CASE_NAME_PATTERN = "(Tc.*)"
+    CASE_HEADER_PATTERN = "^=Test Case (\d+): .*" + CASE_NAME_PATTERN + "=$"
 
     # Test Step Patterns
-    STEP_HEADER_PATTERN = "-Starting Step \d+ for " + CASE_NAME_PATTERN \
-                          + ": .*-" + "\n-Expect: .*-"
+    STEP_HEADER_PATTERN = "^-Starting Step (\d+) for " + CASE_NAME_PATTERN \
+                          + ": .*-" + "\n-Expect: .*-$"
 
     # General Header Patterns
-    GENERAL_HEADER_PATTERN = "=.*="
+    GENERAL_HEADER_PATTERN = "^=(.*)=$"
 
     TRACEBACK_PATTERN = "^(.*)Traceback \(most recent call last\):\s*$"
     TRACEBACK_STEP_PATTERN = "^\s*File \"(.+\.py)\", line (\d+), in (\w+)\\n\s+(.+)$"
@@ -193,7 +193,8 @@ class VPatterns(object):
         patterns.append(cls.get_std_source())
         patterns.append(cls.get_std_thread())
         patterns.append(cls.get_std_details())
-        return " ".join(patterns)
+        output = " ".join(patterns)
+        return "".join(["^", output, "$"])
 
     @classmethod
     def get_std_datetime(cls):
@@ -285,3 +286,37 @@ class VPatterns(object):
     def get_other(cls):
         """Return the regex ``str`` used for identifying misc. logs."""
         return cls.OTHER_PATTERN
+
+
+def file_parse(file):
+
+    tc_regex = "^Test Case (\d+): .*(Tc\w+).*$"
+    header_regex = "^=*$"
+    header = False
+
+    with open(file) as original_file:
+
+        for line in original_file:
+
+            header_match = re.match(header_regex, line)
+            # Initial header border
+            if header_match and not header:
+                header = True
+                continue
+
+            # Last header border
+            if header and header_match:
+                header = False
+                continue
+
+            if header:
+                tc_match = re.match(tc_regex, line)
+                tc_name = ""
+                tc_num = ""
+                if tc_match:
+                    tc_num = tc_match.group(1)
+                    tc_name = tc_match.group(2)
+                else:
+                    pass
+
+

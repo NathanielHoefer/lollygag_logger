@@ -59,14 +59,12 @@ if __name__ == '__main__':
             # Test case specified
             if m.group(1):
                 if m.group(1).isdigit():
-                    # config.display_test_case(number=int(m.group(1)))
                     logfile = tmp_formatter.parse_test_case(logfile, tc_num=int(m.group(1)))
                 else:
-                    # config.display_test_case(name=m.group(1))
                     logfile = tmp_formatter.parse_test_case(logfile, tc_name=m.group(1))
             # Step specified
-            # if m.group(3) and m.group(3).isdigit():
-            #     config.display_step(number=int(m.group(3)))
+            if m.group(3) and m.group(3).isdigit():
+                logfile = tmp_formatter.parse_step(logfile, step_num=int(m.group(3)))
 
         config = VConfigInterface()
 

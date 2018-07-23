@@ -384,7 +384,7 @@ class VFormatter(LogFormatter):
         """Parses test case logs from a log file.
 
         The specified test case logs are placed into a file labelled with the tc info,
-        and the file will be located in a directory labelled test_cases in the same directory as the
+        and the file will be located in a directory labelled tc_logs in the same directory as the
         log file.
         If the file already exists, the method will return.
 
@@ -398,6 +398,7 @@ class VFormatter(LogFormatter):
         :param str log_file: Filepath of log file to be parsed.
         :param str tc_name: Name of test case to be parsed, will supercede tc_num if specified
         :param int tc_num: Number of test case to be parsed.
+        :returns: String filepath to parsed log file.
         """
 
         dir = os.path.dirname(log_file)
@@ -465,3 +466,68 @@ class VFormatter(LogFormatter):
                 if completed_specified_tc:
                     return tc_file
         return tc_file
+
+    def parse_step(self, tc_log_file, step_num):
+        """Parses step logs from a test case log file.
+
+        The specified step logs are placed into a file labelled with the step info,
+        and the file will be located in a directory labelled tc_logs in the same directory as the
+        log file.
+        If the file already exists, the method will return.
+
+        Example::
+
+            parse_step("~/logs/tc_logs/TcExample.log", step=0)
+
+            # File location
+            ~/logs/tc_logs/TcExample_Step-0.log
+
+        :param str tc_log_file: Filepath of log file to be parsed.
+        :param int step_num: Number of step to be parsed.
+        """
+
+        tc_dir = os.path.dirname(tc_log_file)
+        tc_filename = re.search("(Tc-?\w+).log", tc_log_file)
+        step_filename = "%s_Step-%d.log" % (tc_filename.group(1), step_num)
+        step_file = os.path.join(tc_dir, step_filename)
+        if os.path.exists(step_file):
+            return step_file
+        else:
+            open(step_file, "w").close()
+
+        step_regex = VPatterns.get_step_header()
+        in_specified_step = False
+        completed_specified_step = False
+
+        with open(tc_log_file) as original_file:
+            for line in original_file:
+                line = self._handle_raw_header(line.rstrip("\n"))
+                if line is None:
+                    continue
+
+                step_match = re.match(step_regex, line)
+
+                # Line is test case
+                if step_match:
+                    step = vlogline.StepHeader(line)
+
+                    # TC name matches current line
+                    if step_num == step.number:
+                        in_specified_step = True
+                    # New TC is reached
+                    elif in_specified_step:
+                        completed_specified_step = True
+                        in_specified_step = False
+
+                    if in_specified_step:
+                        with open(step_file, "a") as f:
+                            f.write(str(step) + "\n")
+
+                # Logs in specified test case
+                elif in_specified_step:
+                    with open(step_file, "a") as f:
+                        f.write(str(line) + "\n")
+
+                if completed_specified_step:
+                    return step_file
+        return step_file

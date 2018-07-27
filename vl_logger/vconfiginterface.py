@@ -8,7 +8,7 @@ import configparser
 import os
 
 DEFAULT_CONFIG_DIR = os.path.expanduser("~")
-FORMAT_CONFIG_FILE_NAME = ".vl_logger.ini"
+FORMAT_CONFIG_FILE_NAME = ".vlogger.ini"
 DEFAULT_CONFIG_PATH = DEFAULT_CONFIG_DIR + "/" + FORMAT_CONFIG_FILE_NAME
 # Valid values from ConfigParser that result in True
 VALID_TRUE_INPUT = ("true", "yes", "t", "y", "1")

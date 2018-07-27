@@ -150,7 +150,7 @@ class VPatterns(object):
 
     # Standard Log Patterns
     DATE_RE_PATTERN = "\d{4}-\d{2}-\d{2}"
-    TIME_RE_PATTERN = "\d{2}:\d{2}:\d{2}\.\d{6}"
+    TIME_RE_PATTERN = "\d{2}:\d{2}:\d{2}(?:\.\d{6}|,\d{3})"
     LOG_TYPES = [VLogType.DEBUG, VLogType.INFO, VLogType.NOTICE,
                  VLogType.WARNING, VLogType.ERROR, VLogType.CRITICAL]
     SOURCE_PATTERN = "\[.*:.*\]"
@@ -191,7 +191,7 @@ class VPatterns(object):
         patterns.append(cls.get_std_datetime())
         patterns.append(cls.get_std_type())
         patterns.append(cls.get_std_source())
-        patterns.append(cls.get_std_thread())
+        patterns.append("".join(["(?:", cls.get_std_thread(), ")?"]))
         patterns.append(cls.get_std_details())
         output = " ".join(patterns)
         return "".join(["^", output, "$"])

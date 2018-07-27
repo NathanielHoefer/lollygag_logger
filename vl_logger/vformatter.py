@@ -289,7 +289,7 @@ class VFormatter(LogFormatter):
         :returns: modified header description if unf_str is a header description
         """
         # Border to test case, suite, or general header.
-        if re.match("=+", unf_str):
+        if re.match("={105}", unf_str):
             # Second border
             if self.border_flag == "=":
                 self.border_flag = ""
@@ -299,7 +299,7 @@ class VFormatter(LogFormatter):
                 self.border_flag = "="
                 return None
         # Border to test case steps
-        elif re.match("-+", unf_str):
+        elif re.match("-{105}", unf_str):
             # Second border
             if self.border_flag == "-":
                 self.border_flag = ""

@@ -51,6 +51,7 @@ class Datetime(LogField):
 
     _DATE_FORMAT = "%Y-%m-%d"
     _TIME_FORMAT = "%H:%M:%S.%f"
+    _TIME_FORMAT_AT2 = "%H:%M:%S,%f"
 
     def __init__(self, datetime_token):
         """Initialize datetime field from ``str`` token.
@@ -60,12 +61,11 @@ class Datetime(LogField):
         """
         super(Datetime, self).__init__()
         try:
-            format = " ".join([self._DATE_FORMAT, self._TIME_FORMAT])
-            self._datetime = datetime.strptime(datetime_token, format)
+            self._datetime = self._try_parsing_date(datetime_token)
             self._display_date = True
             self._display_time = True
         except ValueError:
-            msg = "The datetime token '" + datetime_token + "' is not vaild."
+            msg = "The datetime token '" + datetime_token + "' is not valid."
             raise ValueError(msg)
 
     def __str__(self):
@@ -105,6 +105,16 @@ class Datetime(LogField):
     def display_time(self, value=True):
         if isinstance(value, bool):
             self._display_time = value
+
+    def _try_parsing_date(self, text):
+
+        for time_fmt in (self._TIME_FORMAT, self._TIME_FORMAT_AT2):
+            format = " ".join([self._DATE_FORMAT, time_fmt])
+            try:
+                return datetime.strptime(text, format)
+            except ValueError:
+                pass
+        raise ValueError('no valid date format found')
 
 
 class Type(LogField):

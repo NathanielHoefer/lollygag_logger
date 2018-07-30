@@ -501,6 +501,7 @@ class VFormatter(LogFormatter):
             open(step_file, "w").close()
 
         step_regex = VPatterns.get_step_header()
+        tc_regex = VPatterns.get_test_case_header()
         in_specified_step = False
         completed_specified_step = False
 
@@ -510,16 +511,17 @@ class VFormatter(LogFormatter):
                 if line is None:
                     continue
 
+                tc_match = re.match(tc_regex, line)
                 step_match = re.match(step_regex, line)
 
-                # Line is test case
+                # Line is step
                 if step_match:
                     step = vlogline.StepHeader(line)
 
-                    # TC name matches current line
+                    # Step number matches current line
                     if step_num == step.number:
                         in_specified_step = True
-                    # New TC is reached
+                    # New step is reached
                     elif in_specified_step:
                         completed_specified_step = True
                         in_specified_step = False
@@ -528,7 +530,12 @@ class VFormatter(LogFormatter):
                         with open(step_file, "a") as f:
                             f.write(str(step) + "\n")
 
-                # Logs in specified test case
+                # Next Test Case reached
+                elif tc_match and in_specified_step:
+                    completed_specified_step = True
+                    in_specified_step = False
+
+                # Logs in specified step
                 elif in_specified_step:
                     with open(step_file, "a") as f:
                         f.write(str(line) + "\n")

@@ -242,6 +242,9 @@ class VConfigInterface:
         info.append(self._format_config[AT2_TASKINSTANCE_CREDENTIALS].get("fetch-task-instance-script-path"))
         return tuple(info)
 
+    def output_file(self, filepath, log_file_wc):
+        """Save formatted STDOUT to a file with progress bar."""
+        vformatter.VFormatter.output_file(filepath, log_file_wc)
 
     def max_line_len(self, length=105):
         """Set the maximum length of the standard log line strings when printed.

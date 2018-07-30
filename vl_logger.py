@@ -14,7 +14,7 @@ from vl_logger.vformatter import VFormatter
 from vl_logger.vconfiginterface import VConfigInterface
 from vl_logger.lollygag_logger import LollygagLogger
 
-FILE_PATTERN = "^(?:\w|-)+\.log$"
+FILE_PATTERN = "^(?:\w|-|/)+\.log$"
 AT2_PATTERN = "^\d+$"
 SUITE_PATTERN = "^Ts(?:\w|-)+$"
 
@@ -38,15 +38,17 @@ def args():
     testcase_desc = ""  # TODO
     format_api_desc = ""  # TODO
     summary_desc = ""  # TODO
+    output_desc = ""  # TODO
 
     # Argument setup and parsing
     parser = argparse.ArgumentParser(prog=program, description=description)
-    group = parser.add_mutually_exclusive_group()
+    # group = parser.add_mutually_exclusive_group()
     parser.add_argument("log_source", nargs=1, help=log_source)
     # group.add_argument("-r", "--read", action="store", dest="read_path", help=read_desc)
     # group.add_argument("-at2", action="store", dest="at2_inst", help=at2_desc)
     parser.add_argument("-t", "--testcase", action="store", dest="testcase", help=testcase_desc)
     parser.add_argument("-a", "--api", action="store_true", dest="format_api", help=format_api_desc)
+    parser.add_argument("-o", "--output", action="store", dest="output", help=output_desc)
     parser.add_argument("-s", "--summary", action="store_true", dest="summary", help=summary_desc)
     return parser.parse_args()
 
@@ -123,6 +125,12 @@ if __name__ == '__main__':
 
         if is_at2:
             config.at2_format()
+
+        if args.output:
+            print "Saving formatted logs to %s..." % args.output
+            open(args.output, 'w').close()
+            word_count = sum(1 for line in open(logfile))
+            config.output_file(args.output, word_count)
 
         if args.format_api:
             config.format_api()

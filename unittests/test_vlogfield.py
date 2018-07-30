@@ -12,7 +12,7 @@ class TestFieldCreation(unittest.TestCase):
         datetime_field = vlogfield.Datetime(token)
         format = " ".join(["%Y-%m-%d", "%H:%M:%S.%f"])
         datetime_obj = datetime.strptime(token, format)
-        self.assertEqual(datetime_field.get_datetime(), datetime_obj)
+        self.assertEqual(datetime_field.datetime, datetime_obj)
 
     def test_correct_tokens(self):
         dt_token = "2018-05-08 14:33:22.984875"
@@ -25,18 +25,18 @@ class TestFieldCreation(unittest.TestCase):
         self.assertEqual(str(datetime), "2018-05-08 14:33:22.984875")
 
         type = vlogfield.Type(type_token)
-        self.assertEqual(type.type(), VLogType.DEBUG)
+        self.assertEqual(type.logtype, VLogType.DEBUG)
         self.assertEqual(str(type), "DEBUG")
 
         source = vlogfield.Source(source_token)
         self.assertEqual(str(source), source_token)
-        self.assertEqual(source.get_module(), "res.core.absolute")
-        self.assertEqual(source.get_line_number(), 636)
+        self.assertEqual(source.module, "res.core.absolute")
+        self.assertEqual(source.line_number, 636)
 
         thread = vlogfield.Thread(thread_token)
         self.assertEqual(str(thread), thread_token)
-        self.assertEqual(thread.get_process(), "MainProcess")
-        self.assertEqual(thread.get_thread(), "MainThread")
+        self.assertEqual(thread.process, "MainProcess")
+        self.assertEqual(thread.thread, "MainThread")
 
         details = vlogfield.Details(details_token)
         self.assertEqual(str(details), details_token)
@@ -72,17 +72,17 @@ class TestFieldCreation(unittest.TestCase):
         exp_token = '''ApiCallMethodException: Error calling Method: ''' \
                     '''DoesNotExist. JSON response: {u'id': 63}'''
         step = vlogfield.TracebackStep(step_token)
-        self.assertEqual(step.get_file(), "/home/http_utils.py")
-        self.assertEqual(step.get_line_num(), 1078)
-        self.assertEqual(step.get_function(), "_call_cluster_api")
-        self.assertEqual(step.get_line(), "check_json_rpc_response(json_response, retry_faults, method)")
+        self.assertEqual(step.file, "/home/http_utils.py")
+        self.assertEqual(step.line_num, 1078)
+        self.assertEqual(step.function, "_call_cluster_api")
+        self.assertEqual(step.line, "check_json_rpc_response(json_response, retry_faults, method)")
         self.assertEqual(str(step), step_token)
 
         exception = vlogfield.TracebackException(exp_token)
         self.assertEqual(str(exception), exp_token)
-        self.assertEqual(exception.get_exception(), "ApiCallMethodException")
-        self.assertEqual(exception.get_desc(), "Error calling Method: "
-                                               "DoesNotExist. JSON response: {u'id': 63}")
+        self.assertEqual(exception.exception, "ApiCallMethodException")
+        self.assertEqual(exception.desc, "Error calling Method: "
+                                         "DoesNotExist. JSON response: {u'id': 63}")
 
     def test_incorrect_tokens(self):
         token = "Garbage"

@@ -50,8 +50,9 @@ class Datetime(LogField):
     """Represents both date and time field."""
 
     _DATE_FORMAT = "%Y-%m-%d"
-    _TIME_FORMAT = "%H:%M:%S.%f"
-    _TIME_FORMAT_AT2 = "%H:%M:%S,%f"
+    _TIME_STANDARD = "%H:%M:%S.%f"
+    _TIME_AT2 = "%H:%M:%S,%f"
+    AT2_FORMAT = False
 
     def __init__(self, datetime_token):
         """Initialize datetime field from ``str`` token.
@@ -61,7 +62,10 @@ class Datetime(LogField):
         """
         super(Datetime, self).__init__()
         try:
-            self._datetime = self._try_parsing_date(datetime_token)
+            time_format = self._TIME_AT2 if self.AT2_FORMAT \
+                else self._TIME_STANDARD
+            self._dt_format = " ".join([self._DATE_FORMAT, time_format])
+            self._datetime = datetime.strptime(datetime_token, self._dt_format)
             self._display_date = True
             self._display_time = True
         except ValueError:
@@ -72,9 +76,9 @@ class Datetime(LogField):
         """Convert date and time fields to ``str`` following vl formatting."""
         if self._display:
             if self._display_date and self._display_time:
-                str_format = " ".join([self._DATE_FORMAT, self._TIME_FORMAT])
+                str_format = self._dt_format
             elif self._display_time:
-                str_format = self._TIME_FORMAT
+                str_format = self._TIME_AT2 if self.AT2_FORMAT else self._TIME_STANDARD
             elif self._display_date:
                 str_format = self._DATE_FORMAT
             else:
@@ -106,15 +110,9 @@ class Datetime(LogField):
         if isinstance(value, bool):
             self._display_time = value
 
-    def _try_parsing_date(self, text):
-
-        for time_fmt in (self._TIME_FORMAT, self._TIME_FORMAT_AT2):
-            format = " ".join([self._DATE_FORMAT, time_fmt])
-            try:
-                return datetime.strptime(text, format)
-            except ValueError:
-                pass
-        raise ValueError('no valid date format found')
+    @classmethod
+    def at2_format(cls, value=True):
+        cls.AT2_FORMAT = value
 
 
 class Type(LogField):

@@ -190,11 +190,11 @@ class VPatterns(object):
         patterns = []
         patterns.append(cls.get_std_datetime())
         patterns.append(cls.get_std_type())
-        patterns.append(cls.get_std_source())
-        patterns.append("".join(["(?:", cls.get_std_thread(), ")?"]))
+        patterns.append("".join([cls.get_std_source(), "(?: ", cls.get_std_thread(), ")?"]))
         patterns.append(cls.get_std_details())
         output = " ".join(patterns)
-        return "".join(["^", output, "$"])
+        output = "".join(["^", output, "$"])
+        return output
 
     @classmethod
     def get_std_datetime(cls):

@@ -360,7 +360,11 @@ class LogManager(object):
             self._log_queue.append(self._curr_log)
         elif log and isinstance(log, vlogline.Traceback) and log.logtype == VLogType.TRACEBACK:
             prev_log = self._log_queue[-1]
-            if prev_log.logtype == VLogType.ERROR or prev_log.logtype == VLogType.WARNING:
+            # if isinstance(prev_log, str):
+            #     self._log_queue.append(self._curr_log)
+            #     self._hold = False
+
+            if not isinstance(prev_log, str) and (prev_log.logtype == VLogType.ERROR or prev_log.logtype == VLogType.WARNING):
                 prev_log.add_additional_logs(log)
                 return
         self._curr_log = log

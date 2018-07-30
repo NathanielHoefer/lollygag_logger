@@ -360,6 +360,11 @@ class VFormatter(LogFormatter):
         elif self._lm.curr_log_type == VLogType.OTHER and unf_log:
             self._store_log(unf_log)
             output = None
+        # Traceback doesn't meet vl specifications
+        elif self._lm.curr_log_type:
+            self._lm.enqueue_log(self._pull_logs())
+            self._lm.hold = False
+            output = unf_log
         return output
 
     def _store_curr_time(self, log):

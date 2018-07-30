@@ -22,6 +22,7 @@ class Base(LogLine):
     CONDENSE_LINE = False
     SHORTEN_FIELDS = False
     FORMAT_API = False
+    AT2_FORMAT = False
     DISPLAY_FIELDS = [
         VLogStdFields.DATE,
         VLogStdFields.TIME,
@@ -100,6 +101,11 @@ class Base(LogLine):
         """
         cls.DISPLAY_FIELDS = fields
 
+    @classmethod
+    def at2_format(cls, value=True):
+        """Use AT2 formatting which formats the time differently and doesn't print the Thread field."""
+        cls.AT2_FORMAT = value
+
 
 class Standard(Base):
     """Standard VL Log Line.
@@ -123,6 +129,7 @@ class Standard(Base):
         :param str unf_str: Unformatted VL log line
         :param `vutils.VLogType`_ type: The type of VL log line
         """
+        self._token_count = 5 if self.AT2_FORMAT else 6
         self._datetime, self._type, self._source, self._thread, \
             self._details = self._parse_fields(unf_str, type)
         self._additional_logs = []
@@ -156,15 +163,20 @@ class Standard(Base):
         :return a list of the vlogfield objects in the order that they appeared
         :rtype list
         """
-        tokens = unf_str.split(" ", self.UNF_LINE_SPLIT_COUNT)
+        tokens = unf_str.split(" ", self._token_count - 1)  # TODO: Regex Groups
         if not type:
             type = VLogType.get_type(unf_str)
         fields = []
         fields.append(vlogfield.Datetime(" ".join([tokens[0], tokens[1]])))
         fields.append(vlogfield.Type(type))
         fields.append(vlogfield.Source(tokens[3]))
-        fields.append(vlogfield.Thread(tokens[4]))
-        fields.append(vlogfield.Details(tokens[5] if len(tokens) >= 6 else ""))
+
+        if self.AT2_FORMAT:
+            fields.append("")
+            fields.append(vlogfield.Details(tokens[4] if len(tokens) >= 5 else ""))
+        else:
+            fields.append(vlogfield.Thread(tokens[4]))
+            fields.append(vlogfield.Details(tokens[5] if len(tokens) >= 6 else ""))
         return fields
 
     def _set_config(self):
@@ -176,7 +188,8 @@ class Standard(Base):
         if self.SHORTEN_FIELDS:
             self._type.shorten_type = True
             self._source.shorten_amount = self.SHORTEN_FIELDS
-            self._thread.shorten_amount = self.SHORTEN_FIELDS
+            if not self.AT2_FORMAT:
+                self._thread.shorten_amount = self.SHORTEN_FIELDS
 
         if self.FORMAT_API:
             self._details.format_api_calls()
@@ -186,7 +199,8 @@ class Standard(Base):
         self._datetime.display_time = True if VLogStdFields.TIME in self.DISPLAY_FIELDS else False
         self._type.display = True if VLogStdFields.TYPE in self.DISPLAY_FIELDS else False
         self._source.display = True if VLogStdFields.SOURCE in self.DISPLAY_FIELDS else False
-        self._thread.display = True if VLogStdFields.THREAD in self.DISPLAY_FIELDS else False
+        if not self.AT2_FORMAT:
+            self._thread.display = True if VLogStdFields.THREAD in self.DISPLAY_FIELDS else False
         self._details.display = True if VLogStdFields.DETAILS in self.DISPLAY_FIELDS else False
 
     @property

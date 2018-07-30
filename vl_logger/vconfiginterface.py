@@ -1,4 +1,5 @@
 from vl_logger import vlogline
+from vl_logger import vlogfield
 from vl_logger import vformatter
 from vl_logger.vutils import VLogStdFields
 from vl_logger.vutils import VLogType
@@ -8,7 +9,7 @@ import configparser
 import os
 
 DEFAULT_CONFIG_DIR = os.path.expanduser("~")
-FORMAT_CONFIG_FILE_NAME = ".vl_logger.ini"
+FORMAT_CONFIG_FILE_NAME = ".vlogger.ini"
 DEFAULT_CONFIG_PATH = DEFAULT_CONFIG_DIR + "/" + FORMAT_CONFIG_FILE_NAME
 # Valid values from ConfigParser that result in True
 VALID_TRUE_INPUT = ("true", "yes", "t", "y", "1")
@@ -57,9 +58,9 @@ class VConfigInterface:
         """Initialize the Config Interface."""
         self._format_config = None
         self._config_ini_mod_time = None
-        self_file_directory = file_directory
-        self.create_config_file(self_file_directory)
-        self.load_config_file(self_file_directory)
+        self._file_directory = file_directory
+        self.create_config_file(self._file_directory)
+        self.load_config_file(self._file_directory)
 
         use_defaults = self._str_to_bool(self._format_config[GENERAL]["use_defaults"])
         use_unformatted = self._str_to_bool(self._format_config[GENERAL]["use_unformatted"])
@@ -84,7 +85,7 @@ class VConfigInterface:
         config_fields[AT2_TASKINSTANCE_CREDENTIALS] = [
             ("username", ""),
             ("password", ""),
-            ("at2_url", "https://")]
+            ("fetch-task-instance-script-path", "fetch-task-instance-step-log.py")]
 
         # Log lines identified by the following types to be printed or ignored
         config_fields[DISPLAY_LOG_TYPES_SECT] = [
@@ -124,24 +125,24 @@ class VConfigInterface:
         # Create and add sections and options to configparser object
         self._format_config = configparser.ConfigParser()
         if file_directory:
-            config_path = file_directory + "/" + FORMAT_CONFIG_FILE_NAME
+            self._config_path = file_directory + "/" + FORMAT_CONFIG_FILE_NAME
         else:
-            config_path = DEFAULT_CONFIG_DIR + "/" + FORMAT_CONFIG_FILE_NAME
+            self._config_path = DEFAULT_CONFIG_DIR + "/" + FORMAT_CONFIG_FILE_NAME
 
         # If format config file doesn't already exist, create and write, otherwise read from existing file.
-        if not os.path.isfile(config_path):
+        if not os.path.isfile(self._config_path):
             for section, options in config_fields.items():
                 self._format_config.add_section(section)
                 for option in options:
                     self._format_config.set(section, option[0], option[1])
-            with open(config_path, "wb") as configfile:
+            with open(self._config_path, "wb") as configfile:
                 self._format_config.write(configfile)
 
     def load_config_file(self, file_directory=""):
         if file_directory:
-            config_path = file_directory + "/" + FORMAT_CONFIG_FILE_NAME
+            config_path = os.path.join(file_directory, FORMAT_CONFIG_FILE_NAME)
         else:
-            config_path = DEFAULT_CONFIG_DIR + "/" + FORMAT_CONFIG_FILE_NAME
+            config_path = os.path.join(DEFAULT_CONFIG_DIR, FORMAT_CONFIG_FILE_NAME)
         self._format_config.read(config_path)
         self._config_ini_mod_time = os.path.getmtime(config_path)
         self._load_config_file_log_types()
@@ -230,6 +231,21 @@ class VConfigInterface:
             VLogType.GENERAL_H
         ])
 
+    def get_at2_info(self):
+        """Return AT2 username, password, and fetch-instance-script-path from .ini file.
+
+        :return: Tuple (username, password, fetch-instance-script-path)
+        """
+        info = []
+        info.append(self._format_config[AT2_TASKINSTANCE_CREDENTIALS].get("username"))
+        info.append(self._format_config[AT2_TASKINSTANCE_CREDENTIALS].get("password"))
+        info.append(self._format_config[AT2_TASKINSTANCE_CREDENTIALS].get("fetch-task-instance-script-path"))
+        return tuple(info)
+
+    def output_file(self, filepath, log_file_wc):
+        """Save formatted STDOUT to a file with progress bar."""
+        vformatter.VFormatter.output_file(filepath, log_file_wc)
+
     def max_line_len(self, length=105):
         """Set the maximum length of the standard log line strings when printed.
 
@@ -293,6 +309,10 @@ class VConfigInterface:
 
     def display_summary(self, set=True):
         vformatter.VFormatter.display_summary(set)
+
+    def at2_format(self, set=True):
+        vlogline.Base.at2_format(set)
+        vlogfield.Datetime.at2_format(set)
 
     def _str_to_bool(self, str_bool_val):
         """Evaluates bool value of string input based on VALID_TRUE_INPUT.

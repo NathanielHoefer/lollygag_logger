@@ -8,6 +8,7 @@ from vl_logger.vutils import VLogType
 from vl_logger.vutils import VPatterns
 from vl_logger import vlogfield
 from vl_logger.vmanagers import HeaderManager, LogManager
+from vutils import progress_bar
 
 
 class VFormatter(LogFormatter):
@@ -45,6 +46,9 @@ class VFormatter(LogFormatter):
     DISPLAY_STEP_NUM = -1
     SUMMARY = False
 
+    OUTPUT_FILE = ""
+    LOG_FILE_WC = 0
+
     def __init__(self, config_interface):
         """Initializes ``VFormatter``
 
@@ -78,6 +82,7 @@ class VFormatter(LogFormatter):
         self._curr_time = None
 
         self._set_log_len()
+        self._log_count = 0
 
     def format(self, unf_str):
         """Convert raw log line to formatted log line objects.
@@ -89,6 +94,11 @@ class VFormatter(LogFormatter):
         :returns: Non-empty str if raw log not classified.
         :returns: None if log line is not to be printed.
         """
+        if self.OUTPUT_FILE:
+            self._log_count += 1
+            if self._log_count % 100 == 0:
+                progress_bar(self._log_count, self.LOG_FILE_WC + 1, "Logs Processed")
+
         if unf_str.isspace():
             self._lm.enqueue_log("")  # Print a blank line
             return self._lm.flush_logs()
@@ -116,13 +126,20 @@ class VFormatter(LogFormatter):
         :param list(``LogLine``|str|None) fmt_logs: The formatted log lines after ``format()``.
         """
         for log in fmt_logs:
+            output = ""
             if log:
                 self.last_line_empty = False
-                print log
+                output = log
             elif log == "":
                 if not self.last_line_empty:
                     self.last_line_empty = True
-                    print ""
+                    output = ""
+
+            if self.OUTPUT_FILE:
+                with open(self.OUTPUT_FILE, 'a') as f:
+                    f.write(str(output) + "\n")
+            else:
+                print output
 
     def complete(self):
         """Prints summary if requested."""
@@ -134,8 +151,13 @@ class VFormatter(LogFormatter):
             try:
                 self._hm.end_time(self.curr_time, root=True)
                 summary = self._hm.generate_summary()
-                print
-                print summary
+                output = "\n" + summary
+
+                if self.OUTPUT_FILE:
+                    with open(self.OUTPUT_FILE, 'a') as f:
+                        f.write(str(output) + "\n")
+                else:
+                    print output
             # except AttributeError:
             except:
                 print "Error generating summary. Log may be incomplete."
@@ -189,6 +211,12 @@ class VFormatter(LogFormatter):
     @classmethod
     def display_summary(cls, value=True):
         cls.SUMMARY = value
+
+    @classmethod
+    def output_file(cls, filepath, log_file_wc):
+        """Save formatted STDOUT to a file with progress bar."""
+        cls.OUTPUT_FILE = filepath
+        cls.LOG_FILE_WC = log_file_wc
 
     def _store_log(self, unf_str):
         self.stored_logs.append(unf_str)
@@ -289,7 +317,7 @@ class VFormatter(LogFormatter):
         :returns: modified header description if unf_str is a header description
         """
         # Border to test case, suite, or general header.
-        if re.match("=+", unf_str):
+        if re.match("={105}", unf_str):
             # Second border
             if self.border_flag == "=":
                 self.border_flag = ""
@@ -299,7 +327,7 @@ class VFormatter(LogFormatter):
                 self.border_flag = "="
                 return None
         # Border to test case steps
-        elif re.match("-+", unf_str):
+        elif re.match("-{105}", unf_str):
             # Second border
             if self.border_flag == "-":
                 self.border_flag = ""
@@ -360,6 +388,11 @@ class VFormatter(LogFormatter):
         elif self._lm.curr_log_type == VLogType.OTHER and unf_log:
             self._store_log(unf_log)
             output = None
+        # Traceback doesn't meet vl specifications
+        elif self._lm.curr_log_type:
+            self._lm.enqueue_log(self._pull_logs())
+            self._lm.hold = False
+            output = unf_log
         return output
 
     def _store_curr_time(self, log):
@@ -496,6 +529,7 @@ class VFormatter(LogFormatter):
             open(step_file, "w").close()
 
         step_regex = VPatterns.get_step_header()
+        tc_regex = VPatterns.get_test_case_header()
         in_specified_step = False
         completed_specified_step = False
 
@@ -505,16 +539,17 @@ class VFormatter(LogFormatter):
                 if line is None:
                     continue
 
+                tc_match = re.match(tc_regex, line)
                 step_match = re.match(step_regex, line)
 
-                # Line is test case
+                # Line is step
                 if step_match:
                     step = vlogline.StepHeader(line)
 
-                    # TC name matches current line
+                    # Step number matches current line
                     if step_num == step.number:
                         in_specified_step = True
-                    # New TC is reached
+                    # New step is reached
                     elif in_specified_step:
                         completed_specified_step = True
                         in_specified_step = False
@@ -523,7 +558,12 @@ class VFormatter(LogFormatter):
                         with open(step_file, "a") as f:
                             f.write(str(step) + "\n")
 
-                # Logs in specified test case
+                # Next Test Case reached
+                elif tc_match and in_specified_step:
+                    completed_specified_step = True
+                    in_specified_step = False
+
+                # Logs in specified step
                 elif in_specified_step:
                     with open(step_file, "a") as f:
                         f.write(str(line) + "\n")

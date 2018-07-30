@@ -2,6 +2,7 @@ import unittest
 from datetime import datetime
 
 from vl_logger import vlogline
+from vl_logger import vlogfield
 from vl_logger.vutils import VLogType
 from vl_logger.vutils import VLogStdFields
 
@@ -30,6 +31,14 @@ class TestLogLineCreation(unittest.TestCase):
     def test_std_log_creation_type(self):
         line = "2017-10-30 19:13:32.208116 DEBUG [res.core:636] " \
                "[MainProcess:MainThread] Sending HTTP POST request"
+        std_log = vlogline.Standard(line, VLogType.DEBUG)
+        self.assertEqual(str(std_log), line)
+
+    def test_std_log_creation_type_at2(self):
+        line = "2017-10-30 19:13:32,216 DEBUG [res.core:636] " \
+               "Sending HTTP POST request"
+        vlogline.Base.at2_format()
+        vlogfield.Datetime.at2_format()
         std_log = vlogline.Standard(line, VLogType.DEBUG)
         self.assertEqual(str(std_log), line)
 

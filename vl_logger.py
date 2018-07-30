@@ -76,9 +76,16 @@ if __name__ == '__main__':
             tmp_config = VConfigInterface()
             AT2_USER, AT2_PASS, FETCH_PATH = tmp_config.get_at2_info()
 
-
             output_file = "%s.log" % log_source
-            logfile = os.path.join(os.getcwd(), output_file)
+            _, cwd = os.path.split(os.getcwd())
+            if cwd == log_source:
+                output_dir = os.getcwd()
+            else:
+                output_dir = os.path.join(os.getcwd(), log_source)
+                if not os.path.exists(output_dir):
+                    os.mkdir(output_dir)
+            logfile = os.path.join(output_dir, output_file)
+
             print "AT2 option selected. TaskID: {0}.".format(log_source)
             if not os.path.exists(logfile):
                 print "Downloading from AT2..."

@@ -121,6 +121,7 @@ class Colorize:
         'api-response': Style.BRIGHT + Back.MAGENTA + Fore.WHITE,
 
         'passed-status': Fore.GREEN,
+        'passed-error-status': Fore.YELLOW,
         'failed-status': Fore.RED
     }
 

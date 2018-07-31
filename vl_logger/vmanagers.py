@@ -33,6 +33,17 @@ class HeaderManager(object):
         self._calc_end_time()
 
         output = []
+
+        # Update status of failed headers
+        for _, _, node in RenderTree(self._root):
+            errors = node.name.errors
+            if errors:
+                for error in errors:
+                    tracebacks = error.get_additional_logs()
+                    if tracebacks:
+                        self._update_tree_status(node, "Failed")
+
+        # Generate Summary string
         for pre, fill, node in RenderTree(self._root):
             # Add Title
             output.append("%s%s" % (pre, node.name.get_id()))
@@ -94,8 +105,6 @@ class HeaderManager(object):
         else:
             self._curr_testcase = self._add_node(header, self._root)
 
-        # testcase_specified = self.header_in_specified_testcase(header)
-        # if self._specified_tc and
         if self._specified_step or not self.header_in_specified_testcase(header):
             return None
         return header
@@ -113,7 +122,8 @@ class HeaderManager(object):
         """Associate an error with a header."""
         curr_node = self._header_tree[-1]
         curr_node.name.add_error(error)
-        self._update_tree_status(curr_node, "Failed")
+        self._update_tree_status(curr_node, "Passed (with Error)")
+
 
     def start_time(self, start_time, root=False):
         """Set the start time of the current ``VHeader`` object."""

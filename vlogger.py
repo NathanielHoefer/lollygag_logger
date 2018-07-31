@@ -54,13 +54,14 @@ def args():
 
 
 if __name__ == '__main__':
-    args = args()
+
 
     logger = None
 
     COMMAND_LINE = True
 
     if COMMAND_LINE:
+        args = args()
 
         log_source = args.log_source[0]
 
@@ -69,8 +70,10 @@ if __name__ == '__main__':
         suite = re.match(SUITE_PATTERN, log_source)
 
         logfile = ""
+        output_dir = None
         is_at2 = False
 
+        # Log source
         if savedfile:
             logfile = log_source
 
@@ -127,10 +130,13 @@ if __name__ == '__main__':
             config.at2_format()
 
         if args.output:
-            print "Saving formatted logs to %s..." % args.output
-            open(args.output, 'w').close()
+            output = args.output
+            if is_at2:
+                output = os.path.join(output_dir, output)
+            print "Saving formatted logs to %s..." % output
+            open(output, 'w').close()
             word_count = sum(1 for line in open(logfile))
-            config.output_file(args.output, word_count)
+            config.output_file(output, word_count)
 
         if args.format_api:
             config.format_api()
@@ -150,15 +156,15 @@ if __name__ == '__main__':
 
     else:
         # path = "/home/nathaniel/vl_artifacts/TsDriveEncryptionPersistenceAndAccessibility-2018-02-07T16.14.18/test.log"
-        path = "/home/hnathani/vl_artifacts/TsNetworking_7285930_test.log"
+        path = "/home/hnathani/vl_artifacts/285465966/285465966_format.log"
 
 
         config = VConfigInterface()
         config.at2_format()
 
-        # config.display_test_case(number=1)
+        config.display_test_case(number=5)
         # config.display_step(number=1)
-        config.display_summary(False)
+        config.display_summary(True)
 
         # config.use_unformatted()
 

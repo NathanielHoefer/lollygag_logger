@@ -95,9 +95,9 @@ class VFormatter(LogFormatter):
         :returns: None if log line is not to be printed.
         """
         if self.OUTPUT_FILE:
-            self._log_count += 1
             if self._log_count % 100 == 0:
-                progress_bar(self._log_count, self.LOG_FILE_WC + 1, "Logs Processed")
+                progress_bar(self._log_count, self.LOG_FILE_WC, "Logs Processed")
+            self._log_count += 1
 
         if unf_str.isspace():
             self._lm.enqueue_log("")  # Print a blank line
@@ -161,6 +161,9 @@ class VFormatter(LogFormatter):
             # except AttributeError:
             except:
                 print "Error generating summary. Log may be incomplete."
+
+        if self.OUTPUT_FILE:
+            print "\nSave complete."
 
     @property
     def curr_time(self):

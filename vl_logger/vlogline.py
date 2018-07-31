@@ -351,7 +351,14 @@ class Header(Base):
     def status(self):
         status = self._status
         if self.COLORIZE:
-            color_name = 'passed-status' if status == 'Passed' else 'failed-status'
+            if status == 'Passed':
+                color_name = 'passed-status'
+            elif status == 'Failed':
+                color_name = 'failed-status'
+            elif status == 'Passed (with Error)':
+                color_name = 'passed-error-status'
+            else:
+                color_name = 'passed-status'
             status = Colorize.apply(status, color_name)
         return status
 

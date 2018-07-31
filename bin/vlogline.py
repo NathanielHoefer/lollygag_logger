@@ -4,12 +4,13 @@ import abc
 import re
 
 import six
-from vl_logger import vlogfield
-from vl_logger.lollygag_logger import LogLine
-from vl_logger.vutils import VLogType
-from vl_logger.vutils import VLogStdFields
-from vl_logger.vutils import VPatterns
-from vl_logger.vutils import Colorize
+from bin.vutils import Colorize
+from bin.vutils import VLogStdFields
+from bin.vutils import VLogType
+from bin.vutils import VPatterns
+
+from bin.lollygag_logger import LogLine
+from bin import vlogfield
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -173,10 +174,12 @@ class Standard(Base):
 
         if self.AT2_FORMAT:
             fields.append("")
-            fields.append(vlogfield.Details(tokens[4] if len(tokens) >= 5 else ""))
+            fields.append(
+                vlogfield.Details(tokens[4] if len(tokens) >= 5 else ""))
         else:
             fields.append(vlogfield.Thread(tokens[4]))
-            fields.append(vlogfield.Details(tokens[5] if len(tokens) >= 6 else ""))
+            fields.append(
+                vlogfield.Details(tokens[5] if len(tokens) >= 6 else ""))
         return fields
 
     def _set_config(self):

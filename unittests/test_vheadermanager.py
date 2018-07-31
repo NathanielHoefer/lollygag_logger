@@ -1,10 +1,10 @@
 import unittest
-from datetime import datetime
 
-from vl_logger import vlogline
-from vl_logger.vutils import VLogType
+from datetime import datetime
 from vl_logger.vutils import VLogStdFields
-from vl_logger.vmanagers import HeaderManager
+
+from bin.vmanagers import HeaderManager
+from vl_logger import vlogline
 
 
 class TestHeaderManager(unittest.TestCase):

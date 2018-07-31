@@ -2,13 +2,13 @@ import os
 import re
 import sys
 
-from vl_logger import vlogline
-from vl_logger.lollygag_logger import LogFormatter
-from vl_logger.vutils import VLogType
-from vl_logger.vutils import VPatterns
-from vl_logger import vlogfield
-from vl_logger.vmanagers import HeaderManager, LogManager
-from vutils import progress_bar
+import vlogfield
+import vlogline
+from lollygag_logger import LogFormatter
+from vmanagers import HeaderManager, LogManager
+from vutils import VLogType
+from vutils import VPatterns
+from vutils import ProgressBar
 
 
 class VFormatter(LogFormatter):
@@ -83,6 +83,7 @@ class VFormatter(LogFormatter):
 
         self._set_log_len()
         self._log_count = 0
+        self._prog = ProgressBar(total=self.LOG_FILE_WC)
 
     def format(self, unf_str):
         """Convert raw log line to formatted log line objects.
@@ -96,7 +97,7 @@ class VFormatter(LogFormatter):
         """
         if self.OUTPUT_FILE:
             if self._log_count % 100 == 0:
-                progress_bar(self._log_count, self.LOG_FILE_WC, "Logs Processed")
+                self._prog.progress(self._log_count, "Logs Processed")
             self._log_count += 1
 
         if unf_str.isspace():
@@ -163,6 +164,7 @@ class VFormatter(LogFormatter):
                 print "Error generating summary. Log may be incomplete."
 
         if self.OUTPUT_FILE:
+            self._prog.progress(self._log_count, "Complete")
             print "\nSave complete."
 
     @property

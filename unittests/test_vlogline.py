@@ -1,10 +1,10 @@
 import unittest
-from datetime import datetime
 
-from vl_logger import vlogline
-from vl_logger import vlogfield
-from vl_logger.vutils import VLogType
-from vl_logger.vutils import VLogStdFields
+from bin.vutils import VLogStdFields
+from bin.vutils import VLogType
+
+from bin import vlogline
+from bin import vlogfield
 
 
 class TestLogLineCreation(unittest.TestCase):

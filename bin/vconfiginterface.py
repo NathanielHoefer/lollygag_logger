@@ -1,14 +1,15 @@
-from vl_logger import vlogline
-from vl_logger import vlogfield
-from vl_logger import vformatter
-from vl_logger.vutils import VLogStdFields
-from vl_logger.vutils import VLogType
-from vl_logger.vutils import VPatterns
-
-from collections import OrderedDict
-import configparser
 import os
 import re
+from collections import OrderedDict
+
+import configparser
+from bin.vutils import VLogStdFields
+from bin.vutils import VLogType
+from bin.vutils import VPatterns
+
+from bin import vlogline
+from bin import vformatter
+from bin import vlogfield
 
 DEFAULT_CONFIG_DIR = os.path.expanduser("~")
 FORMAT_CONFIG_FILE_NAME = ".vlogger.ini"

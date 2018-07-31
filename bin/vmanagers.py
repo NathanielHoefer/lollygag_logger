@@ -1,6 +1,7 @@
 from anytree import Node, RenderTree
-from vl_logger.vutils import VLogType
-from vl_logger import vlogline
+from bin.vutils import VLogType
+
+from bin import vlogline
 
 
 class HeaderManager(object):

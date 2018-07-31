@@ -1,8 +1,9 @@
 import unittest
-from datetime import datetime
 
-from vl_logger import vlogfield
-from vl_logger.vutils import VLogType
+from datetime import datetime
+from bin.vutils import VLogType
+
+from bin import vlogfield
 
 
 class TestFieldCreation(unittest.TestCase):

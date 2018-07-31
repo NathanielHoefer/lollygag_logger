@@ -5,14 +5,14 @@ Formats the logs to be output to the screen.
 """
 
 import argparse
-import re
-import requests
 import os
+import re
 import subprocess
 
-from vl_logger.vformatter import VFormatter
-from vl_logger.vconfiginterface import VConfigInterface
-from vl_logger.lollygag_logger import LollygagLogger
+from bin.vconfiginterface import VConfigInterface
+from bin.vformatter import VFormatter
+
+from bin.lollygag_logger import LollygagLogger
 
 FILE_PATTERN = "^(?:\w|-|/|\.)+\.log$"
 AT2_PATTERN = "^\d+$"

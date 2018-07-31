@@ -5,13 +5,13 @@ import json
 import os
 import pprint
 import re
-from datetime import datetime
 
 import six
+from datetime import datetime
 
-from vl_logger.vutils import Colorize
-from vl_logger.vutils import VLogType
-from vl_logger.vutils import VPatterns
+from bin.vutils import Colorize
+from bin.vutils import VLogType
+from bin.vutils import VPatterns
 
 
 @six.add_metaclass(abc.ABCMeta)

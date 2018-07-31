@@ -111,9 +111,9 @@ class Colorize:
         'traceback-header': Style.BRIGHT + Fore.YELLOW,
         'traceback-exception': Style.BRIGHT + Fore.RED,
         'traceback-description': Style.BRIGHT + Fore.YELLOW,
-        'traceback-line-num': Fore.RED,
+        'traceback-line-num': Fore.YELLOW,
         'traceback-filename': Fore.RED,
-        'traceback-funct': Fore.RED,
+        'traceback-funct': Fore.GREEN,
 
         'json-post': Style.BRIGHT,
         'api-id': Style.BRIGHT,
@@ -155,6 +155,7 @@ class VPatterns(object):
     # Standard Log Patterns
     DATE_RE_PATTERN = "\d{4}-\d{2}-\d{2}"
     TIME_RE_PATTERN = "\d{2}:\d{2}:\d{2}(?:\.\d{6}|,\d{3})"
+    AT2_TIME_PATTERN = "\d{2}:\d{2}:\d{2},\d{3}"
     LOG_TYPES = [VLogType.DEBUG, VLogType.INFO, VLogType.NOTICE,
                  VLogType.WARNING, VLogType.ERROR, VLogType.CRITICAL]
     SOURCE_PATTERN = "\[.*:.*\]"
@@ -204,6 +205,11 @@ class VPatterns(object):
     def get_std_datetime(cls):
         """Return the regex ``str`` used for identifying VL datetime field."""
         return " ".join([cls.DATE_RE_PATTERN, cls.TIME_RE_PATTERN])
+
+    @classmethod
+    def get_at2_time(cls):
+        """Return the regex ``str`` used for identifying VL AT2 time field."""
+        return cls.AT2_TIME_PATTERN
 
     @classmethod
     def get_std_type(cls):

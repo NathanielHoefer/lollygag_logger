@@ -3,10 +3,12 @@ from vl_logger import vlogfield
 from vl_logger import vformatter
 from vl_logger.vutils import VLogStdFields
 from vl_logger.vutils import VLogType
+from vl_logger.vutils import VPatterns
 
 from collections import OrderedDict
 import configparser
 import os
+import re
 
 DEFAULT_CONFIG_DIR = os.path.expanduser("~")
 FORMAT_CONFIG_FILE_NAME = ".vlogger.ini"
@@ -241,6 +243,17 @@ class VConfigInterface:
         info.append(self._format_config[AT2_TASKINSTANCE_CREDENTIALS].get("password"))
         info.append(self._format_config[AT2_TASKINSTANCE_CREDENTIALS].get("fetch-task-instance-script-path"))
         return tuple(info)
+
+    def is_at2_formatting(self, filepath):
+        """Determines if the logs are using the AT2 format."""
+        with open(filepath, 'r') as f:
+            for line in f:
+                if re.match(VPatterns.get_std(), line):
+                   if re.search(VPatterns.get_at2_time(), line):
+                       return True
+                   else:
+                       return False
+
 
     def output_file(self, filepath, log_file_wc):
         """Save formatted STDOUT to a file with progress bar."""

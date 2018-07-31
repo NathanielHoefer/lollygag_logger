@@ -14,7 +14,7 @@ from vl_logger.vformatter import VFormatter
 from vl_logger.vconfiginterface import VConfigInterface
 from vl_logger.lollygag_logger import LollygagLogger
 
-FILE_PATTERN = "^(?:\w|-|/)+\.log$"
+FILE_PATTERN = "^(?:\w|-|/|\.)+\.log$"
 AT2_PATTERN = "^\d+$"
 SUITE_PATTERN = "^Ts(?:\w|-)+$"
 
@@ -34,11 +34,10 @@ def args():
                   "execute the command directly and the output will be in real time."
     read_desc = "Read from log file specified."
     at2_desc = ""  # TODO
-    log_source = ""  # TODO
-    testcase_desc = ""  # TODO
-    format_api_desc = ""  # TODO
-    summary_desc = ""  # TODO
-    output_desc = ""  # TODO
+    log_source = "Log File (*.log) | AT2 Task Inst. Step ID | Suite Path"
+    testcase_desc = "(tc_name|tc_number)[:step number] - List specified test case and optionally step"
+    format_api_desc = "Display API calls"
+    output_desc = "Filepath - Store formatted logs to a file."  # TODO
 
     # Argument setup and parsing
     parser = argparse.ArgumentParser(prog=program, description=description)
@@ -49,9 +48,7 @@ def args():
     parser.add_argument("-t", "--testcase", action="store", dest="testcase", help=testcase_desc)
     parser.add_argument("-a", "--api", action="store_true", dest="format_api", help=format_api_desc)
     parser.add_argument("-o", "--output", action="store", dest="output", help=output_desc)
-    parser.add_argument("-s", "--summary", action="store_true", dest="summary", help=summary_desc)
     return parser.parse_args()
-
 
 if __name__ == '__main__':
 
@@ -71,7 +68,6 @@ if __name__ == '__main__':
 
         logfile = ""
         output_dir = None
-        is_at2 = False
 
         # Log source
         if savedfile:
@@ -126,6 +122,7 @@ if __name__ == '__main__':
 
         config = VConfigInterface()
 
+        is_at2 = config.is_at2_formatting(logfile)
         if is_at2:
             config.at2_format()
 
@@ -140,9 +137,6 @@ if __name__ == '__main__':
 
         if args.format_api:
             config.format_api()
-
-        if args.summary:
-            config.display_summary()
 
         vl_console_output = VFormatter(config)
         try:

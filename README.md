@@ -111,18 +111,54 @@ python vlogger.py <log_source> -o <filepath>
 
 ### Format Config File
 
-The configuration settings are accessed through the `.vlogger.ini` file which is created on your first run of the logger. 
-Currently, the customization is as follows found within the .ini file:
- - hide/view specific log types
- - hide/view specific log fields
- - condense fields
- - condense logs to a specified length or the console width
- - collapse dictionaries and lists
- - color the log type if displayed
+The configuration settings are accessed through the `.vlogger.ini` file which is created in the home directory.
+If `~/.vlogger.ini` doesn't exist, it will be created using the default values specified below. 
 
-By default, it is stored in your home directory, but you may specify another directory by using the `-ini` argument. If using the `-run` option,the .ini file can be updated at any point during the current test, and will reflect any changes on future logs. For example, if you decide that you wish to see debug logs, simply change the option within the format_config file and save it, and any further logs will include the debug logs.
+*Note - To pull logs from AT2, all of the fields under `AT2 LOG CREDENTIALS` must be manually entered.*
+ 
+##### AT2 LOG CREDENTIALS
+Credentials used for pulling logs from AT2 task instances
+* `username`: AT2 Username
+* `password`: AT2 Password
+* `fetch-task-instance-script-path`: Path to `fetch-task-instance-step-log.py` script.
+
+##### DISPLAY LOG TYPES
+Log types marked as `True` will display, otherwise the log lines will be filtered.
+* `debug` [False]: Standard VL Debug logs 
+* `info` [True]: Standard VL Info logs 
+* `notice` [True]: Standard VL Notice logs 
+* `warning` [True]: Standard VL Warning logs 
+* `error` [True]: Standard VL Error logs 
+* `critical` [True]: Standard VL Critical logs 
+* `traceback` [True]: Any traceback following conventional format
+* `other` [True]: Select logs not covered by the above types
+* `step_headers` [True]: Headers that describe a VL test step
+* `test_case_headers` [True]: Headers that describe a VL test case
+* `suite_headers` [True]: Headers that describe a VL suite
+* `general_headers` [True]: Any other headers found within the logs.
+
+##### DISPLAY FIELDS
+Fields within logs that fit the standard VL log pattern, will be filtered if not marked `True`.
+* `date` [False]
+* `time` [True]
+* `type` [True]
+* `source` [True]
+* `thread` [False]
+* `details` [True]
+
+##### GENERAL
+Any other configuration options available to modify.
+* `use_defaults` [False]: Override all options specified in the config file, and use the defaults.
+* `use_unformatted` [False]: Override all options specified in the config file, and don't use any formatting.
+* `use_colors` [True]: Color escape characters will be added per description above.
+* `format_api` [False]: Format API requests and responses found in `DEBUG` logs.
+* `condense_line` [True]: Truncate standard VL logs to the console length or a max length specified below.
+* `shorten_fields` [True]: Truncate the contents of the `Source` and `Thread` fields to 30 characters.
+* `display_summary` [True]: Append a summary of the logs.
+* `use_console_len` [True]: If `True`, the console length will override the max line length for the standard VL logs.
+* `max_line_len` [200]: Specifies the max line length of standard VL logs if `use_console_len` is set to `False`.
+
 *Note: The options listed are only what is currently offered. It will be expanded in future releases.*
-
 
 ## Installation
 After downloading the repository, you must have at least Python 2.7 and the modules within the `requirements.txt` installed. To install the required modules, execute the following command:

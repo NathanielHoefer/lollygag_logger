@@ -245,6 +245,12 @@ class VConfigInterface:
         info.append(self._format_config[AT2_TASKINSTANCE_CREDENTIALS].get("fetch-task-instance-script-path"))
         return tuple(info)
 
+    def set_at2_info(self, at2_user, at2_pass, fetch_script):
+        """Return AT2 username, password, and fetch-instance-script-path from .ini file."""
+        self._format_config.set(AT2_TASKINSTANCE_CREDENTIALS, "username", at2_user)
+        self._format_config.set(AT2_TASKINSTANCE_CREDENTIALS, "password", at2_pass)
+        self._format_config.set(AT2_TASKINSTANCE_CREDENTIALS, "etch-task-instance-script-path", fetch_script)
+
     def is_at2_formatting(self, filepath):
         """Determines if the logs are using the AT2 format."""
         with open(filepath, 'r') as f:

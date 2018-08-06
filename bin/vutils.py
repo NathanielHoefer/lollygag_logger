@@ -344,6 +344,11 @@ class ProgressBar(object):
         self.total = total
 
     def progress(self, current, msg=None):
+
+        # No total specified - don't continue
+        if not self.total:
+            return
+
         if current == 0:
             self.begin_time = time.time()  # Reset for new bar.
 

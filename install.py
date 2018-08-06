@@ -40,6 +40,10 @@ def create_soft_link():
     print "Creating soft link for easy execution: %s" % cmd_str
     subprocess.call(["ln", "-s", vlogger_path, soft_path])
 
+    export_path = ["PATH=%s:$PATH" % bin_dir, "&&", "export", "PATH"]
+    print "Exporting PATH: %s" % export_path
+    subprocess.call(["PATH=%s:$PATH" % bin_dir, "&&", "export", "PATH"])
+
 
 if __name__ == '__main__':
     pass

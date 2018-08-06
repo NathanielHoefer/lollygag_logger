@@ -37,7 +37,8 @@ def args():
     log_source = "Log File (*.log) | AT2 Task Inst. Step ID | Suite Path"
     testcase_desc = "(tc_name|tc_number)[:step number] - List specified test case and optionally step"
     format_api_desc = "Display API calls"
-    output_desc = "Filepath - Store formatted logs to a file."  # TODO
+    save_desc = "Filepath - Store formatted logs to a file."  # TODO
+    file_desc = ""  # TODO
 
     # Argument setup and parsing
     parser = argparse.ArgumentParser(prog=program, description=description)
@@ -47,7 +48,7 @@ def args():
     # group.add_argument("-at2", action="store", dest="at2_inst", help=at2_desc)
     parser.add_argument("-t", "--testcase", action="store", dest="testcase", help=testcase_desc)
     parser.add_argument("-a", "--api", action="store_true", dest="format_api", help=format_api_desc)
-    parser.add_argument("-o", "--output", action="store", dest="output", help=output_desc)
+    parser.add_argument("-s", "--save", action="store_true", dest="save", help=save_desc)
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -58,6 +59,9 @@ if __name__ == '__main__':
     COMMAND_LINE = True
 
     if COMMAND_LINE:
+
+        # Variable Init *******************************************************
+
         args = args()
 
         log_source = args.log_source[0]
@@ -67,25 +71,29 @@ if __name__ == '__main__':
         suite = re.match(SUITE_PATTERN, log_source)
 
         logfile = ""
-        output_dir = None
+        save_filepath = ""
 
-        # Log source
+        # Log source **********************************************************
+        # - Handle any log source specific operations
+
         if savedfile:
             logfile = log_source
+            save_filename = "fmt_%s" % os.path.basename(logfile)
+            save_filepath = os.path.join(os.path.dirname(logfile), save_filename)
 
         elif at2_instance:
             tmp_config = VConfigInterface()
             AT2_USER, AT2_PASS, FETCH_PATH = tmp_config.get_at2_info()
 
-            output_file = "%s.log" % log_source
+            at2_log_file = "%s.log" % log_source
             _, cwd = os.path.split(os.getcwd())
             if cwd == log_source:
-                output_dir = os.getcwd()
+                save_dir = os.getcwd()
             else:
-                output_dir = os.path.join(os.getcwd(), log_source)
-                if not os.path.exists(output_dir):
-                    os.mkdir(output_dir)
-            logfile = os.path.join(output_dir, output_file)
+                save_dir = os.path.join(tmp_config.get_save_dir(), log_source)
+                if not os.path.exists(save_dir):
+                    os.mkdir(save_dir)
+            logfile = os.path.join(save_dir, at2_log_file)
 
             print "AT2 option selected. TaskID: {0}.".format(log_source)
             if not os.path.exists(logfile):
@@ -95,14 +103,29 @@ if __name__ == '__main__':
                 command.extend(["-o", "%s" % logfile])
                 command.extend(["-u", "%s" % AT2_USER])
                 command.extend(["-p", "%s" % AT2_PASS])
-                subprocess.call(command)
+
+                try:
+                    subprocess.check_call(command)
+                except:
+                    if not os.path.exists(logfile):
+                        print "Unable to fetch AT2 logs. Check fetch-task-instance-script-path in .ini file."
+                        exit(1)
+
+                    print "Unable to fetch AT2 logs. Check AT2 credentials in .ini file."
+                    os.remove(logfile)
+                    exit(1)
+
+
             is_at2 = True
+            save_filepath = os.path.join(save_dir, "fmt_%s" % at2_log_file)
 
         elif suite:
             pass
         else:
             print "Invalid log source."
-            exit(0)
+            exit(1)
+
+        # Test Cases **********************************************************
 
         # Display specific test cases and steps
         if (savedfile or at2_instance) and args.testcase:
@@ -120,23 +143,28 @@ if __name__ == '__main__':
             if m.group(3) and m.group(3).isdigit():
                 logfile = tmp_formatter.parse_step(logfile, step_num=int(m.group(3)))
 
+            save_filename = "fmt_%s" % os.path.basename(logfile)
+            save_filepath = os.path.join(os.path.dirname(logfile), save_filename)
+
+
+        # Additional Configuration ********************************************
+
         config = VConfigInterface()
 
         is_at2 = config.is_at2_formatting(logfile)
         if is_at2:
             config.at2_format()
 
-        if args.output:
-            output = args.output
-            if is_at2:
-                output = os.path.join(output_dir, output)
-            print "Saving formatted logs to %s..." % output
-            open(output, 'w').close()
+        if args.save:
+            print "Saving formatted logs to %s..." % save_filepath
+            open(save_filepath, 'w').close()
             word_count = sum(1 for line in open(logfile))
-            config.output_file(output, word_count)
+            config.save_file(save_filepath, word_count)
 
         if args.format_api:
             config.format_api()
+
+        # Execute vlogger *****************************************************
 
         vl_console_output = VFormatter(config)
         try:

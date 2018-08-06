@@ -115,6 +115,7 @@ class VConfigInterface:
             ("details", "True")]
 
         config_fields[GENERAL] = [
+            ("save_dir", os.path.join(os.path.expanduser("~"), "vl_artifacts")),
             ("use_defaults", "False"),
             ("use_unformatted", "False"),
             ("use_colors", "True"),
@@ -246,7 +247,7 @@ class VConfigInterface:
         return tuple(info)
 
     def set_at2_info(self, at2_user, at2_pass, fetch_script):
-        """Return AT2 username, password, and fetch-instance-script-path from .ini file."""
+        """Store the AT2 username, password, and fetch-instance-script-path to .ini file."""
         self._format_config.set(AT2_TASKINSTANCE_CREDENTIALS, "username", at2_user)
         self._format_config.set(AT2_TASKINSTANCE_CREDENTIALS, "password", at2_pass)
         self._format_config.set(AT2_TASKINSTANCE_CREDENTIALS, "etch-task-instance-script-path", fetch_script)
@@ -261,8 +262,15 @@ class VConfigInterface:
                    else:
                        return False
 
+    def get_save_dir(self):
+        """Return save directory from .ini file."""
+        return self._format_config[GENERAL].get("save_dir")
 
-    def output_file(self, filepath, log_file_wc):
+    def set_save_dir(self, filepath):
+        """Store the Save directory path to the .ini file."""
+        self._format_config.set(GENERAL, "save_dir", filepath)
+
+    def save_file(self, filepath, log_file_wc):
         """Save formatted STDOUT to a file with progress bar."""
         vformatter.VFormatter.output_file(filepath, log_file_wc)
 

@@ -370,6 +370,8 @@ class VFormatter(LogFormatter):
         :returns: list of log lines gathered from traceback if unf_log is the last line.
         """
         output = ""
+        if unf_log is None:
+            return None
         # First line of traceback ('Traceback (most recent call last):')
         if self._lm.curr_log_type == VLogType.TRACEBACK:
             self._lm.hold = True

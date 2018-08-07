@@ -4,3 +4,6 @@
 # Pycharm
 *.idea/
 *.pyc
+
+# Plugins
+*plugins/

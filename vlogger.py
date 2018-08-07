@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
-"""
-Formats the logs to be output to the screen.
-"""
+"""Formats the logs to be output to the screen."""
 
 import argparse
 import os
@@ -11,8 +9,6 @@ import re
 from bin.lollygag_logger import LollygagLogger
 from bin.vconfiginterface import VConfigInterface
 from bin.vformatter import VFormatter
-from plugins import at2_task
-from plugins import vl_run
 
 FILE_PATTERN = "^(?:\w|-|/|\.)+\.log$"
 AT2_PATTERN = "^\d+$"
@@ -20,10 +16,7 @@ SUITE_PATTERN = "^(?:\w|-|/|\.)*Ts(?:\w|-)+$"
 
 
 def args():
-    """Args for vl_logger.
-
-    :rtype: ArgumentParser
-    """
+    """Args for vlogger."""
 
     # Descriptions for arg parse
     program = "Valence Lollygag Logger"
@@ -32,13 +25,17 @@ def args():
                   "tool can format logs from the 'vl run' command, stored log file, or an at2 task " \
                   "step instance. When formatting logs from the 'vl run' command, the tool will " \
                   "execute the command directly and the output will be in real time."
-    log_source = "Log File (*.log) | AT2 Task Inst. Step ID | Suite Path"
+    log_source = "Log File (*.log) | AT2 Task Inst. Step ID | Suite Path (path.to.suite.Ts*)"
     testcase_desc = "(tc_name|tc_number)[:step number] - List specified test case and optionally step"
     format_api_desc = "Display API calls"
-    save_desc = "Filepath - Store formatted logs to a file."  # TODO
+    save_desc = "Store formatted logs to a file at a default location. " \
+                "The storage location can be specified in the .ini file, but " \
+                "defaults to ~/vl_artifacts."
+    epilog = "The configuration file (.ini) is located at ~/.vlogger.ini. \n" \
+             "When executing a suite, only options specified in the .ini file are considered."
 
     # Argument setup and parsing
-    parser = argparse.ArgumentParser(prog=program, description=description)
+    parser = argparse.ArgumentParser(prog=program, description=description, epilog=epilog)
     parser.add_argument("log_source", nargs=1, help=log_source)
     parser.add_argument("-t", "--testcase", action="store", dest="testcase", help=testcase_desc)
     parser.add_argument("-a", "--api", action="store_true", dest="format_api", help=format_api_desc)
@@ -67,9 +64,11 @@ if __name__ == '__main__':
         logfile = log_source
 
     elif at2_instance:
+        from plugins import at2_task
         logfile = at2_task.logs_from_at2(log_source)
 
     elif suite:
+        from plugins import vl_run
         logfile = vl_run.execute_local_run(log_source)
 
     else:

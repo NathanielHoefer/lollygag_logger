@@ -3,13 +3,13 @@ import re
 from collections import OrderedDict
 
 import configparser
+
+from bin import vformatter
+from bin import vlogfield
+from bin import vlogline
 from bin.vutils import VLogStdFields
 from bin.vutils import VLogType
 from bin.vutils import VPatterns
-
-from bin import vlogline
-from bin import vformatter
-from bin import vlogfield
 
 DEFAULT_CONFIG_DIR = os.path.expanduser("~")
 FORMAT_CONFIG_FILE_NAME = ".vlogger.ini"
@@ -65,8 +65,8 @@ class VConfigInterface:
         self.create_config_file(self._file_directory)
         self.load_config_file(self._file_directory)
 
-        use_defaults = self._str_to_bool(self._format_config[GENERAL]["use_defaults"])
-        use_unformatted = self._str_to_bool(self._format_config[GENERAL]["use_unformatted"])
+        use_defaults = self._str_to_bool(self._format_config.get(GENERAL, "use_defaults"))
+        use_unformatted = self._str_to_bool(self._format_config.get(GENERAL, "use_unformatted"))
 
         if use_defaults and not use_unformatted:
             self.use_default()
@@ -241,9 +241,9 @@ class VConfigInterface:
         :return: Tuple (username, password, fetch-instance-script-path)
         """
         info = []
-        info.append(self._format_config[AT2_TASKINSTANCE_CREDENTIALS].get("username"))
-        info.append(self._format_config[AT2_TASKINSTANCE_CREDENTIALS].get("password"))
-        info.append(self._format_config[AT2_TASKINSTANCE_CREDENTIALS].get("fetch-task-instance-script-path"))
+        info.append(self._format_config.get(AT2_TASKINSTANCE_CREDENTIALS, "username"))
+        info.append(self._format_config.get(AT2_TASKINSTANCE_CREDENTIALS, "password"))
+        info.append(self._format_config.get(AT2_TASKINSTANCE_CREDENTIALS, "fetch-task-instance-script-path"))
         return tuple(info)
 
     def set_at2_info(self, at2_user, at2_pass, fetch_script):
@@ -264,7 +264,7 @@ class VConfigInterface:
 
     def get_save_dir(self):
         """Return save directory from .ini file."""
-        return self._format_config[GENERAL].get("save_dir")
+        return self._format_config.get(GENERAL, "save_dir")
 
     def set_save_dir(self, filepath):
         """Store the Save directory path to the .ini file."""
@@ -353,7 +353,7 @@ class VConfigInterface:
     def _load_config_file_log_types(self):
         """Updates the display log types from the loaded config file."""
         types_dict = {}
-        for key, val in self._format_config[DISPLAY_LOG_TYPES_SECT].items():
+        for key, val in self._format_config.items(DISPLAY_LOG_TYPES_SECT):
             types_dict[key] = self._str_to_bool(val)
 
         log_types = []
@@ -385,7 +385,7 @@ class VConfigInterface:
 
     def _load_config_file_fields(self):
         fields_dict = {}
-        for key, val in self._format_config[DISPLAY_FIELDS_SECT].items():
+        for key, val in self._format_config.items(DISPLAY_FIELDS_SECT):
             fields_dict[key] = self._str_to_bool(val)
 
         fields = []
@@ -405,7 +405,7 @@ class VConfigInterface:
 
     def _load_config_file_general(self):
         general_dict = {}
-        for key, val in self._format_config[GENERAL].items():
+        for key, val in self._format_config.items(GENERAL):
             general_dict[key] = self._str_to_bool(val)
 
         self.colorize(general_dict["use_colors"])
@@ -414,4 +414,4 @@ class VConfigInterface:
         self.shorten_fields(general_dict["shorten_fields"])
         self.display_summary(general_dict["display_summary"])
         self.use_console_width(general_dict["use_console_len"])
-        self.max_line_len(int(self._format_config[GENERAL]["max_line_len"]))
+        self.max_line_len(int(self._format_config.get(GENERAL, "max_line_len")))

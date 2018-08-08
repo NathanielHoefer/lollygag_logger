@@ -1,7 +1,7 @@
 import unittest
 
-from vl_logger import VLogType
-from vl_logger import VPatterns
+from bin.vutils import VLogType
+from bin.vutils import VPatterns
 
 
 class TestGetType(unittest.TestCase):

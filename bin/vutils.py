@@ -161,8 +161,9 @@ class VPatterns(object):
     SOURCE_PATTERN = "\[.*:.*\]"
     THREAD_PATTERN = "\[.*:.*\]"
     DETAIL_PATTERN = ".*"
-    DETAIL_API_PATTERN = "^JSON-RPC-POST response|(^Sending HTTP POST request).*"
-    DETAIL_REQUEST_PATTERN = "^Sending HTTP POST request to server_url: (.*); ({.*}|None).$"
+    DETAIL_API_PATTERN = "^JSON-RPC-POST response|(^Sending HTTP POST request|JSON-RPC-POST:).*"
+    DETAIL_REQUEST_PATTERN_1 = "^Sending HTTP POST request to server_url: (.*); ({.*}|None).$"
+    DETAIL_REQUEST_PATTERN_2 = "^JSON-RPC-POST: method=(.*), url=(.*), id=(\d+)$"
     DETAIL_RESPONSE_PATTERN = "^JSON-RPC-POST response: ({.*})$"
 
 
@@ -241,7 +242,7 @@ class VPatterns(object):
     @classmethod
     def get_std_details_request(cls):
         """Return the regex ``str`` used for identifying request api call in the VL details field."""
-        return cls.DETAIL_REQUEST_PATTERN
+        return cls.DETAIL_REQUEST_PATTERN_1, cls.DETAIL_REQUEST_PATTERN_2
 
     @classmethod
     def get_std_details_response(cls):

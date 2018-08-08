@@ -1,1 +1,3 @@
-{}
+{
+  "test_vutils.py::TestGetPatterns::test_get_std": true
+}

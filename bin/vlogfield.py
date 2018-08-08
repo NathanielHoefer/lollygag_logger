@@ -289,27 +289,35 @@ class Details(LogField):
 
     def format_api_calls(self):
         """When converted to string, the API requests and responses will be formatted."""
-        m = re.match(VPatterns.get_std_details_api(), self._details)
-        if m:
-            if m.group(1):
-                request = re.match(VPatterns.get_std_details_request(), self._details)
-                if request.group(2) != 'None':
-                    request_json = json.loads(request.group(2))
-                    self._request_url = request.group(1)
-                    self._request_id = int(request_json['id'])
-                    self._request_method = request_json['method']
-                    self._request_params = request_json['params']
-            else:
-                response = re.match(VPatterns.get_std_details_response(), self._details)
-                string = response.group(1)
-                json_response = json.loads(string)
-                self._response_id = json_response['id']
-                if 'result' in json_response:
-                    self._response_result = json_response['result']
-                    self._response_type = 'Result'
-                elif 'error' in json_response:
-                    self._response_result = json_response['error']
-                    self._response_type = 'Error'
+        request1 = re.match(VPatterns.get_std_details_request()[0], self._details)
+        request2 = re.match(VPatterns.get_std_details_request()[1], self._details)
+        response = re.match(VPatterns.get_std_details_response(), self._details)
+
+        if request1:
+            # "Sending HTTP POST request to server_url: ..."
+            if request1.group(2) != 'None':
+                request_json = json.loads(request1.group(2))
+                self._request_url = request1.group(1)
+                self._request_id = int(request_json['id'])
+                self._request_method = request_json['method']
+                self._request_params = request_json['params']
+        elif request2:
+            # "JSON-RPC-POST: method= ..."
+            self._request_url = request2.group(2)
+            self._request_id = int(request2.group(3))
+            self._request_method = request2.group(1)
+            self._request_params = ""
+        elif response:
+            # "JSON-RPC-POST response: ..."
+            string = response.group(1)
+            json_response = json.loads(string)
+            self._response_id = json_response['id']
+            if 'result' in json_response:
+                self._response_result = json_response['result']
+                self._response_type = 'Result'
+            elif 'error' in json_response:
+                self._response_result = json_response['error']
+                self._response_type = 'Error'
 
     def _is_api_request(self):
         """Return ``True`` if detail contains an API request."""

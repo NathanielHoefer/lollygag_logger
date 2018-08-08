@@ -31,7 +31,7 @@ def args():
     save_desc = "Store formatted logs to a file at a default location. " \
                 "The storage location can be specified in the .ini file, but " \
                 "defaults to ~/vl_artifacts."
-    epilog = "The configuration file (.ini) is located at ~/.vlogger.ini. \n" \
+    epilog = "The configuration file (.ini) is located at ~/.vlogger.ini. " \
              "When executing a suite, only options specified in the .ini file are considered."
 
     # Argument setup and parsing

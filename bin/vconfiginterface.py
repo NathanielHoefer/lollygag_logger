@@ -18,7 +18,6 @@ DEFAULT_CONFIG_PATH = DEFAULT_CONFIG_DIR + "/" + FORMAT_CONFIG_FILE_NAME
 VALID_TRUE_INPUT = ("true", "yes", "t", "y", "1")
 
 # Section names
-AT2_TASKINSTANCE_CREDENTIALS = "AT2 LOG CREDENTIALS"
 DISPLAY_LOG_TYPES_SECT = "DISPLAY LOG TYPES"
 DISPLAY_FIELDS_SECT = "DISPLAY FIELDS"
 GENERAL = "GENERAL"
@@ -57,13 +56,22 @@ class VConfigInterface:
         config = VConfigInterface(use_unformatted=True)
     """
 
-    def __init__(self, file_directory=""):
+    def __init__(self, file_directory="", create_config_file=True, load_config_file=True):
         """Initialize the Config Interface."""
-        self._format_config = None
         self._config_ini_mod_time = None
         self._file_directory = file_directory
-        self.create_config_file(self._file_directory)
-        self.load_config_file(self._file_directory)
+
+        # Create and add sections and options to configparser object
+        self._format_config = configparser.ConfigParser()
+        if file_directory:
+            self._config_path = file_directory + "/" + FORMAT_CONFIG_FILE_NAME
+        else:
+            self._config_path = DEFAULT_CONFIG_DIR + "/" + FORMAT_CONFIG_FILE_NAME
+
+        if create_config_file:
+            self.create_config_file(self._file_directory)
+        if load_config_file:
+            self.load_config_file(self._file_directory)
 
         use_defaults = self._str_to_bool(self._format_config.get(GENERAL, "use_defaults"))
         use_unformatted = self._str_to_bool(self._format_config.get(GENERAL, "use_unformatted"))
@@ -83,12 +91,6 @@ class VConfigInterface:
         """
 
         config_fields = OrderedDict()
-
-        # Username and password for grabbing AT2 logs from a task instance ID.
-        config_fields[AT2_TASKINSTANCE_CREDENTIALS] = [
-            ("username", ""),
-            ("password", ""),
-            ("fetch-task-instance-script-path", "fetch-task-instance-step-log.py")]
 
         # Log lines identified by the following types to be printed or ignored
         config_fields[DISPLAY_LOG_TYPES_SECT] = [
@@ -125,13 +127,6 @@ class VConfigInterface:
             ("display_summary", "True"),
             ("use_console_len", "True"),  # Use console width for max log line length
             ("max_line_len", "200")]  # Max length to be printed if console width is not selected
-
-        # Create and add sections and options to configparser object
-        self._format_config = configparser.ConfigParser()
-        if file_directory:
-            self._config_path = file_directory + "/" + FORMAT_CONFIG_FILE_NAME
-        else:
-            self._config_path = DEFAULT_CONFIG_DIR + "/" + FORMAT_CONFIG_FILE_NAME
 
         # If format config file doesn't already exist, create and write, otherwise read from existing file.
         if not os.path.isfile(self._config_path):
@@ -250,7 +245,9 @@ class VConfigInterface:
         """Store the AT2 username, password, and fetch-instance-script-path to .ini file."""
         self._format_config.set(AT2_TASKINSTANCE_CREDENTIALS, "username", at2_user)
         self._format_config.set(AT2_TASKINSTANCE_CREDENTIALS, "password", at2_pass)
-        self._format_config.set(AT2_TASKINSTANCE_CREDENTIALS, "etch-task-instance-script-path", fetch_script)
+        self._format_config.set(AT2_TASKINSTANCE_CREDENTIALS, "fetch-task-instance-script-path", fetch_script)
+        with open(self._config_path, "ab") as configfile:
+            self._format_config.write(configfile)
 
     def is_at2_formatting(self, filepath):
         """Determines if the logs are using the AT2 format."""

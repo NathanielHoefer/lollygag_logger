@@ -45,9 +45,9 @@ and displays their runtime, status (Passed, Failed, Passed with Errors) and conc
 
 ### Log Sources
 
-**Execute local VL run (Not Currently Available)** 
+**Execute local VL run** 
 
-Use the `-run` argument followed by the suite path. This tool utilizes the `vl run` command, so it must be installed and you must execute it from the same directory as if running that command instead. To stop the test, issue a keyboard interupt Ctrl-C just as you would normally.
+This tool utilizes the `vl run` command, so it must be installed and you must execute it from the same directory as if running that command instead. To stop the test, issue a keyboard interupt Ctrl-C just as you would normally.
 
 ```
 python vlogger.py <path.to.suite>
@@ -99,14 +99,14 @@ By using the `-a` argument, the API calls will be clearly displayed.
 python vlogger.py <log_source> -a
     Ex: python vlogger test.log -a
 ```
-**Output Formatted Logs to a File** 
+**Save Formatted Logs to a File** 
 
 The formatted logs can be redirected to a file rather than STDOUT. 
-Specify a filepath where the logs are to be stored. 
+By default, the file will be saved in a directory in `~/vl_artifacts`
 
 ```
-python vlogger.py <log_source> -o <filepath>
-    Ex: python vlogger test.log -o test_formatted.log
+python vlogger.py <log_source> -s
+    Ex: python vlogger test.log -s
 ```
 
 ### Format Config File
@@ -115,12 +115,6 @@ The configuration settings are accessed through the `.vlogger.ini` file which is
 If `~/.vlogger.ini` doesn't exist, it will be created using the default values specified below. 
 
 *Note - To pull logs from AT2, all of the fields under `AT2 LOG CREDENTIALS` must be manually entered.*
- 
-##### AT2 LOG CREDENTIALS
-Credentials used for pulling logs from AT2 task instances
-* `username`: AT2 Username
-* `password`: AT2 Password
-* `fetch-task-instance-script-path`: Path to `fetch-task-instance-step-log.py` script.
 
 ##### DISPLAY LOG TYPES
 Log types marked as `True` will display, otherwise the log lines will be filtered.
@@ -159,28 +153,3 @@ Any other configuration options available to modify.
 * `max_line_len` [200]: Specifies the max line length of standard VL logs if `use_console_len` is set to `False`.
 
 *Note: The options listed are only what is currently offered. It will be expanded in future releases.*
-
-## Installation
-After downloading the repository, you must have at least Python 2.7 and the modules within the `requirements.txt` installed. To install the required modules, execute the following command:
-```
-pip install -r /path/to/requirements.txt
-
-
-1. Download the repository:
-    git clone --recurse-submodules git@github.com:NathanielHoefer/lollygag_logger.git
-    
-
-```
-
-## Additional Info
-To execute this tool without the initial `python` command from any directory, execute the following commands.
-```
-chmod u+x vl_logger.py
-ln -s <explicit path to repo>/lollygag_logger/vl_logger.py ~/bin/vl_logger
-```
-Then you may execute the tool as follows:
-```
-Ex: vl_logger -at2 <step id> -f "<string>"
-```
-Do not use PDB when using this script, it will not output correctly.
-If you find any bugs or have suggestions, feel free to contact me.

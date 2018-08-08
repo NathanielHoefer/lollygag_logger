@@ -164,6 +164,12 @@ Any other configuration options available to modify.
 After downloading the repository, you must have at least Python 2.7 and the modules within the `requirements.txt` installed. To install the required modules, execute the following command:
 ```
 pip install -r /path/to/requirements.txt
+
+
+1. Download the repository:
+    git clone --recurse-submodules git@github.com:NathanielHoefer/lollygag_logger.git
+    
+
 ```
 
 ## Additional Info

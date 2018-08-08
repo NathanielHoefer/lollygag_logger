@@ -90,46 +90,46 @@ class VConfigInterface:
             store in the user's home directory.
         """
 
-        config_fields = OrderedDict()
-
-        # Log lines identified by the following types to be printed or ignored
-        config_fields[DISPLAY_LOG_TYPES_SECT] = [
-            ("debug", "False"),
-            ("info", "True"),
-            ("notice", "True"),
-            ("warning", "True"),
-            ("error", "True"),
-            ("critical", "True"),
-            ("traceback", "True"),
-            ("other", "True"),
-            ("step_headers", "True"),
-            ("test_case_headers", "True"),
-            ("suite_headers", "True"),
-            ("general_headers", "True")]
-
-        # Elements within each log line to be printed or ignored
-        config_fields[DISPLAY_FIELDS_SECT] = [
-            ("date", "False"),
-            ("time", "True"),
-            ("type", "True"),
-            ("source", "True"),
-            ("thread", "False"),
-            ("details", "True")]
-
-        config_fields[GENERAL] = [
-            ("save_dir", os.path.join(os.path.expanduser("~"), "vl_artifacts")),
-            ("use_defaults", "False"),
-            ("use_unformatted", "False"),
-            ("use_colors", "True"),
-            ("format_api", "False"),
-            ("condense_line", "True"),
-            ("shorten_fields", "True"),
-            ("display_summary", "True"),
-            ("use_console_len", "True"),  # Use console width for max log line length
-            ("max_line_len", "200")]  # Max length to be printed if console width is not selected
-
         # If format config file doesn't already exist, create and write, otherwise read from existing file.
         if not os.path.isfile(self._config_path):
+            config_fields = OrderedDict()
+
+            # Log lines identified by the following types to be printed or ignored
+            config_fields[DISPLAY_LOG_TYPES_SECT] = [
+                ("debug", "False"),
+                ("info", "True"),
+                ("notice", "True"),
+                ("warning", "True"),
+                ("error", "True"),
+                ("critical", "True"),
+                ("traceback", "True"),
+                ("other", "True"),
+                ("step_headers", "True"),
+                ("test_case_headers", "True"),
+                ("suite_headers", "True"),
+                ("general_headers", "True")]
+
+            # Elements within each log line to be printed or ignored
+            config_fields[DISPLAY_FIELDS_SECT] = [
+                ("date", "False"),
+                ("time", "True"),
+                ("type", "True"),
+                ("source", "True"),
+                ("thread", "False"),
+                ("details", "True")]
+
+            config_fields[GENERAL] = [
+                ("save_dir", os.path.join(os.path.expanduser("~"), "vl_artifacts")),
+                ("use_defaults", "False"),
+                ("use_unformatted", "False"),
+                ("use_colors", "True"),
+                ("format_api", "False"),
+                ("condense_line", "True"),
+                ("shorten_fields", "True"),
+                ("display_summary", "True"),
+                ("use_console_len", "True"),  # Use console width for max log line length
+            ("max_line_len", "200")]  # Max length to be printed if console width is not selected
+
             for section, options in config_fields.items():
                 self._format_config.add_section(section)
                 for option in options:
@@ -138,12 +138,8 @@ class VConfigInterface:
                 self._format_config.write(configfile)
 
     def load_config_file(self, file_directory=""):
-        if file_directory:
-            config_path = os.path.join(file_directory, FORMAT_CONFIG_FILE_NAME)
-        else:
-            config_path = os.path.join(DEFAULT_CONFIG_DIR, FORMAT_CONFIG_FILE_NAME)
-        self._format_config.read(config_path)
-        self._config_ini_mod_time = os.path.getmtime(config_path)
+        self._format_config.read(self._config_path)
+        self._config_ini_mod_time = os.path.getmtime(self._config_path)
         self._load_config_file_log_types()
         self._load_config_file_fields()
         self._load_config_file_general()
@@ -230,24 +226,9 @@ class VConfigInterface:
             VLogType.GENERAL_H
         ])
 
-    def get_at2_info(self):
-        """Return AT2 username, password, and fetch-instance-script-path from .ini file.
-
-        :return: Tuple (username, password, fetch-instance-script-path)
-        """
-        info = []
-        info.append(self._format_config.get(AT2_TASKINSTANCE_CREDENTIALS, "username"))
-        info.append(self._format_config.get(AT2_TASKINSTANCE_CREDENTIALS, "password"))
-        info.append(self._format_config.get(AT2_TASKINSTANCE_CREDENTIALS, "fetch-task-instance-script-path"))
-        return tuple(info)
-
-    def set_at2_info(self, at2_user, at2_pass, fetch_script):
-        """Store the AT2 username, password, and fetch-instance-script-path to .ini file."""
-        self._format_config.set(AT2_TASKINSTANCE_CREDENTIALS, "username", at2_user)
-        self._format_config.set(AT2_TASKINSTANCE_CREDENTIALS, "password", at2_pass)
-        self._format_config.set(AT2_TASKINSTANCE_CREDENTIALS, "fetch-task-instance-script-path", fetch_script)
-        with open(self._config_path, "ab") as configfile:
-            self._format_config.write(configfile)
+    @property
+    def config_path(self):
+        return self._config_path
 
     def is_at2_formatting(self, filepath):
         """Determines if the logs are using the AT2 format."""

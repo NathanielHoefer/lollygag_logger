@@ -50,6 +50,7 @@ if __name__ == '__main__':
     args = args()
 
     logger = None
+    config = VConfigInterface()
     log_source = args.log_source[0]
     logfile = ""
 
@@ -79,9 +80,8 @@ if __name__ == '__main__':
 
     # Display specific test cases and steps
     if (savedfile or at2_instance) and args.testcase:
-        tmp_config = VConfigInterface()
-        tmp_config.use_unformatted()
-        tmp_formatter = VFormatter(tmp_config)
+        config.use_unformatted()
+        tmp_formatter = VFormatter(config)
         m = re.match("^(\d+|Tc\w*)(:(\d+))*$", args.testcase)
         # Test case specified
         if m.group(1):
@@ -92,10 +92,9 @@ if __name__ == '__main__':
         # Step specified
         if m.group(3) and m.group(3).isdigit():
             logfile = tmp_formatter.parse_step(logfile, step_num=int(m.group(3)))
+        config.load_config_file()
 
     # Additional Configuration ************************************************
-
-    config = VConfigInterface()
 
     if savedfile or at2_instance:
         is_at2 = config.is_at2_formatting(logfile)

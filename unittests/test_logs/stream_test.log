@@ -1,5 +1,0 @@
-This is the beginning of the file.
-2017-10-30 19:13:32.208116 DEBUG [res.core.absolute.implementation:636] [MainProcess:MainThread] Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc/10.0; {"params": {"IDs": [203, 204]}, "method": "Delete", "id": 54}.
-2017-10-30 19:13:32.208116 INFO [res.core.absolute.implementation:636] [MainProcess:MainThread] Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc/10.0; {"params": {"IDs": [203, 204]}, "method": "Delete", "id": 54}.
-2017-10-30 19:13:32.208116 WARNING [res.core.absolute.implementation:636] [MainProcess:MainThread] Sending HTTP POST request to server_url: https://10.10.10.10/json-rpc/10.0; {"params": {"IDs": [203, 204]}, "method": "Delete", "id": 54}.
-This is the end of the file.

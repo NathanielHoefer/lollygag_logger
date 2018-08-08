@@ -1,0 +1,79 @@
+Problem Statement:
+We need a tool that will allow us to more efficiently interpret logs from executed tests and extract more information that is readily visible from various sources.
+For formatting, this includes:
+  - using color to differentiate between log types,
+  - filter logs by type,
+  - filter log fields,
+  - condense logs to a single line,
+  - align fields from line to line
+More information to be extracted includes:
+ - clearly display the API calls and responses
+ - duration of suites/test cases/steps
+The user can choose the following
+ - what log types to filter,
+ - what log fields to filter
+Various sources:
+ - log files that have already been generated,
+ - locally running test executed from the tool,
+ - AT2 task instances.
+
+
+Stories:
+
+Title: Convert Log Lines to Objects
+Type: Enabler
+Description: As the logs are coming in, convert the line into an object that can identify the various fields.
+Acceptance Criteria:
+    - Given any state, when
+
+As a user, choose to show API calls and responses in a clear manner
+
+As a user, choose to what suites/test cases/steps to show and their durations
+
+Provide a config file that allows user to decide what log types to filter, what log fields to filter
+
+As a user, execute a local suite and format the output as it is being produced.
+
+Stories:
+
+As a user, I want to
+
+
+
+
+User Interface:
+
+
+
+Completed Stories:
+Title: Design Basic Structure for Command.
+Type: Enabler
+Description: Design the initial command and arguments to allow for consistency between options.
+Acceptance Criteria: When the program is executed with the '-h' option, a list of commands to be implemented within this feature are to be displayed.
+
+Title: Format Log Type by Color
+Type: User Story
+Description: As a user, I want to format logs from a local file that uses color to differentiate between log types, so that I can more easily triage logs.
+Acceptance Criteria: Given logs are in vl format within a file, when the program is executed with the file as an argument, then the file will be printed to stdout with console color formatting around the log type.
+
+Title: Read Logs from a File
+Type: User Story
+Description: As a user, I want to read the logs in from a file, so that later they can be formatted.
+Acceptance Criteria: Given any state, when the program is executed with a log file as an argument, then each line will be printed to stdout as it was.
+
+Read from log file
+vl-logger -r[--read] test.log
+
+Read from log file and view specific test case
+vl-logger -r test.log -t[--testcase] [tc number|tc name]
+
+Read from log file and view specific step from test case
+vl-logger -r test.log -t [tc number|tc name]:[step number]
+
+- As a user, I want to filter logs by type so that I can more easily triage logs
+
+Read from log file and view API calls and responses
+vl-logger -r test.log -a[--api]
+
+Compute and display header runtime
+vl-logger -r test.log -s[--summary]

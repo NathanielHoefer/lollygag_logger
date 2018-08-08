@@ -1,2 +1,11 @@
 .idea/*
+=======
+# Sphinx
+*_build/
+
+# Pycharm
+*.idea/
 *.pyc
+
+# Plugins
+*plugins/

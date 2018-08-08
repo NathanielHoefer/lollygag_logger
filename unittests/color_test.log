@@ -1,0 +1,36 @@
+=========================================================================================================
+All Test Case Preconditions
+=========================================================================================================
+
+=========================================================================================================
+Test Suite: Starting Setup of TsSuite
+=========================================================================================================
+
+=========================================================================================================
+Test Case 0: Starting Setup of TcTest
+=========================================================================================================
+
+---------------------------------------------------------------------------------------------------------
+Starting Step 1 for TcTest: Running the step.
+Expect: Step to complete successfully.
+---------------------------------------------------------------------------------------------------------
+
+|! Traceback (most recent call last):
+|!   File "/home/http_utils.py", line 1078, in _call_cluster_api
+|!     check_json_rpc_response(json_response, retry_faults, method)
+|!   File "/home/testing/http_utils.py", line 1031, in check_json_rpc_response
+|!     response)
+|! ApiCallMethodException: DoesNotExist. JSON response: {u\'id\': 63}
+
+Standard Log Types
+2017-10-30 19:13:32.208116 DEBUG [res.core:636] [MainProcess:MainThread] Sending HTTP POST request
+2017-10-30 19:13:32.208116 INFO [res.core:636] [MainProcess:MainThread] Sending HTTP POST request
+2017-10-30 19:13:32.208116 NOTICE [res.core:636] [MainProcess:MainThread] Sending HTTP POST request
+2017-10-30 19:13:32.208116 WARNING [res.core:636] [MainProcess:MainThread] Sending HTTP POST request
+2017-10-30 19:13:32.208116 ERROR [res.core:636] [MainProcess:MainThread] Sending HTTP POST request
+2017-10-30 19:13:32.208116 CRITICAL [res.core:636] [MainProcess:MainThread] Sending HTTP POST request
+2017-10-30 19:13:32.208116 OTHER [res.core:636] [MainProcess:MainThread] Sending HTTP POST request
+
+API Calls
+2017-10-30 19:13:32.208116 DEBUG [res.core:636] [MainProcess:MainThread] JSON-RPC-POST: method=GetClusterInfo, url=https://1.1.1.1/json-rpc/10.1, id=8
+2017-10-30 19:13:32.208116 DEBUG [res.core:636] [MainProcess:MainThread] JSON-RPC-POST response: {"id": 8, "result": {"clusterInfo": {"repCount": 2, "encryptionAtRestState": "enabled", "attributes": {}, "ensemble": ["10.117.208.26", "10.117.208.41"], "NodeID": 3}}}

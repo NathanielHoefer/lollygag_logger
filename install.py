@@ -5,7 +5,6 @@
 import sys
 import os
 import subprocess
-from bin.vconfiginterface import VConfigInterface
 
 install_path = os.path.abspath(__file__)
 vlogger_dir = os.path.dirname(install_path)
@@ -21,10 +20,12 @@ def install_requirements():
     req_path = os.path.join([vlogger_dir, "requirements.txt"])
     subprocess.call(["pip", "install", "-r", req_path])
 
-def create_ini(at2_user, at2_pass, fetch_script):
-    """Creates .ini file and adds the AT2 credential information."""
-    config = VConfigInterface()
-    config.set_at2_info(at2_user, at2_pass, fetch_script)
+
+def pull_submodules():
+    """Initializes and pulls any submodules if not already pulled."""
+    subprocess.call(["git", "submodule", "init"])
+    subprocess.call(["git", "submodule", "--recursive", "--remote"])
+
 
 def create_soft_link():
     """Add soft link of vlogger.py to ~/bin/vlogger."""

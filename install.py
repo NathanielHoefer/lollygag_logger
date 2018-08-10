@@ -36,17 +36,20 @@ def create_soft_link():
         os.mkdir(bin_dir)
 
     soft_path = os.path.join(bin_dir, "vlogger")
-    command = ["ln", "-s", vlogger_path, soft_path]
-    cmd_str = " ".join(command)
-    print "Creating soft link for easy execution: %s" % cmd_str
-    subprocess.call(["ln", "-s", vlogger_path, soft_path])
 
-    # export_path = ["PATH=%s:$PATH" % bin_dir, "&&", "export", "PATH"]
-    # print "Exporting PATH: %s" % export_path
-    # subprocess.call(["PATH=%s:$PATH" % bin_dir, "&&", "export", "PATH"])
+    if not os.path.exists(soft_path):
+        command = ["ln", "-s", vlogger_path, soft_path]
+        cmd_str = " ".join(command)
+        print "Soft link command for easy execution: %s" % cmd_str
+        subprocess.call(["ln", "-s", vlogger_path, soft_path])
+    else:
+        print "Soft link already created: %s" % soft_path
 
 
 if __name__ == '__main__':
-    pull_submodules()
+    if not is_venv():
+        print "\nNote: You are currently not in a virtual environment."
+    print "\nInstalling necessary packages...\n"
     install_requirements()
+    print "\nCreating soft link...\n"
     create_soft_link()

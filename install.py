@@ -24,7 +24,7 @@ def install_requirements():
 def pull_submodules():
     """Initializes and pulls any submodules if not already pulled."""
     subprocess.call(["git", "submodule", "init"])
-    subprocess.call(["git", "submodule", "--recursive", "--remote"])
+    subprocess.call(["git", "submodule", "update", "--recursive", "--remote"])
 
 
 def create_soft_link():

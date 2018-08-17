@@ -125,7 +125,7 @@ class VConfigInterface:
                 ("use_colors", "True"),
                 ("format_api", "False"),
                 ("condense_line", "True"),
-                ("shorten_fields", "True"),
+                ("shorten_fields", "30"),
                 ("display_summary", "True"),
                 ("use_console_len", "True"),  # Use console width for max log line length
             ("max_line_len", "200")]  # Max length to be printed if console width is not selected
@@ -389,7 +389,7 @@ class VConfigInterface:
         self.colorize(general_dict["use_colors"])
         self.format_api(general_dict["format_api"])
         self.condense_line(general_dict["condense_line"])
-        self.shorten_fields(general_dict["shorten_fields"])
+        self.shorten_fields(int(self._format_config.get(GENERAL, "shorten_fields")))
         self.display_summary(general_dict["display_summary"])
         self.use_console_width(general_dict["use_console_len"])
         self.max_line_len(int(self._format_config.get(GENERAL, "max_line_len")))

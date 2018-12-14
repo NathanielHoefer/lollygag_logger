@@ -9,3 +9,5 @@
 
 # Plugins
 *plugins/
+
+*.DS_Store

@@ -50,21 +50,17 @@ class VLogType(Enum):
         if not unf_str:
             return None
 
-        if re.match(VPatterns.get_std(), unf_str):
-            type = re.search(VPatterns.get_std_type(), unf_str).group(0)
-            if type == cls.DEBUG.name:
-                return VLogType.DEBUG
-            elif type == cls.INFO.name:
-                return VLogType.INFO
-            elif type == cls.NOTICE.name:
-                return VLogType.NOTICE
-            elif type == cls.WARNING.name:
-                return VLogType.WARNING
-            elif type == cls.ERROR.name:
-                return VLogType.ERROR
-            elif type == cls.CRITICAL.name:
-                return VLogType.CRITICAL
-        elif re.match(VPatterns.get_traceback(), unf_str):
+        vtypes = {cls.DEBUG.name: VLogType.DEBUG,
+                  cls.INFO.name: VLogType.INFO,
+                  cls.NOTICE.name: VLogType.NOTICE,
+                  cls.WARNING.name: VLogType.WARNING,
+                  cls.ERROR.name: VLogType.ERROR,
+                  cls.CRITICAL.name: VLogType.CRITICAL
+                  }
+        for stype, vtype in vtypes.iteritems():
+            if unf_str[24:].startswith(stype) or unf_str[27:].startswith(stype):
+                return vtype
+        if re.match(VPatterns.get_traceback(), unf_str):
             return VLogType.TRACEBACK
         elif re.match(VPatterns.get_suite_header(), unf_str):
             return VLogType.SUITE_H

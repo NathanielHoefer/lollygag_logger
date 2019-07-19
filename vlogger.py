@@ -73,7 +73,7 @@ if __name__ == '__main__':
         logfile = vl_run.execute_local_run(log_source)
 
     else:
-        print "Invalid log source."
+        print("Invalid log source.")
         exit(1)
 
     # Test Cases **************************************************************
@@ -102,9 +102,9 @@ if __name__ == '__main__':
             config.at2_format()
 
         if args.save:
-            save_filename = "fmt_%s" % os.path.basename(logfile)
+            save_filename = "fmt_{}".format(os.path.basename(logfile))
             save_filepath = os.path.join(os.path.dirname(logfile), save_filename)
-            print "Saving formatted logs to %s..." % save_filepath
+            print("Saving formatted logs to {}...".format(save_filepath))
             open(save_filepath, 'w').close()
             word_count = sum(1 for line in open(logfile))
             config.save_file(save_filepath, word_count)
@@ -125,5 +125,5 @@ if __name__ == '__main__':
                 logger.run()
     except KeyboardInterrupt:
         logger.kill()
-        print "Keyboard Interrupt: Exiting Logger"
+        print("Keyboard Interrupt: Exiting Logger")
         exit(0)

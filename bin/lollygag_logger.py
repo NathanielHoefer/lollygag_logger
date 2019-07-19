@@ -1,4 +1,4 @@
-import Queue
+from queue import Queue
 import abc
 from threading import Thread
 
@@ -31,7 +31,7 @@ class LollygagLogger(object):
 
         self.stream_handle = stream_handle
         self.log_formatter = log_formatter
-        self.queue = Queue.Queue()
+        self.queue = Queue()
         self.read_complete = False
         self.kill_logging = False
 
@@ -80,7 +80,7 @@ class LollygagLogger(object):
 
 @six.add_metaclass(abc.ABCMeta)
 class LogFormatter(object):
-    """Abstract base class\used in the LollygagLogger to format incoming
+    """Abstract base class used in the LollygagLogger to format incoming
     LogLine objects.
     """
 

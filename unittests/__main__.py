@@ -1,8 +1,8 @@
 import unittest
 
-import test_vlogfield
-import test_vlogline
-import test_vutils
+from unittests import test_vlogfield
+from unittests import test_vlogline
+from unittests import test_vutils
 
 suite_loader = unittest.TestLoader()
 modules = [

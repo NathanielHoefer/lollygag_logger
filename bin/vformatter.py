@@ -2,13 +2,13 @@ import os
 import re
 import sys
 
-import vlogfield
-import vlogline
-from lollygag_logger import LogFormatter
-from vmanagers import HeaderManager, LogManager
-from vutils import VLogType
-from vutils import VPatterns
-from vutils import ProgressBar
+from bin import vlogfield
+from bin import vlogline
+from bin.lollygag_logger import LogFormatter
+from bin.vmanagers import HeaderManager, LogManager
+from bin.vutils import VLogType
+from bin.vutils import VPatterns
+from bin.vutils import ProgressBar
 
 
 class VFormatter(LogFormatter):
@@ -140,7 +140,7 @@ class VFormatter(LogFormatter):
                 with open(self.OUTPUT_FILE, 'a') as f:
                     f.write(str(output) + "\n")
             else:
-                print output
+                print(output)
 
     def complete(self):
         """Prints summary if requested."""
@@ -152,20 +152,21 @@ class VFormatter(LogFormatter):
             try:
                 self._hm.end_time(self.curr_time, root=True)
                 summary = self._hm.generate_summary()
-                output = "\n" + summary
+                output = "".join(["\n", summary])
 
                 if self.OUTPUT_FILE:
                     with open(self.OUTPUT_FILE, 'a') as f:
                         f.write(str(output) + "\n")
                 else:
-                    print output
+                    print(output)
             # except AttributeError:
-            except:
-                print "Error generating summary. Log may be incomplete."
+            except Exception as e:
+                print(e.with_traceback())
+                print("Error generating summary. Log may be incomplete.")
 
         if self.OUTPUT_FILE:
             self._prog.progress(self._log_count, "Complete")
-            print "\nSave complete."
+            print("\nSave complete.")
 
     @property
     def curr_time(self):

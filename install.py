@@ -40,16 +40,16 @@ def create_soft_link():
     if not os.path.exists(soft_path):
         command = ["ln", "-s", vlogger_path, soft_path]
         cmd_str = " ".join(command)
-        print "Soft link command for easy execution: %s" % cmd_str
+        print("Soft link command for easy execution: {}".format(cmd_str))
         subprocess.call(["ln", "-s", vlogger_path, soft_path])
     else:
-        print "Soft link already created: %s" % soft_path
+        print("Soft link already created: {}".format(soft_path))
 
 
 if __name__ == '__main__':
     if not is_venv():
-        print "\nNote: You are currently not in a virtual environment."
-    print "\nInstalling necessary packages...\n"
+        print("\nNote: You are currently not in a virtual environment.")
+    print("\nInstalling necessary packages...\n")
     install_requirements()
-    print "\nCreating soft link...\n"
+    print("\nCreating soft link...\n")
     create_soft_link()

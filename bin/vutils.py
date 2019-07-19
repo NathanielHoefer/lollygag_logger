@@ -57,7 +57,7 @@ class VLogType(Enum):
                   cls.ERROR.name: VLogType.ERROR,
                   cls.CRITICAL.name: VLogType.CRITICAL
                   }
-        for stype, vtype in vtypes.iteritems():
+        for stype, vtype in vtypes.items():
             if unf_str[24:].startswith(stype) or unf_str[27:].startswith(stype):
                 return vtype
         if re.match(VPatterns.get_traceback(), unf_str):
@@ -169,7 +169,7 @@ class VPatterns(object):
 
     # Test Case Patterns
     CASE_NAME_PATTERN = "(Tc.*)"
-    CASE_HEADER_PATTERN = "^=Test Case (\d+): .*" + CASE_NAME_PATTERN + "=$"
+    CASE_HEADER_PATTERN = "".join(["^=Test Case (\d+): .*", CASE_NAME_PATTERN, "=$"])
 
     # Test Step Patterns
     STEP_HEADER_PATTERN = "^-Starting Step (\d+) for " + CASE_NAME_PATTERN \

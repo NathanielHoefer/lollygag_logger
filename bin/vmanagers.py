@@ -21,8 +21,9 @@ class HeaderManager(object):
         self._root = Node(vlogline.GeneralHeader("=Test Summary="))
         self._header_tree = [self._root]
 
-        self._specified_tc = True if tc_name or tc_num >= 0 else False
-        self._specified_step = True if step >= 0 else False
+
+        self._specified_tc = bool(tc_name)
+        self._specified_step = bool(tc_num)
         self._store_tc_name = tc_name
         self._store_tc_num = tc_num
         self._store_step = step
@@ -52,8 +53,9 @@ class HeaderManager(object):
             # Add Runtime
             if not node.name.start_time:  # May not result in accurate time
                 node.name.start_time = self._root.name.start_time
-            runtime = node.name.end_time - node.name.start_time
-            output.append("%s%s" % (fill, "  Runtime: %s" % runtime))
+            if node.name.end_time:
+                runtime = node.name.end_time - node.name.start_time
+                output.append("%s%s" % (fill, "  Runtime: %s" % runtime))
 
             # Add Status and Errors
             status = node.name.status
@@ -76,7 +78,7 @@ class HeaderManager(object):
             # Add Separator
             output.append("%s%s" % (fill, "_" * (75 - len(fill))))
 
-        return "\n".join(output).encode('utf-8')
+        return "\n".join(output)
 
     def add_general(self, header):
 
@@ -106,8 +108,8 @@ class HeaderManager(object):
         else:
             self._curr_testcase = self._add_node(header, self._root)
 
-        if self._specified_step or not self.header_in_specified_testcase(header):
-            return None
+        # if self._specified_step or not self.header_in_specified_testcase(header):
+        #     return None
         return header
 
     def add_step(self, header):
